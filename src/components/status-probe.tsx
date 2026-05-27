@@ -26,6 +26,7 @@ const PROBES: Array<{ key: string; label: string; href: string }> = [
   { key: "health", label: "GET /api/health", href: "/api/health" },
   { key: "profile", label: "GET /api/profile", href: "/api/profile" },
   { key: "dashboard", label: "GET /api/dashboard", href: "/api/dashboard" },
+  { key: "chat", label: "POST /api/chat", href: "/api/chat" },
   {
     key: "search",
     label: "GET /api/notes/search?q=架构",
@@ -67,7 +68,18 @@ export function StatusProbe() {
       PROBES.map(async (probe) => {
         const started = performance.now();
         try {
-          const res = await fetch(probe.href, { cache: "no-store" });
+          const res =
+            probe.key === "chat"
+              ? await fetch(probe.href, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  cache: "no-store",
+                  body: JSON.stringify({
+                    question: "status probe: hello",
+                    stream: false,
+                  }),
+                })
+              : await fetch(probe.href, { cache: "no-store" });
           return {
             key: probe.key,
             label: probe.label,

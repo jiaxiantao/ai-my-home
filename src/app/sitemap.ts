@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 
 import { insightArticles } from "@/lib/editorial-content";
+import { listPublishedNotes } from "@/lib/notes-service";
 import { caseStudies, domainDetails } from "@/lib/site-content";
 
 const staticPaths = [
@@ -16,7 +17,7 @@ const staticPaths = [
   "/status",
 ];
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const now = new Date();
 
@@ -48,5 +49,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.65,
   }));
 
-  return [...staticEntries, ...domainEntries, ...caseEntries, ...insightEntries];
+  const publishedNotes = await listPublishedNotes();
+  const noteEntries = publishedNotes.map((note) => ({
+    url: `${base}/notes/${note.slug}`,
+    lastModified: new Date(note.updatedAt),
+    changeFrequency: "monthly" as const,
+    priority: 0.55,
+  }));
+
+  return [
+    ...staticEntries,
+    ...domainEntries,
+    ...caseEntries,
+    ...insightEntries,
+    ...noteEntries,
+  ];
 }

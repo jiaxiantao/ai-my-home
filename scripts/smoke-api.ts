@@ -14,7 +14,14 @@ type Check = {
   assert: (status: number, body: unknown) => void;
 };
 
-const checks: Check[] = [
+type CheckMethod = "GET" | "POST";
+
+type CheckRequest = {
+  method?: CheckMethod;
+  body?: unknown;
+};
+
+const checks: Array<Check & CheckRequest> = [
   {
     name: "health",
     path: "/api/health",
@@ -36,6 +43,27 @@ const checks: Check[] = [
         throw new Error(
           `database unhealthy (connected=${String(data.db?.connected)}, ok=${String(data.db?.ok)})`,
         );
+      }
+    },
+  },
+  {
+    name: "chat",
+    path: "/api/chat",
+    method: "POST",
+    body: { question: "smoke: hello", stream: false },
+    assert: (status, body) => {
+      if (status !== 200) {
+        throw new Error(`expected 200, got ${status}`);
+      }
+
+      const data = body as { answer?: string; references?: unknown[] };
+
+      if (!data.answer || typeof data.answer !== "string") {
+        throw new Error("missing answer");
+      }
+
+      if (!Array.isArray(data.references)) {
+        throw new Error("missing references array");
       }
     },
   },
@@ -107,7 +135,18 @@ const checks: Check[] = [
 
 async function runCheck(check: Check) {
   const url = `${base.replace(/\/$/, "")}${check.path}`;
-  const response = await fetch(url, { cache: "no-store" });
+  const response = await fetch(url, {
+    method: (check as Check & CheckRequest).method ?? "GET",
+    headers:
+      (check as Check & CheckRequest).method === "POST"
+        ? { "Content-Type": "application/json" }
+        : undefined,
+    body:
+      (check as Check & CheckRequest).method === "POST"
+        ? JSON.stringify((check as Check & CheckRequest).body ?? {})
+        : undefined,
+    cache: "no-store",
+  });
   const text = await response.text();
   let body: unknown = null;
 
