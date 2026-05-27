@@ -71,7 +71,7 @@ const checks: Check[] = [
   },
   {
     name: "notes-search",
-    path: "/api/notes/search?q=架构&limit=3",
+    path: `/api/notes/search?q=${encodeURIComponent("架构")}&limit=3`,
     assert: (status, body) => {
       if (status !== 200) {
         throw new Error(`expected 200, got ${status}`);
@@ -117,7 +117,18 @@ async function runCheck(check: Check) {
     throw new Error(`${check.name}: invalid JSON (${response.status})`);
   }
 
-  check.assert(response.status, body);
+  try {
+    check.assert(response.status, body);
+  } catch (error) {
+    const detail =
+      typeof body === "object" && body !== null
+        ? JSON.stringify(body).slice(0, 400)
+        : String(body).slice(0, 200);
+    throw new Error(
+      `${error instanceof Error ? error.message : error} · ${check.name} HTTP ${response.status} · ${detail}`,
+    );
+  }
+
   console.log(`✓ ${check.name} ${check.path}`);
 }
 

@@ -80,11 +80,27 @@ jobs:
 
       - name: Start production server
         run: |
-          pnpm start > /tmp/next.log 2>&1 &
+          # 使用 next start（完整 node_modules）以便 Prisma 连上 CI 的 Postgres；
+          # standalone server.js 在 CI 中常出现 db.ok=false
+          pnpm start:ci > /tmp/next.log 2>&1 &
           echo $! > /tmp/next.pid
           for i in $(seq 1 45); do
-            if curl -sf "${SMOKE_BASE_URL}/api/health" > /dev/null; then
-              echo "Server ready after ${i} attempts"
+            if curl -sf "${SMOKE_BASE_URL}/api/health" | node -e "
+              const chunks = [];
+              process.stdin.on('data', (c) => chunks.push(c));
+              process.stdin.on('end', () => {
+                try {
+                  const data = JSON.parse(Buffer.concat(chunks).toString());
+                  if (data.db?.ok) process.exit(0);
+                  console.error('health not ready:', JSON.stringify(data));
+                  process.exit(1);
+                } catch (e) {
+                  console.error(e);
+                  process.exit(1);
+                }
+              });
+            "; then
+              echo "Server ready (db ok) after ${i} attempts"
               exit 0
             fi
             sleep 2
