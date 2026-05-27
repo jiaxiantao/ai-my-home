@@ -26,7 +26,7 @@
 pnpm install
 cp .env.example .env
 docker compose up -d db
-pnpm db:push && pnpm db:seed
+pnpm db:setup
 pnpm dev
 ```
 
@@ -39,7 +39,9 @@ pnpm dev
 - `LLM_PROVIDER=ollama` — 本地 Ollama（`OLLAMA_BASE_URL` / `OLLAMA_MODEL`）
 - 云端模型：设 `LLM_PROVIDER=openai` 并填写 `OPENAI_*`
 
-### 可选：启用 pg_trgm
+### pg_trgm
+
+`pnpm db:seed` 会尝试 `CREATE EXTENSION IF NOT EXISTS pg_trgm`（需数据库权限）。也可手动执行：
 
 ```bash
 psql "$DATABASE_URL" -f prisma/sql/pg_trgm.sql

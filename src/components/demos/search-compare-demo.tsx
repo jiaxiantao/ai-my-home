@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 type SearchPayload = {
@@ -98,9 +99,9 @@ function ResultColumn({
               key={item.slug}
               className="flex justify-between gap-2 rounded-lg bg-white/5 px-3 py-2 text-xs"
             >
-              <a href={`/notes/${item.slug}`} className="text-slate-200 hover:text-white">
+              <Link href={`/notes/${item.slug}`} className="text-slate-200 hover:text-white">
                 {item.title}
-              </a>
+              </Link>
               <span className="shrink-0 font-mono text-cyan-200/80">
                 {formatScore(item.similarity ?? item.score)}
               </span>

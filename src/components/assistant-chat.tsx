@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { streamChatQuestion, type ChatReference } from "@/lib/chat-stream";
@@ -18,9 +19,11 @@ const starterPrompts = [
 export function AssistantChat({
   initialQuestion = "",
   autoRun = false,
+  llmLabel,
 }: {
   initialQuestion?: string;
   autoRun?: boolean;
+  llmLabel?: string;
 }) {
   const hasAutoRun = useRef(false);
   const [question, setQuestion] = useState(initialQuestion);
@@ -122,9 +125,16 @@ export function AssistantChat({
           <h2 className="text-2xl font-semibold tracking-tight text-white">
             对话窗口
           </h2>
-          <span className="rounded-full border border-cyan-300/25 bg-cyan-300/10 px-3 py-1 font-mono text-[10px] text-cyan-100">
-            SSE · POST /api/chat
-          </span>
+          <div className="flex flex-wrap gap-2">
+            <span className="rounded-full border border-cyan-300/25 bg-cyan-300/10 px-3 py-1 font-mono text-[10px] text-cyan-100">
+              SSE · POST /api/chat
+            </span>
+            {llmLabel ? (
+              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 font-mono text-[10px] text-slate-300">
+                {llmLabel}
+              </span>
+            ) : null}
+          </div>
         </div>
 
         <div className="mt-5 flex flex-wrap gap-2">
@@ -215,12 +225,12 @@ export function AssistantChat({
                   {reference.summary}
                 </p>
               ) : null}
-              <a
+              <Link
                 href={`/notes/${reference.slug}`}
                 className="mt-5 inline-flex text-sm font-semibold text-cyan-200 transition hover:text-white"
               >
                 打开来源笔记
-              </a>
+              </Link>
             </article>
           ))
         ) : (

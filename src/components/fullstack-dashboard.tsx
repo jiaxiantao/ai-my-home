@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useState } from "react";
 import {
@@ -18,9 +19,33 @@ import {
   LazySystemRadarChart,
   LazyTagDistributionChart,
 } from "@/components/charts/lazy-dashboard-charts";
-import { DashboardAssistantPreview } from "@/components/dashboard-assistant-preview";
-import { DashboardDecisionWidget } from "@/components/dashboard-decision-widget";
+import { DashboardPanelMount } from "@/components/dashboard-panel-mount";
 import type { DashboardData } from "@/lib/dashboard-service";
+
+function PanelLoading() {
+  return (
+    <div className="grid gap-3">
+      <div className="h-10 animate-pulse rounded-xl bg-white/5" />
+      <div className="h-48 animate-pulse rounded-2xl bg-white/5" />
+    </div>
+  );
+}
+
+const DashboardAssistantPreview = dynamic(
+  () =>
+    import("@/components/dashboard-assistant-preview").then(
+      (mod) => mod.DashboardAssistantPreview,
+    ),
+  { ssr: false, loading: PanelLoading },
+);
+
+const DashboardDecisionWidget = dynamic(
+  () =>
+    import("@/components/dashboard-decision-widget").then(
+      (mod) => mod.DashboardDecisionWidget,
+    ),
+  { ssr: false, loading: PanelLoading },
+);
 
 type DashboardPanelId =
   | "overview"
@@ -162,7 +187,7 @@ export function FullstackDashboard({
       </div>
 
       <div className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 md:p-8">
-        {activePanel === "overview" ? (
+        <DashboardPanelMount id="overview" active={activePanel}>
           <div className="grid gap-6">
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
               {metricCards.map((metric) => (
@@ -309,9 +334,9 @@ export function FullstackDashboard({
               </a>
             </div>
           </div>
-        ) : null}
+        </DashboardPanelMount>
 
-        {activePanel === "knowledge" ? (
+        <DashboardPanelMount id="knowledge" active={activePanel}>
           <div className="grid gap-6">
             <div className="grid gap-4 lg:grid-cols-2">
               <article className="rounded-2xl border border-white/10 bg-white/5 p-4">
@@ -364,9 +389,9 @@ export function FullstackDashboard({
               </Link>
             </div>
           </div>
-        ) : null}
+        </DashboardPanelMount>
 
-        {activePanel === "flow" ? (
+        <DashboardPanelMount id="flow" active={activePanel}>
           <div className="grid gap-6">
             <article className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <p className="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200/75">
@@ -418,13 +443,15 @@ export function FullstackDashboard({
               <span>cases / insights</span>
             </div>
           </div>
-        ) : null}
+        </DashboardPanelMount>
 
-        {activePanel === "assistant" ? (
+        <DashboardPanelMount id="assistant" active={activePanel}>
           <DashboardAssistantPreview llmLabel={llmLabel} />
-        ) : null}
+        </DashboardPanelMount>
 
-        {activePanel === "decision" ? <DashboardDecisionWidget /> : null}
+        <DashboardPanelMount id="decision" active={activePanel}>
+          <DashboardDecisionWidget />
+        </DashboardPanelMount>
       </div>
     </div>
   );
