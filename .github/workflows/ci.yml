@@ -13,6 +13,7 @@ jobs:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ci?schema=public
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
       SMOKE_BASE_URL: http://localhost:3000
+      PLAYWRIGHT_BASE_URL: http://localhost:3000
       ADMIN_SECRET: ci-secret
       LLM_PROVIDER: ollama
       OLLAMA_BASE_URL: http://127.0.0.1:11434/v1
@@ -54,7 +55,10 @@ jobs:
 
       - run: pnpm build
 
-      - name: API smoke (production server)
+      - name: Install Playwright browser
+        run: pnpm exec playwright install chromium --with-deps
+
+      - name: API smoke and E2E (production server)
         run: |
           pnpm start > /tmp/next.log 2>&1 &
           echo $! > /tmp/next.pid
@@ -71,4 +75,5 @@ jobs:
             sleep 2
           done
           pnpm smoke
+          pnpm test:e2e
           kill "$(cat /tmp/next.pid)" || true

@@ -1,0 +1,46 @@
+# Optional Ollama stack — use with base compose:
+#   docker compose -f docker-compose.yml -f docker-compose.ollama.yml up --build
+#
+# First run pulls llama3.2 (may take several minutes).
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 12
+      start_period: 30s
+
+  ollama-pull:
+    image: ollama/ollama:latest
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    depends_on:
+      ollama:
+        condition: service_healthy
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        set -e
+        echo "Pulling llama3.2..."
+        ollama pull llama3.2
+        echo "Model ready."
+    restart: "no"
+
+  web:
+    environment:
+      OLLAMA_BASE_URL: http://ollama:11434/v1
+    depends_on:
+      ollama-pull:
+        condition: service_completed_successfully
+
+volumes:
+  ollama-data:
