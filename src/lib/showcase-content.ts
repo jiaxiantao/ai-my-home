@@ -322,6 +322,17 @@ export const techStackGroups: TechStackGroup[] = [
     summary: "从个人产出走向团队复用和技术影响力。",
     items: ["Technical Writing", "Knowledge Base", "AI-assisted Workflow", "Cross-team Collaboration", "Mentoring Mindset"],
   },
+  {
+    title: "Cross-Platform & Multi-End",
+    summary: "把 Web 能力延伸到移动 H5、小程序与桌面运行时。",
+    items: [
+      "Mobile H5 · viewport / safe-area",
+      "WeChat / Alipay Mini Program",
+      "Taro / uni-app 同构",
+      "Electron / Tauri / Capacitor",
+      "JSBridge · 分包 · 发布治理",
+    ],
+  },
 ];
 
 export const workingNotes: WorkingNote[] = [

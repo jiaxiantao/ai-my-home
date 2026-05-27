@@ -58,6 +58,7 @@ export const siteProfile: SiteProfile = {
   summary: "用可运行的页面和 API 代替自述。",
   focus: [
     "前端架构与设计系统",
+    "大前端与多端交付",
     "工程化与研发效能",
     "性能优化与体验治理",
     "全栈协作与 AI 自动化",
@@ -84,8 +85,8 @@ export const siteMetrics: SiteMetric[] = [
   },
   {
     label: "核心能力域",
-    value: "4 大方向",
-    detail: "架构、工程化、性能治理、全栈与 AI 协作",
+    value: "5 大方向",
+    detail: "架构、大前端多端、工程化、性能治理、全栈与 AI",
   },
   {
     label: "交付视角",
@@ -249,6 +250,43 @@ export const domainDetails: DomainDetail[] = [
     ],
   },
   {
+    slug: "cross-platform-frontend",
+    title: "大前端与多端交付",
+    strapline: "移动端 · 小程序 · 桌面端同一套工程判断",
+    summary:
+      "覆盖 H5 移动适配、小程序双线程与宿主差异、Electron / Tauri / Capacitor 桌面选型，把 Web 能力延伸到更多终端。",
+    overview:
+      "大前端不是多写几个端，而是同一套业务模型下，针对不同运行时做约束、桥接与发布策略。我会先对齐体验与能力边界，再决定是同构、混合还是原生补强。",
+    icon: "smartphone",
+    expertiseLevel: "H5 / Mini Program / Desktop Runtime",
+    highlights: ["移动端视口与安全区", "小程序分层与分包", "桌面运行时选型"],
+    principles: [
+      "先定能力矩阵和降级策略，再选框架，而不是先选 Taro 或 Electron。",
+      "跨端复用的是业务模型与接口契约，不是把 DOM API 硬搬到每个端。",
+      "发布链路、包体、权限与审核约束和页面实现同等重要。",
+    ],
+    topics: [
+      {
+        title: "移动端 H5 交付",
+        summary: "视口、安全区、触控热区与资源策略决定真实体验。",
+        body:
+          "我会优先处理 viewport、safe-area、软键盘顶起和 1x/2x/3x 资源，再用 visualViewport 和 rem/vw 组合避免 100vh 等常见坑。复杂动效要评估低端机帧率预算。",
+      },
+      {
+        title: "小程序工程实践",
+        summary: "理解双线程、setData 粒度与宿主 API 差异。",
+        body:
+          "View / Logic / Service / Bridge 四层职责要清晰：渲染层控展示，逻辑层控状态，服务端聚合敏感能力，Native Bridge 承接支付、扫码等开放能力。跨宿主（微信 / 支付宝 / 抖音）要预留 API 适配层。",
+      },
+      {
+        title: "桌面端与混合壳",
+        summary: "Electron、Tauri、Capacitor 各有包体、性能与系统能力权衡。",
+        body:
+          "内部工具可接受 Electron 的 Chromium 体积；对包体敏感选 Tauri + 系统 WebView；已有 Web 团队扩桌面/商店分发可看 Capacitor。自动更新、代码签名与商店审核要提前纳入方案。",
+      },
+    ],
+  },
+  {
     slug: "ai-automation",
     title: "AI 应用与自动化工程",
     strapline: "把知识与流程交给系统复用",
@@ -371,6 +409,22 @@ export const caseStudies: CaseStudy[] = [
       "笔记入库 → 检索 → /api/chat 引用回答",
       "Prompt / 校验 / 沉淀分阶段，可切换能力组合",
       "本仓库即该工作流的运行实例",
+    ],
+  },
+  {
+    slug: "cross-platform-delivery",
+    title: "大前端多端同构与发布治理",
+    summary:
+      "在 H5、小程序与桌面壳之间复用业务模型与 BFF，按端补齐视口、Bridge 与包体策略。",
+    context:
+      "多端项目最容易失控的是「每个端各写一套」：接口分叉、设计稿不一致、发布节奏不同步，长期维护成本会指数上升。",
+    impact:
+      "通过能力矩阵、共享类型与分层壳，团队可以在保留端特性的同时控制重复劳动和回归范围。",
+    stack: ["H5", "Mini Program", "Taro / uni-app", "Electron", "Tauri"],
+    proofLines: [
+      "移动端：viewport / safe-area / 触控热区有检查清单",
+      "小程序：View-Logic-Service-Bridge 分层 + 分包预下载",
+      "桌面：Electron vs Tauri 按包体与系统能力选型",
     ],
   },
 ];

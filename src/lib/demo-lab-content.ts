@@ -123,6 +123,19 @@ export const architectureScenarios: ArchitectureScenario[] = [
     },
     outputs: ["知识资产化", "工作流可复盘", "AI 结果更稳定可控"],
   },
+  {
+    id: "multi-end-product",
+    title: "大前端多端产品",
+    summary: "H5、小程序与桌面共享业务模型，按端补齐运行时与发布策略。",
+    signals: ["至少两个终端", "接口与 UI 易分叉", "各端发布节奏不同"],
+    decisions: {
+      rendering: "H5 与服务端首屏协同；小程序按 View/Logic 分层；桌面用 WebView 壳承载核心 Web。",
+      state: "共享领域模型与 API 类型，端内状态各自收敛，避免把 DOM 状态跨端硬搬。",
+      data: "BFF 聚合 + 统一错误码；敏感能力走 Service，不塞进小程序逻辑层。",
+      delivery: "能力矩阵 + 降级清单；各端独立回归用例，共享核心链路冒烟。",
+    },
+    outputs: ["端差异有文档", "同构边界清晰", "发布与包体策略可核对"],
+  },
 ];
 
 export const performanceLanes: PerformanceLane[] = [

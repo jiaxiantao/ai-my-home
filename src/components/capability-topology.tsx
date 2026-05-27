@@ -46,6 +46,16 @@ const topologyNodeMeta: Record<
     signal: "设计系统 / SSR",
     slotClass: "col-start-2 row-start-1 self-start",
   },
+  "cross-platform-frontend": {
+    x: 32,
+    y: 12,
+    delay: 0.4,
+    accent: "text-rose-100",
+    glow: "rgba(251, 113, 133, 0.24)",
+    label: "大前端",
+    signal: "H5 / 小程序 / 桌面",
+    slotClass: "col-start-1 row-start-1 justify-self-start self-start",
+  },
   "engineering-efficiency": {
     x: 16,
     y: 33,
@@ -99,6 +109,9 @@ const topologyNodeMeta: Record<
 };
 
 const relatedEdges = [
+  ["cross-platform-frontend", "frontend-architecture"],
+  ["cross-platform-frontend", "performance-experience"],
+  ["cross-platform-frontend", "fullstack-delivery"],
   ["frontend-architecture", "engineering-efficiency"],
   ["frontend-architecture", "performance-experience"],
   ["engineering-efficiency", "ai-automation"],

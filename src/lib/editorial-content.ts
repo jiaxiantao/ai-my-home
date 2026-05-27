@@ -223,6 +223,45 @@ export const caseStudyDetails: CaseStudyDetail[] = [
       { slug: "engineering-efficiency", label: "工程化与研发效能" },
     ],
   },
+  {
+    slug: "cross-platform-delivery",
+    title: "大前端多端同构与发布治理",
+    strapline: "同一业务模型，按端补齐运行时约束",
+    summary:
+      "在 H5、小程序与桌面壳之间复用领域模型与 BFF，用能力矩阵和分层壳控制重复劳动与回归范围。",
+    problem:
+      "多端项目常见问题是各端各写一套：接口分叉、设计不一致、发布节奏不同步，导致维护成本指数上升。",
+    constraints: [
+      "各端运行时能力不同，不能假设 DOM 或 Node API 处处可用。",
+      "小程序有包体、审核与 setData 性能约束。",
+      "桌面端要兼顾包体、自动更新与系统 API。",
+    ],
+    decisions: [
+      "先画能力矩阵与降级策略，再选 Taro / uni-app / Electron / Tauri。",
+      "BFF 聚合接口，统一错误码；敏感逻辑留在 Service 层。",
+      "移动端单独维护 viewport / safe-area 检查清单。",
+    ],
+    execution: [
+      "H5 用 rem / visualViewport 处理键盘与安全区。",
+      "小程序按 View-Logic-Service-Bridge 分层，分包预下载核心路径。",
+      "桌面按场景在 Electron 与 Tauri 之间选型并落实签名更新链。",
+    ],
+    outcomes: [
+      "核心业务模型与类型在端间复用，差异集中在壳与桥接层。",
+      "各端有独立回归用例，共享链路统一冒烟。",
+      "首页 #cross-platform 提供可切换的交互 Demo 对齐文档。",
+    ],
+    lessons: [
+      "跨端复用的是契约与模型，不是 DOM API。",
+      "发布链路与包体策略要和页面实现一起设计。",
+      "先对齐能力边界，再谈框架选型。",
+    ],
+    relatedDomains: [
+      { slug: "cross-platform-frontend", label: "大前端与多端交付" },
+      { slug: "frontend-architecture", label: "前端架构与设计系统" },
+      { slug: "fullstack-delivery", label: "全栈协作与服务端能力" },
+    ],
+  },
 ];
 
 export const conversationTopics: ConversationTopic[] = [
@@ -251,6 +290,15 @@ export const conversationTopics: ConversationTopic[] = [
       "你的性能排查顺序通常是什么？",
       "如何让 AI 产出真正可控，而不是偶尔可用？",
       "为什么我会把知识沉淀放到日常工作里？",
+    ],
+  },
+  {
+    title: "大前端与多端交付",
+    summary: "移动端 H5、小程序分层、桌面运行时选型与发布治理。",
+    prompts: [
+      "H5 里 viewport 和 safe-area 你会怎么验收？",
+      "小程序 setData 和分包你会怎么规划？",
+      "Electron 和 Tauri 你会怎么选型？",
     ],
   },
 ];

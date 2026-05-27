@@ -6,7 +6,14 @@ test.describe("Homepage", () => {
 
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
-    for (const id of ["viz", "dashboard", "tech-demos", "demo-lab", "topology"]) {
+    for (const id of [
+      "viz",
+      "dashboard",
+      "cross-platform",
+      "tech-demos",
+      "demo-lab",
+      "topology",
+    ]) {
       await expect(page.locator(`#${id}`)).toBeAttached();
       await page.locator(`#${id}`).scrollIntoViewIfNeeded();
     }

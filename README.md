@@ -16,6 +16,7 @@
 |------|------|
 | `#viz` | Three.js 拓扑 + ECharts + 笔记分析（PostgreSQL） |
 | `#dashboard` | 全栈看板：Profile / Notes / Chat / Demo Lab 聚合 |
+| `#cross-platform` | **大前端**：移动端 H5 视口、小程序分层、桌面运行时选型（可切换交互 Demo） |
 | `#tech-demos` | 工程 Demo：Web Vitals、API 延迟、虚拟列表、状态机、SSE、**Worker 计算**、**pg_trgm vs 内存检索** |
 | `#demo-lab` | 架构 / 性能 / 工作流判断台 |
 | `#topology` | 能力连接图 |

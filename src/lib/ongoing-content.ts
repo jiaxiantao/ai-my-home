@@ -52,6 +52,19 @@ export const currentTracks: CurrentTrack[] = [
     ],
   },
   {
+    slug: "cross-platform-demos",
+    title: "把大前端能力做成可切换的交互 Demo",
+    summary:
+      "首页 #cross-platform 区块用三个可切换面板演示 H5 视口、小程序分层和桌面运行时选型，和领域详情页内容对齐。",
+    status: "Active",
+    stack: ["H5", "Mini Program", "Electron", "Tauri"],
+    notes: [
+      "移动端 Demo 强调 viewport、DPR 与安全区，而不是只放一张手机框图。",
+      "小程序 Demo 按 View / Logic / Service / Bridge 拆职责，可切换宿主。",
+      "桌面 Demo 对比 Electron / Tauri / Capacitor 的包体与适用场景。",
+    ],
+  },
+  {
     slug: "case-writing",
     title: "把项目经验写成可以反复复用的案例",
     summary:

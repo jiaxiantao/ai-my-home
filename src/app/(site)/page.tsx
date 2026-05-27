@@ -38,6 +38,14 @@ const EngineeringShowcase = dynamic(
   { loading: () => <SectionSkeleton lines={5} /> },
 );
 
+const CrossPlatformShowcase = dynamic(
+  () =>
+    import("@/components/cross-platform-showcase").then(
+      (mod) => mod.CrossPlatformShowcase,
+    ),
+  { loading: () => <SectionSkeleton lines={4} /> },
+);
+
 const exploreLinks = [
   { href: "/cases", label: "Cases" },
   { href: "/insights", label: "Insights" },
@@ -77,7 +85,10 @@ export default async function Home() {
               <Link href="#dashboard" className="inline-flex items-center gap-2 rounded-full border border-white/10 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/5">
                 全栈看板
               </Link>
-              <Link href="#tech-demos" className="inline-flex items-center gap-2 rounded-full border border-white/10 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/5">
+              <Link href="#cross-platform" className="inline-flex items-center gap-2 rounded-full border border-white/10 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/5">
+                大前端
+              </Link>
+              <Link href="#tech-demos" className="inline-flex items-center gap-2 rounded-full border border-white/10 px-5 py-2.5 text-sm font-semibold text-slate-400 transition hover:bg-white/5">
                 工程 Demo
               </Link>
               <Link href="#demo-lab" className="inline-flex items-center gap-2 rounded-full border border-white/10 px-5 py-2.5 text-sm font-semibold text-slate-400 transition hover:bg-white/5">
@@ -111,6 +122,14 @@ export default async function Home() {
           <FullstackDashboard data={dashboard} llmLabel={llmLabel} />
         </section>
 
+        <section id="cross-platform" className="space-y-6">
+          <SectionHeading
+            eyebrow="Cross-Platform"
+            title="大前端：移动端 H5 · 小程序 · 桌面端"
+          />
+          <CrossPlatformShowcase />
+        </section>
+
         <section id="tech-demos" className="space-y-6">
           <SectionHeading
             eyebrow="Engineering Demos"
@@ -125,8 +144,8 @@ export default async function Home() {
         </section>
 
         <section className="space-y-6">
-          <SectionHeading eyebrow="Cases" title="结果可核对的三类交付" />
-          <div className="grid gap-4 lg:grid-cols-3">
+          <SectionHeading eyebrow="Cases" title="结果可核对的交付样例" />
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {caseStudies.map((caseStudy) => (
               <CaseProofCard key={caseStudy.slug} caseStudy={caseStudy} />
             ))}

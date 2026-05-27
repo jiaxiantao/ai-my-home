@@ -6,6 +6,7 @@ import { useState } from "react";
 
 const navItems = [
   { href: "/#topology", label: "能力图" },
+  { href: "/#cross-platform", label: "大前端" },
   { href: "/#dashboard", label: "看板" },
   { href: "/#tech-demos", label: "工程 Demo" },
   { href: "/#demo-lab", label: "判断台" },

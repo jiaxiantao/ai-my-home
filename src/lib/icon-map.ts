@@ -3,6 +3,7 @@ import {
   Database,
   Gauge,
   LayoutGrid,
+  Smartphone,
   Sparkles,
   Users,
   Workflow,
@@ -14,7 +15,8 @@ export type IconKey =
   | "gauge"
   | "database"
   | "sparkles"
-  | "users";
+  | "users"
+  | "smartphone";
 
 export const iconMap: Record<IconKey, LucideIcon> = {
   "layout-grid": LayoutGrid,
@@ -23,4 +25,5 @@ export const iconMap: Record<IconKey, LucideIcon> = {
   database: Database,
   sparkles: Sparkles,
   users: Users,
+  smartphone: Smartphone,
 };

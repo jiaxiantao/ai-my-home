@@ -55,6 +55,14 @@ const seededNotes = [
       "生产环境优先启用 pg_trgm，开发机没权限时自动回退 memory。工程 Demo 里并行请求两种 engine，能直观看到排序差异和延迟特征。",
     tags: ["PostgreSQL", "检索", "pg_trgm"],
   },
+  {
+    title: "大前端选型：先画能力矩阵再选框架",
+    slug: "cross-platform-capability-matrix",
+    summary: "H5、小程序、桌面壳共享业务模型，差异在运行时约束与发布链路。",
+    contentMarkdown:
+      "我会先列端能力（离线、支付、系统 API、包体、审核），再决定同构方案还是混合壳。移动端盯 viewport 与安全区；小程序盯 setData 与分包；桌面盯 Electron / Tauri / Capacitor 的包体与更新链。",
+    tags: ["大前端", "小程序", "桌面端", "H5"],
+  },
 ];
 
 async function main() {
