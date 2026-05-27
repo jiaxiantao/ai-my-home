@@ -288,20 +288,30 @@ async function runChatSseProbe(url: string): Promise<{
 
         if (block) {
           const event = parseSseEventName(block);
-          if (event) {
-            if (
-              (event === "references" && lastEvent && lastEvent !== "references") ||
-              (event === "chunk" && lastEvent === "done") ||
-              (event === "done" && lastEvent !== "chunk")
-            ) {
-              invalidOrder = true;
-            }
+            if (event) {
+              if (
+                (event === "references" && lastEvent && lastEvent !== "references") ||
+                (event === "meta" &&
+                  lastEvent &&
+                  lastEvent !== "references" &&
+                  lastEvent !== "meta") ||
+                (event === "chunk" &&
+                  lastEvent &&
+                  lastEvent !== "references" &&
+                  lastEvent !== "meta" &&
+                  lastEvent !== "chunk") ||
+                (event === "done" && lastEvent !== "chunk")
+              ) {
+                invalidOrder = true;
+              }
 
-            lastEvent = event;
+              lastEvent = event;
 
-            if (event === "references") {
-              sawReferences = true;
-            } else if (event === "chunk") {
+              if (event === "references") {
+                sawReferences = true;
+              } else if (event === "meta") {
+                // meta 事件在 references 之后、chunk 之前
+              } else if (event === "chunk") {
               sawChunk = true;
               if (ttftMs == null) {
                 ttftMs = Math.round(performance.now() - startedAt);

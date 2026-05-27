@@ -1,15 +1,26 @@
+import type { ChatStreamMeta } from "@/lib/chat-types";
+
 export type ChatReference = {
   id: string;
   title: string;
   slug: string;
   summary: string | null;
   tags: string[];
+  score?: number;
+  similarity?: number;
+};
+
+export type StreamChatOptions = {
+  signal?: AbortSignal;
+  regenerate?: boolean;
+  temperature?: number;
 };
 
 type StreamHandlers = {
   onReferences?: (references: ChatReference[]) => void;
+  onMeta?: (meta: ChatStreamMeta) => void;
   onChunk?: (text: string) => void;
-  onDone?: () => void;
+  onDone?: (payload?: { streamed?: boolean; mock?: boolean }) => void;
   onError?: (message: string) => void;
 };
 
@@ -37,6 +48,11 @@ function parseSseBlock(block: string, handlers: StreamHandlers) {
     return;
   }
 
+  if (eventName === "meta") {
+    handlers.onMeta?.(payload as unknown as ChatStreamMeta);
+    return;
+  }
+
   if (eventName === "chunk") {
     handlers.onChunk?.(String(payload.text ?? ""));
     return;
@@ -48,18 +64,25 @@ function parseSseBlock(block: string, handlers: StreamHandlers) {
   }
 
   if (eventName === "done") {
-    handlers.onDone?.();
+    handlers.onDone?.(payload as { streamed?: boolean; mock?: boolean });
   }
 }
 
 export async function streamChatQuestion(
   question: string,
   handlers: StreamHandlers,
+  options: StreamChatOptions = {},
 ) {
   const response = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ question, stream: true }),
+    signal: options.signal,
+    body: JSON.stringify({
+      question,
+      stream: true,
+      regenerate: options.regenerate,
+      temperature: options.temperature,
+    }),
   });
 
   if (!response.ok) {
@@ -86,32 +109,44 @@ export async function streamChatQuestion(
   const decoder = new TextDecoder();
   let buffer = "";
 
-  while (true) {
-    const { done, value } = await reader.read();
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
 
-    if (done) {
-      break;
-    }
-
-    buffer += decoder.decode(value, { stream: true });
-
-    let boundary = buffer.indexOf("\n\n");
-
-    while (boundary !== -1) {
-      const block = buffer.slice(0, boundary).trim();
-      buffer = buffer.slice(boundary + 2);
-
-      if (block) {
-        parseSseBlock(block, handlers);
+      if (done) {
+        break;
       }
 
-      boundary = buffer.indexOf("\n\n");
-    }
-  }
+      buffer += decoder.decode(value, { stream: true });
 
-  const tail = buffer.trim();
-  if (tail) {
-    parseSseBlock(tail, handlers);
+      let boundary = buffer.indexOf("\n\n");
+
+      while (boundary !== -1) {
+        const block = buffer.slice(0, boundary).trim();
+        buffer = buffer.slice(boundary + 2);
+
+        if (block) {
+          parseSseBlock(block, handlers);
+        }
+
+        boundary = buffer.indexOf("\n\n");
+      }
+    }
+
+    const tail = buffer.trim();
+    if (tail) {
+      parseSseBlock(tail, handlers);
+    }
+  } catch (error) {
+    if ((error as { name?: string }).name === "AbortError") {
+      handlers.onDone?.({ streamed: false });
+      return;
+    }
+
+    handlers.onError?.(
+      error instanceof Error ? error.message : "Stream failed",
+    );
+    return;
   }
 
   handlers.onDone?.();

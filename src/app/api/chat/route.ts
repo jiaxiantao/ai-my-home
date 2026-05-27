@@ -7,12 +7,18 @@ import {
   streamAnswerQuestionWithNotes,
   streamMockAnswer,
 } from "@/lib/ai-service";
+import {
+  buildAlternativePrompts,
+  computeConfidenceFromReferences,
+} from "@/lib/chat-confidence";
 import { isLlmConfigured } from "@/lib/llm-config";
 import { searchNotes } from "@/lib/note-search";
 
 const chatSchema = z.object({
   question: z.string().min(1, "Question is required"),
   stream: z.boolean().optional(),
+  regenerate: z.boolean().optional(),
+  temperature: z.number().min(0).max(1).optional(),
 });
 
 function mapReferences(
@@ -32,6 +38,7 @@ function mapReferences(
 function createSseStream(
   question: string,
   matchedNotes: Awaited<ReturnType<typeof searchNotes>>,
+  options: { temperature?: number; regenerate?: boolean } = {},
 ) {
   const encoder = new TextEncoder();
 
@@ -43,7 +50,16 @@ function createSseStream(
         );
       };
 
-      send("references", { references: mapReferences(matchedNotes) });
+      const references = mapReferences(matchedNotes);
+      send("references", { references });
+
+      const { confidence, confidenceLabel } =
+        computeConfidenceFromReferences(references);
+      send("meta", {
+        confidence,
+        confidenceLabel,
+        alternatives: buildAlternativePrompts(question, references),
+      });
 
       try {
         const contextBlocks = matchedNotes.map((note) => ({
@@ -55,8 +71,14 @@ function createSseStream(
         }));
 
         const useLlm = isLlmConfigured();
+        const temperature =
+          options.temperature ?? (options.regenerate ? 0.55 : 0.2);
         const answerStream = useLlm
-          ? streamAnswerQuestionWithNotes({ question, contextBlocks })
+          ? streamAnswerQuestionWithNotes({
+              question,
+              contextBlocks,
+              temperature,
+            })
           : streamMockAnswer(getMockStreamAnswer(question));
 
         for await (const chunk of answerStream) {
@@ -82,13 +104,19 @@ export async function POST(request: Request) {
     const matchedNotes = await searchNotes(body.question, 5);
 
     if (body.stream) {
-      return new Response(createSseStream(body.question, matchedNotes), {
+      return new Response(
+        createSseStream(body.question, matchedNotes, {
+          temperature: body.temperature,
+          regenerate: body.regenerate,
+        }),
+        {
         headers: {
           "Content-Type": "text/event-stream; charset=utf-8",
           "Cache-Control": "no-cache, no-transform",
           Connection: "keep-alive",
         },
-      });
+      },
+      );
     }
 
     const answer = await answerQuestionWithNotes({

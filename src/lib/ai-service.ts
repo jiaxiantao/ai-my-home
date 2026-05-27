@@ -80,14 +80,15 @@ export async function answerQuestionWithNotes({
 export async function* streamAnswerQuestionWithNotes({
   question,
   contextBlocks,
-}: AnswerQuestionArgs) {
+  temperature = 0.2,
+}: AnswerQuestionArgs & { temperature?: number }) {
   const client = getClient();
   const { model } = getLlmConfig();
   const context = buildContext(contextBlocks);
 
   const stream = await client.chat.completions.create({
     model,
-    temperature: 0.2,
+    temperature,
     stream: true,
     messages: buildMessages(question, context),
   });

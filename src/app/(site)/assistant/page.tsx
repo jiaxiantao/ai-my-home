@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { AssistantChat } from "@/components/assistant-chat";
+import { AssistantChatLoader } from "@/components/assistant-chat-loader";
 import { SystemRuntimeStrip } from "@/components/system-runtime-strip";
 import { getLlmLabel, isLlmConfigured } from "@/lib/llm-config";
 
@@ -31,10 +31,11 @@ export default async function AssistantPage({
       <section className="rounded-[2rem] border border-white/10 bg-white/5 p-8">
         <p className="text-sm uppercase tracking-[0.3em] text-slate-400">Assistant</p>
         <h1 className="mt-4 text-3xl font-semibold text-white md:text-4xl">
-          pg_trgm 召回 + SSE 流式回答
+          AI 对话工作台
         </h1>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-400">
-          笔记检索作为上下文，经 POST /api/chat 以 SSE 推送 token。带 ?q= 的链接会自动发起提问。
+          流式 Markdown、停止生成、图片/语音输入、多会话与分支、置信度与重新生成。笔记经
+          pg_trgm 召回后 SSE 推送回答。
         </p>
         <div className="mt-6">
           <SystemRuntimeStrip />
@@ -42,7 +43,7 @@ export default async function AssistantPage({
       </section>
 
       <section className="space-y-6">
-        <AssistantChat
+        <AssistantChatLoader
           initialQuestion={initialQuestion}
           autoRun={Boolean(initialQuestion?.trim())}
           llmLabel={llmLabel}
