@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Domain {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  title          String
+  strapline      String
+  summary        String
+  overview       String   @db.Text
+  icon           String
+  expertiseLevel String
+  highlights     String[]
+  principles     String[]
+  order          Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  topics         Topic[]
+}
+
+model Topic {
+  id           String   @id @default(cuid())
+  domainId     String
+  title        String
+  summary      String
+  bodyMarkdown String   @db.Text
+  order        Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  domain       Domain   @relation(fields: [domainId], references: [id], onDelete: Cascade)
+}
+
+model CaseStudy {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  summary   String
+  context   String   @db.Text
+  impact    String   @db.Text
+  stack     String[]
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Note {
+  id              String   @id @default(cuid())
+  title           String
+  slug            String   @unique
+  summary         String?
+  contentMarkdown String   @db.Text
+  tags            String[]
+  isPublished     Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([isPublished])
+  @@index([updatedAt])
+}
