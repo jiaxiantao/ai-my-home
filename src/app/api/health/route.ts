@@ -36,9 +36,11 @@ export async function GET() {
 
   const totalMs = Math.round(performance.now() - started);
   const ready = dbOk && llmConfigured;
+  // CI / 探活：ok 表示 DB 可用即可启动 smoke；ready 表示全栈（含 LLM 配置）
+  const ok = dbOk;
 
   return NextResponse.json({
-    ok: ready,
+    ok,
     ready,
     db: { connected: Boolean(db), ok: dbOk, latencyMs: dbMs },
     llm: { configured: llmConfigured, label: llmLabel },

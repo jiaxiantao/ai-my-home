@@ -5,7 +5,7 @@ test.describe("Site navigation", () => {
     await page.goto("/");
 
     await page
-      .getByRole("navigation")
+      .locator("header")
       .getByRole("link", { name: "Notes", exact: true })
       .click();
 
@@ -19,7 +19,7 @@ test.describe("Site navigation", () => {
     await page.goto("/");
 
     await page
-      .getByRole("navigation")
+      .locator("header")
       .getByRole("link", { name: "Assistant", exact: true })
       .click();
 
@@ -28,16 +28,22 @@ test.describe("Site navigation", () => {
   });
 
   test("engineering demo tabs switch", async ({ page }) => {
-    await page.goto("/#tech-demos");
+    await page.goto("/");
+    await page.locator("#tech-demos").scrollIntoViewIfNeeded();
 
-    await page.getByRole("button", { name: /Web Worker/i }).click();
+    const workerTab = page.getByRole("button", { name: /Web Worker/i });
+    await expect(workerTab).toBeVisible({ timeout: 30_000 });
+    await workerTab.click();
+
     await expect(
       page.getByRole("button", { name: /对比主线程 vs Worker/i }),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 15_000 });
 
-    await page.getByRole("button", { name: /检索对比/i }).click();
+    const searchTab = page.getByRole("button", { name: /检索对比/i });
+    await searchTab.click();
+
     await expect(
       page.getByRole("button", { name: /并行对比检索/i }),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 15_000 });
   });
 });

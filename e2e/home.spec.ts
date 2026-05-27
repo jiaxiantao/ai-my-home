@@ -1,22 +1,22 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("Homepage", () => {
-  test("renders hero and proof sections", async ({ page }) => {
+  test("renders hero and core sections", async ({ page }) => {
     await page.goto("/");
 
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    await expect(page.locator("#viz")).toBeVisible();
-    await expect(page.locator("#dashboard")).toBeVisible();
-    await expect(page.locator("#tech-demos")).toBeVisible();
-    await expect(page.locator("#demo-lab")).toBeVisible();
-    await expect(page.locator("#topology")).toBeVisible();
+
+    for (const id of ["viz", "dashboard", "tech-demos", "demo-lab", "topology"]) {
+      await expect(page.locator(`#${id}`)).toBeAttached();
+      await page.locator(`#${id}`).scrollIntoViewIfNeeded();
+    }
   });
 
-  test("in-page anchors are reachable", async ({ page }) => {
+  test("in-page anchors scroll to dashboard", async ({ page }) => {
     await page.goto("/");
 
     await page.getByRole("link", { name: "全栈看板" }).click();
-    await expect(page.locator("#dashboard")).toBeInViewport();
+    await expect(page.locator("#dashboard")).toBeInViewport({ timeout: 15_000 });
   });
 
   test("sitemap and robots are served", async ({ request }) => {

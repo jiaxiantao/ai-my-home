@@ -23,14 +23,19 @@ const checks: Check[] = [
         throw new Error(`expected 200, got ${status}`);
       }
 
-      const data = body as { ok?: boolean; db?: { connected?: boolean } };
+      const data = body as {
+        ok?: boolean;
+        db?: { connected?: boolean; ok?: boolean };
+      };
 
       if (typeof data.ok !== "boolean") {
         throw new Error("missing ok flag");
       }
 
-      if (!data.db?.connected) {
-        throw new Error("database not connected");
+      if (!data.db?.connected || !data.db?.ok) {
+        throw new Error(
+          `database unhealthy (connected=${String(data.db?.connected)}, ok=${String(data.db?.ok)})`,
+        );
       }
     },
   },

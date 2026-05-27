@@ -13,6 +13,7 @@ const staticPaths = [
   "/now",
   "/playbooks",
   "/resume",
+  "/status",
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {

@@ -10,6 +10,7 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     env:
+      # GitHub Actions service 容器通过服务名 postgres 访问（不要用错 host）
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ci?schema=public
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
       SMOKE_BASE_URL: http://localhost:3000
@@ -19,6 +20,8 @@ jobs:
       OLLAMA_BASE_URL: http://127.0.0.1:11434/v1
       OLLAMA_MODEL: llama3.2
       OLLAMA_API_KEY: ollama
+      HOSTNAME: "0.0.0.0"
+      PORT: "3000"
     services:
       postgres:
         image: postgres:16-alpine
@@ -30,13 +33,12 @@ jobs:
           - 5432:5432
         options: >-
           --health-cmd "pg_isready -U postgres -d ci"
-          --health-interval 10s
+          --health-interval 5s
           --health-timeout 5s
-          --health-retries 5
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
 
-      # 版本以 package.json 的 "packageManager" 为准，勿再写 version，否则会冲突
       - uses: pnpm/action-setup@v4
 
       - uses: actions/setup-node@v4
@@ -45,6 +47,25 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
+
+      - name: Wait for PostgreSQL
+        run: |
+          for i in $(seq 1 30); do
+            if node -e "
+              const { Client } = require('pg');
+              const client = new Client({ connectionString: process.env.DATABASE_URL });
+              client.connect()
+                .then(() => client.end())
+                .then(() => process.exit(0))
+                .catch(() => process.exit(1));
+            "; then
+              echo "Postgres ready after ${i} attempts"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Postgres did not become ready in time"
+          exit 1
 
       - run: pnpm typecheck
 
@@ -57,22 +78,27 @@ jobs:
       - name: Install Playwright browser
         run: pnpm exec playwright install chromium --with-deps
 
-      - name: API smoke and E2E (production server)
+      - name: Start production server
         run: |
           pnpm start > /tmp/next.log 2>&1 &
           echo $! > /tmp/next.pid
-          for i in $(seq 1 30); do
+          for i in $(seq 1 45); do
             if curl -sf "${SMOKE_BASE_URL}/api/health" > /dev/null; then
               echo "Server ready after ${i} attempts"
-              break
-            fi
-            if [ "$i" -eq 30 ]; then
-              echo "--- next.log ---"
-              cat /tmp/next.log
-              exit 1
+              exit 0
             fi
             sleep 2
           done
-          pnpm smoke
-          pnpm test:e2e
-          kill "$(cat /tmp/next.pid)" || true
+          echo "--- next.log ---"
+          cat /tmp/next.log
+          exit 1
+
+      - name: API smoke
+        run: pnpm smoke
+
+      - name: Playwright E2E
+        run: pnpm test:e2e
+
+      - name: Stop server
+        if: always()
+        run: kill "$(cat /tmp/next.pid)" 2>/dev/null || true
