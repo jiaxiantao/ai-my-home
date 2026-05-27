@@ -18,8 +18,10 @@ type ProbeRow = {
   label: string;
   href: string;
   ms?: number;
+  ttftMs?: number;
   status?: number;
   ok?: boolean;
+  detail?: string;
 };
 
 const PROBES: Array<{ key: string; label: string; href: string }> = [
@@ -27,6 +29,7 @@ const PROBES: Array<{ key: string; label: string; href: string }> = [
   { key: "profile", label: "GET /api/profile", href: "/api/profile" },
   { key: "dashboard", label: "GET /api/dashboard", href: "/api/dashboard" },
   { key: "chat", label: "POST /api/chat", href: "/api/chat" },
+  { key: "chat-sse", label: "SSE /api/chat (references→chunk→done)", href: "/api/chat" },
   {
     key: "search",
     label: "GET /api/notes/search?q=架构",
@@ -68,6 +71,20 @@ export function StatusProbe() {
       PROBES.map(async (probe) => {
         const started = performance.now();
         try {
+          if (probe.key === "chat-sse") {
+            const sse = await runChatSseProbe(probe.href);
+            return {
+              key: probe.key,
+              label: probe.label,
+              href: probe.href,
+              ms: Math.round(performance.now() - started),
+              ttftMs: sse.ttftMs,
+              status: sse.status,
+              ok: sse.ok,
+              detail: sse.detail,
+            };
+          }
+
           const res =
             probe.key === "chat"
               ? await fetch(probe.href, {
@@ -80,6 +97,7 @@ export function StatusProbe() {
                   }),
                 })
               : await fetch(probe.href, { cache: "no-store" });
+
           return {
             key: probe.key,
             label: probe.label,
@@ -96,6 +114,7 @@ export function StatusProbe() {
             ms: Math.round(performance.now() - started),
             status: 0,
             ok: false,
+            detail: probe.key === "chat-sse" ? "fetch failed" : undefined,
           };
         }
       }),
@@ -186,6 +205,12 @@ export function StatusProbe() {
                       {row.ok ? "✓" : "✗"} HTTP {row.status || "ERR"}
                     </span>
                     <span className="text-slate-400">{row.ms} ms</span>
+                    {row.ttftMs != null ? (
+                      <span className="text-slate-500">TTFT {row.ttftMs} ms</span>
+                    ) : null}
+                    {row.detail ? (
+                      <span className="text-slate-500">· {row.detail}</span>
+                    ) : null}
                   </div>
                 ) : (
                   <span className="font-mono text-[10px] text-slate-600">
@@ -205,6 +230,120 @@ export function StatusProbe() {
       ) : null}
     </div>
   );
+}
+
+async function runChatSseProbe(url: string): Promise<{
+  ok: boolean;
+  status: number;
+  ttftMs?: number;
+  detail: string;
+}> {
+  const controller = new AbortController();
+  const startedAt = performance.now();
+  const timeout = window.setTimeout(() => controller.abort(), 12_000);
+
+  let status = 0;
+  let sawReferences = false;
+  let sawChunk = false;
+  let sawDone = false;
+  let ttftMs: number | undefined;
+  let lastEvent: string | null = null;
+  let invalidOrder = false;
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+      signal: controller.signal,
+      body: JSON.stringify({
+        question: "status probe: sse",
+        stream: true,
+      }),
+    });
+
+    status = res.status;
+    if (!res.ok) {
+      return { ok: false, status, detail: "non-200" };
+    }
+
+    const reader = res.body?.getReader();
+    if (!reader) {
+      return { ok: false, status, detail: "no reader" };
+    }
+
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+
+      let boundary = buffer.indexOf("\n\n");
+      while (boundary !== -1) {
+        const block = buffer.slice(0, boundary).trim();
+        buffer = buffer.slice(boundary + 2);
+
+        if (block) {
+          const event = parseSseEventName(block);
+          if (event) {
+            if (
+              (event === "references" && lastEvent && lastEvent !== "references") ||
+              (event === "chunk" && lastEvent === "done") ||
+              (event === "done" && lastEvent !== "chunk")
+            ) {
+              invalidOrder = true;
+            }
+
+            lastEvent = event;
+
+            if (event === "references") {
+              sawReferences = true;
+            } else if (event === "chunk") {
+              sawChunk = true;
+              if (ttftMs == null) {
+                ttftMs = Math.round(performance.now() - startedAt);
+              }
+            } else if (event === "done") {
+              sawDone = true;
+              return {
+                ok: sawReferences && sawChunk && !invalidOrder,
+                status,
+                ttftMs,
+                detail: invalidOrder ? "order invalid" : "ok",
+              };
+            }
+          }
+        }
+
+        boundary = buffer.indexOf("\n\n");
+      }
+    }
+
+    return {
+      ok: sawReferences && sawChunk && sawDone && !invalidOrder,
+      status,
+      ttftMs,
+      detail: "stream ended early",
+    };
+  } catch (error) {
+    const aborted = (error as { name?: string }).name === "AbortError";
+    return { ok: false, status, ttftMs, detail: aborted ? "timeout" : "error" };
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
+
+function parseSseEventName(block: string) {
+  const lines = block.split("\n");
+  for (const line of lines) {
+    if (line.startsWith("event:")) {
+      return line.slice(6).trim();
+    }
+  }
+  return null;
 }
 
 function StatusCard({
