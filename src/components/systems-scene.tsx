@@ -121,6 +121,7 @@ export function SystemsScene({
         camera={{ position: [0, 1.2, 6.2], fov: 48 }}
         dpr={[1, 2]}
         gl={{ antialias: true, alpha: true }}
+        legacy={false}
       >
         <color attach="background" args={["#020617"]} />
         <fog attach="fog" args={["#020617", 6, 14]} />

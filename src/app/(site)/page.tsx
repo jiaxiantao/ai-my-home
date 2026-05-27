@@ -70,31 +70,19 @@ export default async function Home() {
             <p className="max-w-lg text-sm leading-7 text-slate-400">{profile.intro}</p>
 
             <div className="flex flex-wrap gap-3">
-              <a
-                href="#viz"
-                className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-100"
-              >
+              <Link href="#viz" className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-100">
                 3D + 图表
                 <ArrowRight className="h-4 w-4" />
-              </a>
-              <a
-                href="#dashboard"
-                className="inline-flex items-center gap-2 rounded-full border border-white/10 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/5"
-              >
+              </Link>
+              <Link href="#dashboard" className="inline-flex items-center gap-2 rounded-full border border-white/10 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/5">
                 全栈看板
-              </a>
-              <a
-                href="#tech-demos"
-                className="inline-flex items-center gap-2 rounded-full border border-white/10 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/5"
-              >
+              </Link>
+              <Link href="#tech-demos" className="inline-flex items-center gap-2 rounded-full border border-white/10 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/5">
                 工程 Demo
-              </a>
-              <a
-                href="#demo-lab"
-                className="inline-flex items-center gap-2 rounded-full border border-white/10 px-5 py-2.5 text-sm font-semibold text-slate-400 transition hover:bg-white/5"
-              >
+              </Link>
+              <Link href="#demo-lab" className="inline-flex items-center gap-2 rounded-full border border-white/10 px-5 py-2.5 text-sm font-semibold text-slate-400 transition hover:bg-white/5">
                 判断台
-              </a>
+              </Link>
               <Link
                 href="/resume"
                 className="inline-flex items-center rounded-full border border-white/10 px-5 py-2.5 text-sm font-semibold text-slate-300 transition hover:text-white"
@@ -153,13 +141,13 @@ export default async function Home() {
         <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-4">
           <div className="flex flex-wrap gap-2">
             {exploreLinks.map((item) => (
-              <a
+              <Link
                 key={item.href}
                 href={item.href}
                 className="rounded-full border border-white/10 px-3 py-1.5 text-sm text-slate-300 transition hover:border-cyan-300/30 hover:text-white"
               >
                 {item.label}
-              </a>
+              </Link>
             ))}
           </div>
           <div className="flex flex-wrap gap-2">

@@ -12,6 +12,7 @@ const navItems = [
   { href: "/notes", label: "Notes" },
   { href: "/assistant", label: "Assistant" },
   { href: "/cases", label: "Cases" },
+  { href: "/status", label: "Status" },
 ] as const;
 
 export function SiteHeader() {

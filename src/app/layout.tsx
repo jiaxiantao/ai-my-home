@@ -42,7 +42,7 @@ export default function RootLayout({
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
   return (
-    <html lang="zh-CN" className="h-full antialiased">
+    <html lang="zh-CN" className="h-full antialiased" data-scroll-behavior="smooth">
       <body className="relative min-h-full flex flex-col bg-transparent">
         <JsonLd
           data={[
