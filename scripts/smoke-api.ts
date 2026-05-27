@@ -47,9 +47,9 @@ const checks: Check[] = [
         throw new Error(`expected 200, got ${status}`);
       }
 
-      const data = body as { name?: string };
+      const data = body as { profile?: { name?: string } };
 
-      if (!data.name) {
+      if (!data.profile?.name) {
         throw new Error("missing profile.name");
       }
     },
