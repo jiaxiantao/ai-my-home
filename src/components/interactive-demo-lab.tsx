@@ -1,7 +1,8 @@
 /* eslint-disable @next/next/no-html-link-for-pages */
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Activity,
   ArrowRight,
@@ -27,6 +28,13 @@ import {
   type BlueprintAxisId,
   type PerformanceLaneId,
 } from "@/lib/demo-lab-content";
+import { SystemMapPanel } from "@/components/system-map-panel";
+import {
+  buildDemoLabShareUrl,
+  buildDemoLabQuery,
+  parseDemoLabState,
+  type DemoLabUrlState,
+} from "@/lib/demo-lab-url-state";
 
 type DemoTabId = "architecture" | "performance" | "workflow" | "blueprint";
 
@@ -58,7 +66,86 @@ const demoTabs = [
 ];
 
 export function InteractiveDemoLab() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const didInitRef = useRef(false);
+  const [copied, setCopied] = useState(false);
+
   const [activeTab, setActiveTab] = useState<DemoTabId>("architecture");
+  const [selectedScenarioId, setSelectedScenarioId] = useState(
+    architectureScenarios[0].id,
+  );
+
+  const [contextId, setContextId] = useState(performanceContexts[0].id);
+  const [selectedSignalIds, setSelectedSignalIds] = useState<string[]>([
+    "slow-first-screen",
+    "third-party-drag",
+  ]);
+
+  const [enabledCapabilities, setEnabledCapabilities] = useState<string[]>([
+    "rules",
+    "knowledge",
+    "validation",
+    "review",
+  ]);
+
+  const [modeId, setModeId] = useState(blueprintModes[1].id);
+  const [selectedConstraintIds, setSelectedConstraintIds] = useState<string[]>([
+    "seo",
+    "team-collab",
+    "content-heavy",
+  ]);
+
+  useEffect(() => {
+    if (didInitRef.current) return;
+
+    const parsed = parseDemoLabState(searchParams);
+
+    setActiveTab((current) => parsed.tab ?? current);
+    setSelectedScenarioId((current) => parsed.scenario ?? current);
+    setContextId((current) => parsed.context ?? current);
+    setSelectedSignalIds((current) =>
+      parsed.signals && parsed.signals.length ? parsed.signals : current,
+    );
+    setEnabledCapabilities((current) =>
+      parsed.capabilities && parsed.capabilities.length
+        ? parsed.capabilities
+        : current,
+    );
+    setSelectedConstraintIds((current) =>
+      parsed.constraints && parsed.constraints.length
+        ? parsed.constraints
+        : current,
+    );
+    setModeId((current) => parsed.mode ?? current);
+
+    didInitRef.current = true;
+  }, [searchParams]);
+
+  useEffect(() => {
+    const state: DemoLabUrlState = {
+      tab: activeTab,
+      scenario: selectedScenarioId,
+      context: contextId,
+      signals: selectedSignalIds,
+      capabilities: enabledCapabilities,
+      constraints: selectedConstraintIds,
+      mode: modeId,
+    };
+
+    const query = buildDemoLabQuery(state);
+    router.replace(`/?${query}#demo-lab`, { scroll: false });
+  }, [
+    activeTab,
+    selectedScenarioId,
+    contextId,
+    selectedSignalIds,
+    enabledCapabilities,
+    selectedConstraintIds,
+    modeId,
+    router,
+  ]);
 
   return (
     <div className="grid gap-6">
@@ -90,21 +177,95 @@ export function InteractiveDemoLab() {
         })}
       </div>
 
-      {activeTab === "architecture" ? <ArchitectureDemo /> : null}
-      {activeTab === "performance" ? <PerformanceDemo /> : null}
-      {activeTab === "workflow" ? <WorkflowDemo /> : null}
-      {activeTab === "blueprint" ? <BlueprintDemo /> : null}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-xs leading-6 text-slate-400">
+          这是可分享的判断台：URL 会同步当前选择。
+        </p>
+        <button
+          type="button"
+          onClick={async () => {
+            const state: DemoLabUrlState = {
+              tab: activeTab,
+              scenario: selectedScenarioId,
+              context: contextId,
+              signals: selectedSignalIds,
+              capabilities: enabledCapabilities,
+              constraints: selectedConstraintIds,
+              mode: modeId,
+            };
+
+            await navigator.clipboard.writeText(buildDemoLabShareUrl(state));
+            setCopied(true);
+            window.setTimeout(() => setCopied(false), 1800);
+          }}
+          className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:bg-white/10"
+        >
+          {copied ? "已复制链接" : "复制本次判断链接"}
+        </button>
+      </div>
+
+      {activeTab === "architecture" ? (
+        <ArchitectureDemo
+          scenarioId={selectedScenarioId}
+          onChangeScenarioId={setSelectedScenarioId}
+        />
+      ) : null}
+      {activeTab === "performance" ? (
+        <PerformanceDemo
+          contextId={contextId}
+          selectedSignalIds={selectedSignalIds}
+          onChangeContextId={setContextId}
+          onToggleSignal={(id) =>
+            setSelectedSignalIds((current) => {
+              if (current.includes(id)) {
+                return current.filter((item) => item !== id);
+              }
+              return [...current, id];
+            })
+          }
+        />
+      ) : null}
+      {activeTab === "workflow" ? (
+        <WorkflowDemo
+          enabledCapabilities={enabledCapabilities}
+          onToggleCapability={(id) =>
+            setEnabledCapabilities((current) => {
+              if (current.includes(id)) {
+                return current.filter((item) => item !== id);
+              }
+              return [...current, id];
+            })
+          }
+        />
+      ) : null}
+      {activeTab === "blueprint" ? (
+        <BlueprintDemo
+          modeId={modeId}
+          selectedConstraintIds={selectedConstraintIds}
+          onChangeModeId={setModeId}
+          onToggleConstraint={(id) =>
+            setSelectedConstraintIds((current) => {
+              if (current.includes(id)) {
+                return current.filter((item) => item !== id);
+              }
+              return [...current, id];
+            })
+          }
+        />
+      ) : null}
     </div>
   );
 }
 
-function ArchitectureDemo() {
-  const [selectedScenarioId, setSelectedScenarioId] = useState(
-    architectureScenarios[0].id,
-  );
-
+function ArchitectureDemo({
+  scenarioId,
+  onChangeScenarioId,
+}: {
+  scenarioId: string;
+  onChangeScenarioId: (id: string) => void;
+}) {
   const scenario =
-    architectureScenarios.find((item) => item.id === selectedScenarioId) ??
+    architectureScenarios.find((item) => item.id === scenarioId) ??
     architectureScenarios[0];
 
   return (
@@ -118,7 +279,7 @@ function ArchitectureDemo() {
             <button
               key={item.id}
               type="button"
-              onClick={() => setSelectedScenarioId(item.id)}
+              onClick={() => onChangeScenarioId(item.id)}
               className={`rounded-[1.5rem] border p-5 text-left transition ${
                 item.id === scenario.id
                   ? "border-cyan-300/35 bg-cyan-300/10"
@@ -195,18 +356,24 @@ function ArchitectureDemo() {
             <ArrowRight className="h-4 w-4" />
           </a>
         </article>
+
+        <SystemMapPanel scenarioId={scenarioId} />
       </div>
     </div>
   );
 }
 
-function PerformanceDemo() {
-  const [contextId, setContextId] = useState(performanceContexts[0].id);
-  const [selectedSignalIds, setSelectedSignalIds] = useState<string[]>([
-    "slow-first-screen",
-    "third-party-drag",
-  ]);
-
+function PerformanceDemo({
+  contextId,
+  selectedSignalIds,
+  onChangeContextId,
+  onToggleSignal,
+}: {
+  contextId: string;
+  selectedSignalIds: string[];
+  onChangeContextId: (id: string) => void;
+  onToggleSignal: (id: string) => void;
+}) {
   const context =
     performanceContexts.find((item) => item.id === contextId) ??
     performanceContexts[0];
@@ -249,16 +416,6 @@ function PerformanceDemo() {
     }));
   }, [context, selectedSignalIds]);
 
-  function toggleSignal(id: string) {
-    setSelectedSignalIds((current) => {
-      if (current.includes(id)) {
-        return current.filter((item) => item !== id);
-      }
-
-      return [...current, id];
-    });
-  }
-
   return (
     <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
       <article className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-7">
@@ -271,7 +428,7 @@ function PerformanceDemo() {
             <button
               key={item.id}
               type="button"
-              onClick={() => setContextId(item.id)}
+              onClick={() => onChangeContextId(item.id)}
               className={`rounded-[1.5rem] border p-4 text-left transition ${
                 item.id === context.id
                   ? "border-cyan-300/35 bg-cyan-300/10"
@@ -292,7 +449,7 @@ function PerformanceDemo() {
               <button
                 key={signal.id}
                 type="button"
-                onClick={() => toggleSignal(signal.id)}
+                onClick={() => onToggleSignal(signal.id)}
                 className={`rounded-[1.5rem] border p-4 text-left transition ${
                   isActive
                     ? "border-cyan-300/35 bg-cyan-300/10"
@@ -381,13 +538,13 @@ function PerformanceDemo() {
   );
 }
 
-function WorkflowDemo() {
-  const [enabledCapabilities, setEnabledCapabilities] = useState<string[]>([
-    "rules",
-    "knowledge",
-    "validation",
-    "review",
-  ]);
+function WorkflowDemo({
+  enabledCapabilities,
+  onToggleCapability,
+}: {
+  enabledCapabilities: string[];
+  onToggleCapability: (id: string) => void;
+}) {
 
   const workflowScore = useMemo(() => {
     return workflowCapabilities.reduce((total, capability) => {
@@ -417,16 +574,6 @@ function WorkflowDemo() {
       enabledCapabilities.includes("knowledge"),
   };
 
-  function toggleCapability(id: string) {
-    setEnabledCapabilities((current) => {
-      if (current.includes(id)) {
-        return current.filter((item) => item !== id);
-      }
-
-      return [...current, id];
-    });
-  }
-
   return (
     <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
       <article className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-7">
@@ -441,7 +588,7 @@ function WorkflowDemo() {
               <button
                 key={capability.id}
                 type="button"
-                onClick={() => toggleCapability(capability.id)}
+                onClick={() => onToggleCapability(capability.id)}
                 className={`rounded-[1.5rem] border p-4 text-left transition ${
                   enabled
                     ? "border-cyan-300/35 bg-cyan-300/10"
@@ -535,14 +682,17 @@ function WorkflowDemo() {
   );
 }
 
-function BlueprintDemo() {
-  const [modeId, setModeId] = useState(blueprintModes[1].id);
-  const [selectedConstraintIds, setSelectedConstraintIds] = useState<string[]>([
-    "seo",
-    "team-collab",
-    "content-heavy",
-  ]);
-
+function BlueprintDemo({
+  modeId,
+  selectedConstraintIds,
+  onChangeModeId,
+  onToggleConstraint,
+}: {
+  modeId: string;
+  selectedConstraintIds: string[];
+  onChangeModeId: (id: string) => void;
+  onToggleConstraint: (id: string) => void;
+}) {
   const activeMode =
     blueprintModes.find((item) => item.id === modeId) ?? blueprintModes[0];
 
@@ -600,16 +750,6 @@ function BlueprintDemo() {
           .join(" / ")
       : "当前约束还不够，建议再勾几项再看";
 
-  function toggleConstraint(id: string) {
-    setSelectedConstraintIds((current) => {
-      if (current.includes(id)) {
-        return current.filter((item) => item !== id);
-      }
-
-      return [...current, id];
-    });
-  }
-
   return (
     <div className="grid gap-6 xl:grid-cols-[0.92fr_1.08fr]">
       <article className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-7">
@@ -622,7 +762,7 @@ function BlueprintDemo() {
             <button
               key={mode.id}
               type="button"
-              onClick={() => setModeId(mode.id)}
+              onClick={() => onChangeModeId(mode.id)}
               className={`rounded-[1.5rem] border p-4 text-left transition ${
                 mode.id === activeMode.id
                   ? "border-cyan-300/35 bg-cyan-300/10"
@@ -643,7 +783,7 @@ function BlueprintDemo() {
               <button
                 key={constraint.id}
                 type="button"
-                onClick={() => toggleConstraint(constraint.id)}
+                onClick={() => onToggleConstraint(constraint.id)}
                 className={`rounded-[1.5rem] border p-4 text-left transition ${
                   active
                     ? "border-cyan-300/35 bg-cyan-300/10"

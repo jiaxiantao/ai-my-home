@@ -26,6 +26,16 @@ test.describe("Homepage", () => {
     await expect(page.locator("#dashboard")).toBeInViewport({ timeout: 15_000 });
   });
 
+  test("demo lab URL state renders system map", async ({ page }) => {
+    await page.goto(
+      "/?lab=architecture&scenario=content-platform#demo-lab",
+    );
+
+    await expect(page.getByText("System Map")).toBeVisible({
+      timeout: 20_000,
+    });
+  });
+
   test("sitemap and robots are served", async ({ request }) => {
     const sitemap = await request.get("/sitemap.xml");
     expect(sitemap.ok()).toBeTruthy();

@@ -5,13 +5,22 @@ import { Activity, Cpu, Gauge, Layers, Radio, Search, Workflow } from "lucide-re
 
 import { ApiLatencyDemo } from "@/components/demos/api-latency-demo";
 import { CheckoutFlowDemo } from "@/components/demos/checkout-flow-demo";
+import { DebounceThrottleDemo } from "@/components/demos/debounce-throttle-demo";
 import { SseInspectorDemo } from "@/components/demos/sse-inspector-demo";
 import { SearchCompareDemo } from "@/components/demos/search-compare-demo";
 import { VirtualScrollDemo } from "@/components/demos/virtual-scroll-demo";
 import { WebVitalsDemo } from "@/components/demos/web-vitals-demo";
 import { WorkerComputeDemo } from "@/components/demos/worker-compute-demo";
 
-type DemoId = "vitals" | "api" | "virtual" | "state" | "sse" | "worker" | "search";
+type DemoId =
+  | "vitals"
+  | "api"
+  | "virtual"
+  | "state"
+  | "sse"
+  | "worker"
+  | "search"
+  | "debounce";
 
 const demos: Array<{
   id: DemoId;
@@ -61,6 +70,12 @@ const demos: Array<{
     tech: "pg_trgm vs memory",
     icon: Search,
   },
+  {
+    id: "debounce",
+    title: "debounce / throttle",
+    tech: "输入节奏控制",
+    icon: Workflow,
+  },
 ];
 
 export function EngineeringShowcase() {
@@ -104,6 +119,7 @@ export function EngineeringShowcase() {
         {active === "sse" ? <SseInspectorDemo /> : null}
         {active === "worker" ? <WorkerComputeDemo /> : null}
         {active === "search" ? <SearchCompareDemo /> : null}
+        {active === "debounce" ? <DebounceThrottleDemo /> : null}
       </div>
     </div>
   );
