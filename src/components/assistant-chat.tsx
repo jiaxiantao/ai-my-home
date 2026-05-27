@@ -1,13 +1,19 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 
 import { streamChatQuestion, type ChatReference } from "@/lib/chat-stream";
 
 type AssistantMessage = {
   role: "user" | "assistant";
   content: string;
+};
+
+type ChatMetrics = {
+  searchMs?: number;
+  ttftMs?: number;
+  totalMs?: number;
 };
 
 const starterPrompts = [
@@ -31,6 +37,7 @@ export function AssistantChat({
   const [references, setReferences] = useState<ChatReference[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [metrics, setMetrics] = useState<ChatMetrics>({});
 
   useEffect(() => {
     const trimmed = initialQuestion?.trim();
@@ -47,6 +54,7 @@ export function AssistantChat({
     setError(null);
     setIsSubmitting(true);
     setReferences([]);
+    setMetrics({});
 
     setMessages((current) => [
       ...current,
@@ -55,11 +63,30 @@ export function AssistantChat({
     ]);
 
     let streamed = "";
+    const startedAt = performance.now();
+    let firstRefAt: number | null = null;
+    let firstChunkAt: number | null = null;
 
     try {
       await streamChatQuestion(currentQuestion, {
-        onReferences: (items) => setReferences(items),
+        onReferences: (items) => {
+          if (firstRefAt === null) {
+            firstRefAt = performance.now();
+            setMetrics((current) => ({
+              ...current,
+              searchMs: Math.round(firstRefAt! - startedAt),
+            }));
+          }
+          setReferences(items);
+        },
         onChunk: (text) => {
+          if (firstChunkAt === null) {
+            firstChunkAt = performance.now();
+            setMetrics((current) => ({
+              ...current,
+              ttftMs: Math.round(firstChunkAt! - startedAt),
+            }));
+          }
           streamed += text;
           setMessages((current) => {
             const next = [...current];
@@ -74,6 +101,13 @@ export function AssistantChat({
         },
         onError: (message) => {
           throw new Error(message);
+        },
+        onDone: () => {
+          const doneAt = performance.now();
+          setMetrics((current) => ({
+            ...current,
+            totalMs: Math.round(doneAt - startedAt),
+          }));
         },
       });
 
@@ -209,8 +243,28 @@ export function AssistantChat({
             References
           </p>
           <p className="mt-3 text-sm text-slate-400">
-            流开始前先推送 references 事件（含 trgm score）。
+            流开始前先推送 references 事件（含 trgm score），下方是最近一次问答的简单耗时。
           </p>
+          <div className="mt-4 grid gap-2 text-xs font-mono text-slate-300">
+            <div className="flex justify-between gap-4 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+              <span>检索 (references)</span>
+              <span className="text-cyan-100">
+                {metrics.searchMs != null ? `${metrics.searchMs} ms` : "—"}
+              </span>
+            </div>
+            <div className="flex justify-between gap-4 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+              <span>TTFT (首 token)</span>
+              <span className="text-cyan-100">
+                {metrics.ttftMs != null ? `${metrics.ttftMs} ms` : "—"}
+              </span>
+            </div>
+            <div className="flex justify-between gap-4 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+              <span>Total</span>
+              <span className="text-cyan-100">
+                {metrics.totalMs != null ? `${metrics.totalMs} ms` : "—"}
+              </span>
+            </div>
+          </div>
         </article>
 
         {references.length ? (
