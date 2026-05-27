@@ -58,13 +58,31 @@ export const architectureSystemMap: Record<string, SystemArtifact[]> = {
       label: "Chat SSE",
       href: "/api/chat",
       kind: "api",
-      summary: "references → chunk → done，含 meta 遥测",
+      summary: "references → meta → chunk → done",
+    },
+    {
+      label: "Agent SSE",
+      href: "/api/agent",
+      kind: "api",
+      summary: "plan → tool_call → tool_result → answer",
     },
     {
       label: "Assistant",
       href: "/assistant",
       kind: "route",
-      summary: "RAG 对话 + 可观测面板",
+      summary: "RAG 多轮对话工作台",
+    },
+    {
+      label: "Agents",
+      href: "/agents",
+      kind: "route",
+      summary: "工具循环编排演示",
+    },
+    {
+      label: "端侧 AI",
+      href: "/#edge-ai",
+      kind: "route",
+      summary: "Transformers.js · WASM · MediaPipe",
     },
     {
       label: "Health",

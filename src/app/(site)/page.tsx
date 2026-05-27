@@ -46,11 +46,18 @@ const CrossPlatformShowcase = dynamic(
   { loading: () => <SectionSkeleton lines={4} /> },
 );
 
+const EdgeAiShowcase = dynamic(
+  () =>
+    import("@/components/edge-ai-showcase").then((mod) => mod.EdgeAiShowcase),
+  { loading: () => <SectionSkeleton lines={4} /> },
+);
+
 const exploreLinks = [
   { href: "/cases", label: "Cases" },
   { href: "/insights", label: "Insights" },
   { href: "/notes", label: "Notes" },
   { href: "/assistant", label: "Assistant" },
+  { href: "/agents", label: "Agents" },
   { href: "/experience", label: "Experience" },
   { href: "/playbooks", label: "Playbooks" },
 ] as const;
@@ -87,6 +94,9 @@ export default async function Home() {
               </Link>
               <Link href="#cross-platform" className="inline-flex items-center gap-2 rounded-full border border-white/10 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/5">
                 大前端
+              </Link>
+              <Link href="#edge-ai" className="inline-flex items-center gap-2 rounded-full border border-white/10 px-5 py-2.5 text-sm font-semibold text-slate-400 transition hover:bg-white/5">
+                端侧 AI
               </Link>
               <Link href="#tech-demos" className="inline-flex items-center gap-2 rounded-full border border-white/10 px-5 py-2.5 text-sm font-semibold text-slate-400 transition hover:bg-white/5">
                 工程 Demo
@@ -128,6 +138,14 @@ export default async function Home() {
             title="大前端：移动端 H5 · 小程序 · 桌面端"
           />
           <CrossPlatformShowcase />
+        </section>
+
+        <section id="edge-ai" className="space-y-6">
+          <SectionHeading
+            eyebrow="Edge AI"
+            title="浏览器端智能：Transformers.js · WASM · MediaPipe · Agent"
+          />
+          <EdgeAiShowcase />
         </section>
 
         <section id="tech-demos" className="space-y-6">

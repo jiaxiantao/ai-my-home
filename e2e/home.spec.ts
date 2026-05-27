@@ -10,6 +10,7 @@ test.describe("Homepage", () => {
       "viz",
       "dashboard",
       "cross-platform",
+      "edge-ai",
       "tech-demos",
       "demo-lab",
       "topology",

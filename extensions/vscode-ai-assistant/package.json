@@ -1,0 +1,53 @@
+{
+  "name": "ai-my-home-assistant",
+  "displayName": "AI My Home · Smart Assistant",
+  "description": "Demo VS Code extension: AI explain / complete / refactor via HTTP API (LSP-ready layout).",
+  "version": "0.1.0",
+  "publisher": "ai-my-home",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Other", "Machine Learning"],
+  "activationEvents": ["onLanguage:typescript", "onLanguage:javascript", "onLanguage:typescriptreact"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "aiMyHome.explainSelection",
+        "title": "AI My Home: Explain Selection"
+      },
+      {
+        "command": "aiMyHome.completeSelection",
+        "title": "AI My Home: Complete Selection"
+      },
+      {
+        "command": "aiMyHome.refactorSelection",
+        "title": "AI My Home: Refactor Selection"
+      }
+    ],
+    "configuration": {
+      "title": "AI My Home",
+      "properties": {
+        "aiMyHome.apiBaseUrl": {
+          "type": "string",
+          "default": "http://localhost:3000",
+          "description": "Site base URL for /api/chat"
+        },
+        "aiMyHome.useAgentApi": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use /api/agent for multi-step flows"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p .",
+    "watch": "tsc -watch -p ."
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5"
+  }
+}

@@ -8,6 +8,7 @@
 - TypeScript · Tailwind CSS 4
 - Prisma · PostgreSQL（含 `pg_trgm` 模糊检索）
 - Three.js · ECharts · Web Worker
+- **Transformers.js** · **MediaPipe Tasks Vision**（浏览器端推理）
 - 默认 **Ollama**（OpenAI 兼容）· Docker Compose
 
 ## 首页模块（`/`）
@@ -17,6 +18,7 @@
 | `#viz` | Three.js 拓扑 + ECharts + 笔记分析（PostgreSQL） |
 | `#dashboard` | 全栈看板：Profile / Notes / Chat / Demo Lab 聚合 |
 | `#cross-platform` | **大前端**：移动端 H5 视口、小程序分层、桌面运行时选型（可切换交互 Demo） |
+| `#edge-ai` | **端侧智能**：Transformers.js 情感分类、WASM/Worker 基准、MediaPipe 姿势、Agent 工具循环 |
 | `#tech-demos` | 工程 Demo：Web Vitals、API 延迟、虚拟列表、状态机、SSE、**Worker 计算**、**pg_trgm vs 内存检索** |
 | `#demo-lab` | 架构 / 性能 / 工作流判断台 |
 | `#topology` | 能力连接图 |
@@ -57,7 +59,22 @@ ollama pull llama3.2
 ollama serve
 ```
 
-Assistant（`/assistant`）与 `/api/chat` 使用同一套 LLM 配置。
+Assistant（`/assistant`）与 `/api/chat` 使用同一套 LLM 配置。`/agents` 提供工具编排循环（`/api/agent` SSE）。
+
+### 端侧 AI 与 Agent
+
+- 首页 `#edge-ai`：按需加载 `@xenova/transformers`、`@mediapipe/tasks-vision`（首次会下载模型）
+- `/agents`：规划 → `search_notes` / `calculate` / `current_time` → 最终回答
+- CI 设置 `LLM_DISABLED=1` 时使用规则规划器，不依赖 Ollama
+
+### VS Code 插件（演示）
+
+```bash
+cd extensions/vscode-ai-assistant
+npm install && npm run compile
+```
+
+F5 启动扩展开发宿主；命令：解释 / 补全 / 重构选中代码（调用本站 Chat API）。详见 `extensions/vscode-ai-assistant/README.md`。
 
 ## API 速览
 
@@ -66,6 +83,7 @@ Assistant（`/assistant`）与 `/api/chat` 使用同一套 LLM 配置。
 - `GET /api/notes/search?q=&limit=&engine=memory` — 笔记检索（默认 pg_trgm，可强制 memory）
 - `GET /api/analytics/notes` — 图表数据
 - `POST /api/chat` — SSE / JSON 对话
+- `POST /api/agent` — Agent 工具循环（SSE trace）
 - `GET /api/health` — DB / LLM / pg_trgm 状态（首页实时探测）
 
 ## Docker

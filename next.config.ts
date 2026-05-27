@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
       "./node_modules/@prisma/client/**/*",
     ],
   },
+  turbopack: {},
 };
 
 export default nextConfig;

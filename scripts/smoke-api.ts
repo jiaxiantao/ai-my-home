@@ -117,6 +117,17 @@ const checks: Array<Check & CheckRequest> = [
     },
   },
   {
+    name: "agent",
+    path: "/api/agent",
+    method: "POST",
+    body: { message: "smoke: what time is it" },
+    assert: (status) => {
+      if (status !== 200) {
+        throw new Error(`expected 200, got ${status}`);
+      }
+    },
+  },
+  {
     name: "analytics",
     path: "/api/analytics/notes",
     assert: (status, body) => {
@@ -135,18 +146,40 @@ const checks: Array<Check & CheckRequest> = [
 
 async function runCheck(check: Check) {
   const url = `${base.replace(/\/$/, "")}${check.path}`;
+  const method = (check as Check & CheckRequest).method ?? "GET";
   const response = await fetch(url, {
-    method: (check as Check & CheckRequest).method ?? "GET",
+    method,
     headers:
-      (check as Check & CheckRequest).method === "POST"
-        ? { "Content-Type": "application/json" }
-        : undefined,
+      method === "POST" ? { "Content-Type": "application/json" } : undefined,
     body:
-      (check as Check & CheckRequest).method === "POST"
+      method === "POST"
         ? JSON.stringify((check as Check & CheckRequest).body ?? {})
         : undefined,
     cache: "no-store",
   });
+
+  const contentType = response.headers.get("content-type") ?? "";
+
+  if (contentType.includes("text/event-stream")) {
+    const text = await response.text();
+
+    if (!text.includes("event:")) {
+      throw new Error(`${check.name}: empty SSE body`);
+    }
+
+    try {
+      check.assert(response.status, { stream: true });
+    } catch (error) {
+      const detail = text.slice(0, 400);
+      throw new Error(
+        `${error instanceof Error ? error.message : error} · ${check.name} HTTP ${response.status} · ${detail}`,
+      );
+    }
+
+    console.log(`✓ ${check.name} ${check.path} (SSE)`);
+    return;
+  }
+
   const text = await response.text();
   let body: unknown = null;
 

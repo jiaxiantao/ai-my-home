@@ -1,0 +1,59 @@
+import { executeAgentTool } from "@/lib/agent/tools";
+import { planAgentStep } from "@/lib/agent/planner";
+import type { AgentTraceEvent, AgentToolResult } from "@/lib/agent/types";
+
+const MAX_STEPS = 4;
+
+export async function* runAgentLoop(
+  message: string,
+): AsyncGenerator<AgentTraceEvent> {
+  const prior: AgentToolResult[] = [];
+  let steps = 0;
+
+  yield { type: "trace", phase: "start", message: "Agent 循环启动" };
+
+  while (steps < MAX_STEPS) {
+    steps += 1;
+    yield {
+      type: "trace",
+      phase: "plan",
+      message: `第 ${steps} 步：规划是否需要工具`,
+    };
+
+    const { plan, mock } = await planAgentStep(message, prior);
+    yield { type: "plan", plan };
+
+    if (plan.action === "answer") {
+      yield { type: "answer", text: plan.answer, mock };
+      yield { type: "done", steps };
+      return;
+    }
+
+    yield { type: "tool_call", tool: plan.tool, args: plan.args };
+
+    try {
+      const result = await executeAgentTool(plan.tool, plan.args);
+      prior.push(result);
+      yield { type: "tool_result", tool: plan.tool, output: result.output };
+    } catch (error) {
+      yield {
+        type: "error",
+        message: error instanceof Error ? error.message : "工具执行失败",
+      };
+      return;
+    }
+
+    if (steps >= MAX_STEPS) {
+      break;
+    }
+  }
+
+  const { plan, mock } = await planAgentStep(message, prior);
+  const text =
+    plan.action === "answer"
+      ? plan.answer
+      : `已达最大步数（${MAX_STEPS}），请缩小问题范围后重试。`;
+
+  yield { type: "answer", text, mock };
+  yield { type: "done", steps };
+}

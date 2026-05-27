@@ -8,10 +8,12 @@ const navItems = [
   { href: "/#topology", label: "能力图" },
   { href: "/#cross-platform", label: "大前端" },
   { href: "/#dashboard", label: "看板" },
+  { href: "/#edge-ai", label: "端侧 AI" },
   { href: "/#tech-demos", label: "工程 Demo" },
   { href: "/#demo-lab", label: "判断台" },
   { href: "/notes", label: "Notes" },
   { href: "/assistant", label: "Assistant" },
+  { href: "/agents", label: "Agents" },
   { href: "/cases", label: "Cases" },
   { href: "/status", label: "Status" },
 ] as const;
