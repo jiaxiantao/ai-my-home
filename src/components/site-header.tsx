@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-html-link-for-pages */
 "use client";
 
 import Link from "next/link";
@@ -31,17 +30,17 @@ export function SiteHeader() {
 
         <nav className="hidden items-center gap-6 text-sm text-slate-300 lg:flex">
           {navItems.map((item) => (
-            <a
+            <Link
               key={item.href}
               href={item.href}
               className="transition-colors hover:text-white"
             >
               {item.label}
-            </a>
+            </Link>
           ))}
-          <a href="/resume" className="transition-colors hover:text-white">
+          <Link href="/resume" className="transition-colors hover:text-white">
             Resume
-          </a>
+          </Link>
         </nav>
 
         <button
@@ -60,23 +59,23 @@ export function SiteHeader() {
           <ul className="grid gap-2">
             {navItems.map((item) => (
               <li key={item.href}>
-                <a
+                <Link
                   href={item.href}
                   className="block rounded-xl border border-white/10 px-4 py-3 text-sm text-slate-200"
                   onClick={() => setOpen(false)}
                 >
                   {item.label}
-                </a>
+                </Link>
               </li>
             ))}
             <li>
-              <a
+              <Link
                 href="/resume"
                 className="block rounded-xl border border-white/10 px-4 py-3 text-sm text-slate-200"
                 onClick={() => setOpen(false)}
               >
                 Resume
-              </a>
+              </Link>
             </li>
           </ul>
         </nav>

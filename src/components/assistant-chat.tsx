@@ -38,7 +38,6 @@ export function AssistantChat({
 
     hasAutoRun.current = true;
     void submitQuestion(trimmed);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once when q is in URL
   }, [autoRun, initialQuestion]);
 
   async function submitQuestion(currentQuestion: string) {

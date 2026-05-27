@@ -2,8 +2,10 @@
 
 import dynamic from "next/dynamic";
 
-import { NotesTimelineChart } from "@/components/charts/notes-timeline-chart";
-import { TagDistributionChart } from "@/components/charts/tag-distribution-chart";
+import {
+  LazyNotesTimelineChart,
+  LazyTagDistributionChart,
+} from "@/components/charts/lazy-viz-charts";
 import type { NoteAnalytics } from "@/lib/note-analytics";
 import type { DomainDetail } from "@/lib/site-content";
 
@@ -66,14 +68,14 @@ export function SystemsVisualization({
               {analytics.source}
             </span>
           </div>
-          <TagDistributionChart data={tagData} />
+          <LazyTagDistributionChart data={tagData} />
         </article>
 
         <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/90 p-4">
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200/75">
             PostgreSQL · date_trunc(month)
           </p>
-          <NotesTimelineChart data={timelineData} />
+          <LazyNotesTimelineChart data={timelineData} />
         </article>
 
         <div className="grid grid-cols-3 gap-2 font-mono text-[11px] text-slate-400">

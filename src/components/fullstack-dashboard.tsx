@@ -1,6 +1,6 @@
-/* eslint-disable @next/next/no-html-link-for-pages */
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import {
   Activity,
@@ -12,10 +12,12 @@ import {
   Layers,
 } from "lucide-react";
 
-import { DeliveryFlowSankey } from "@/components/charts/delivery-flow-sankey";
-import { NotesTimelineChart } from "@/components/charts/notes-timeline-chart";
-import { SystemRadarChart } from "@/components/charts/system-radar-chart";
-import { TagDistributionChart } from "@/components/charts/tag-distribution-chart";
+import {
+  LazyDeliveryFlowSankey,
+  LazyNotesTimelineChart,
+  LazySystemRadarChart,
+  LazyTagDistributionChart,
+} from "@/components/charts/lazy-dashboard-charts";
 import { DashboardAssistantPreview } from "@/components/dashboard-assistant-preview";
 import { DashboardDecisionWidget } from "@/components/dashboard-decision-widget";
 import type { DashboardData } from "@/lib/dashboard-service";
@@ -184,7 +186,7 @@ export function FullstackDashboard({
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200/75">
                   ECharts · 系统规模
                 </p>
-                <SystemRadarChart
+                <LazySystemRadarChart
                   values={{
                     notes: overview.notesCount,
                     domains: overview.domainsCount,
@@ -250,13 +252,13 @@ export function FullstackDashboard({
                     </div>
                   ))}
                 </div>
-                <a
+                <Link
                   href="/now"
                   className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-cyan-200"
                 >
                   Now 页面
                   <ArrowRight className="h-4 w-4" />
-                </a>
+                </Link>
               </article>
 
               <article className="rounded-2xl border border-white/10 bg-white/5 p-5">
@@ -284,20 +286,20 @@ export function FullstackDashboard({
 
             <div className="flex flex-wrap gap-3">
               {featured.caseSlug ? (
-                <a
+                <Link
                   href={`/cases/${featured.caseSlug}`}
                   className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 transition hover:border-cyan-300/30"
                 >
                   精选案例 →
-                </a>
+                </Link>
               ) : null}
               {featured.insightSlug ? (
-                <a
+                <Link
                   href={`/insights/${featured.insightSlug}`}
                   className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 transition hover:border-cyan-300/30"
                 >
                   精选文章 →
-                </a>
+                </Link>
               ) : null}
               <a
                 href="/api/profile"
@@ -316,13 +318,13 @@ export function FullstackDashboard({
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200/75">
                   ECharts · 标签分布
                 </p>
-                <TagDistributionChart data={tagChartData} />
+                <LazyTagDistributionChart data={tagChartData} />
               </article>
               <article className="rounded-2xl border border-white/10 bg-white/5 p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200/75">
                   ECharts · 按月更新
                 </p>
-                <NotesTimelineChart data={timelineData} />
+                <LazyNotesTimelineChart data={timelineData} />
               </article>
             </div>
 
@@ -332,10 +334,10 @@ export function FullstackDashboard({
               </p>
               {knowledge.recentNotes.length ? (
                 knowledge.recentNotes.map((note) => (
-                  <a
+                  <Link
                     key={note.id}
                     href={`/notes/${note.slug}`}
-                    className="rounded-2xl border border-white/10 bg-white/5 p-4 transition hover:border-white/20"
+                    className="block rounded-2xl border border-white/10 bg-white/5 p-4 transition hover:border-white/20"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <h3 className="text-sm font-semibold text-white">{note.title}</h3>
@@ -348,18 +350,18 @@ export function FullstackDashboard({
                         {note.summary}
                       </p>
                     ) : null}
-                  </a>
+                  </Link>
                 ))
               ) : (
                 <p className="text-sm text-slate-500">暂无笔记，可在 Notes 页创建。</p>
               )}
-              <a
+              <Link
                 href="/notes"
                 className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-200"
               >
                 笔记库
                 <ArrowRight className="h-4 w-4" />
-              </a>
+              </Link>
             </div>
           </div>
         ) : null}
@@ -370,7 +372,7 @@ export function FullstackDashboard({
               <p className="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200/75">
                 ECharts · Sankey 交付链路
               </p>
-              <DeliveryFlowSankey
+              <LazyDeliveryFlowSankey
                 notesCount={overview.notesCount}
                 domainsCount={overview.domainsCount}
                 caseStudiesCount={overview.caseStudiesCount}

@@ -1,3 +1,4 @@
+import { LiveHealthPill } from "@/components/live-health-pill";
 import type { DashboardData } from "@/lib/dashboard-service";
 
 const apiProofs = [
@@ -22,6 +23,8 @@ export function HomeProofBar({ dashboard }: { dashboard: DashboardData }) {
 
   return (
     <div className="grid gap-4">
+      <LiveHealthPill />
+
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {stats.map((stat) => (
           <div

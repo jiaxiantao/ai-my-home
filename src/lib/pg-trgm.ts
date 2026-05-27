@@ -27,3 +27,23 @@ export async function ensurePgTrgmExtension() {
 export function resetPgTrgmCache() {
   extensionReady = null;
 }
+
+export async function isPgTrgmEnabled() {
+  const db = getDb();
+
+  if (!db) {
+    return false;
+  }
+
+  try {
+    const rows = await db.$queryRaw<Array<{ exists: boolean }>>`
+      SELECT EXISTS(
+        SELECT 1 FROM pg_extension WHERE extname = 'pg_trgm'
+      ) AS exists
+    `;
+
+    return Boolean(rows[0]?.exists);
+  } catch {
+    return false;
+  }
+}

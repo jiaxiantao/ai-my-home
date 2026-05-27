@@ -63,7 +63,7 @@ Assistant（`/assistant`）与 `/api/chat` 使用同一套 LLM 配置。
 - `GET /api/notes/search?q=&limit=&engine=memory` — 笔记检索（默认 pg_trgm，可强制 memory）
 - `GET /api/analytics/notes` — 图表数据
 - `POST /api/chat` — SSE / JSON 对话
-- `GET /api/health` — 健康检查
+- `GET /api/health` — DB / LLM / pg_trgm 状态（首页实时探测）
 
 ## Docker
 

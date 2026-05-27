@@ -1,4 +1,5 @@
-/* eslint-disable @next/next/no-html-link-for-pages */
+import Link from "next/link";
+
 import { siteProfile } from "@/lib/site-content";
 
 const footerNav = [
@@ -39,9 +40,9 @@ export function SiteFooter() {
 
         <div className="flex flex-wrap gap-4 border-t border-white/10 pt-5 text-sm text-slate-400">
           {footerNav.map((item) => (
-            <a key={item.href} href={item.href} className="transition hover:text-white">
+            <Link key={item.href} href={item.href} className="transition hover:text-white">
               {item.label}
-            </a>
+            </Link>
           ))}
         </div>
       </div>
