@@ -24,7 +24,10 @@ test.describe("Site navigation", () => {
       .click();
 
     await expect(page).toHaveURL(/\/assistant$/);
-    await expect(page.getByRole("heading", { level: 1 })).toContainText(/SSE|召回/);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(
+      /AI 对话工作台/,
+    );
+    await expect(page.getByText("Sessions")).toBeVisible({ timeout: 15_000 });
   });
 
   test("engineering demo tabs switch", async ({ page }) => {
