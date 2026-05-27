@@ -5,8 +5,6 @@ import { notFound } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 
 import { JsonLd } from "@/components/json-ld";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
 import { getInsightBySlug, insightArticles } from "@/lib/editorial-content";
 
 type InsightPageProps = {
@@ -52,10 +50,7 @@ export default async function InsightDetailPage({ params }: InsightPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-transparent text-foreground">
-      <SiteHeader />
-
-      <main className="mx-auto flex w-full max-w-5xl flex-col gap-14 px-6 py-10 lg:px-8 lg:py-16">
+    <main className="mx-auto flex w-full max-w-5xl flex-col gap-14 px-6 py-10 lg:px-8 lg:py-16">
         <JsonLd
           data={{
             "@context": "https://schema.org",
@@ -147,7 +142,5 @@ export default async function InsightDetailPage({ params }: InsightPageProps) {
         </section>
       </main>
 
-      <SiteFooter />
-    </div>
   );
 }

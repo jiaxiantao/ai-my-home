@@ -5,8 +5,6 @@ import { notFound } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 
 import { SectionHeading } from "@/components/section-heading";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
 import { getDomainBySlug } from "@/lib/content-service";
 import { iconMap } from "@/lib/icon-map";
 import { domainDetails } from "@/lib/site-content";
@@ -52,10 +50,7 @@ export default async function DomainPage({ params }: DomainPageProps) {
   const Icon = iconMap[domain.icon];
 
   return (
-    <div className="min-h-screen bg-transparent text-foreground">
-      <SiteHeader />
-
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-16 px-6 py-10 lg:px-8 lg:py-16">
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-16 px-6 py-10 lg:px-8 lg:py-16">
         <section className="grid gap-8 rounded-[2.25rem] border border-white/10 bg-white/5 p-8 lg:grid-cols-[1.15fr_0.85fr] lg:p-10">
           <div>
             <Link
@@ -201,7 +196,5 @@ export default async function DomainPage({ params }: DomainPageProps) {
         </section>
       </main>
 
-      <SiteFooter />
-    </div>
   );
 }

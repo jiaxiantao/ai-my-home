@@ -6,8 +6,6 @@ import { CareerTimeline } from "@/components/career-timeline";
 import { CopyButton } from "@/components/copy-button";
 import { MetricCard } from "@/components/metric-card";
 import { SectionHeading } from "@/components/section-heading";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
 import { TechStackBoard } from "@/components/tech-stack-board";
 import { getHomepageContent } from "@/lib/content-service";
 import {
@@ -27,10 +25,7 @@ export default async function ResumePage() {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
   return (
-    <div className="min-h-screen bg-transparent text-foreground">
-      <SiteHeader />
-
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-16 px-6 py-10 lg:px-8 lg:py-16">
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-16 px-6 py-10 lg:px-8 lg:py-16">
         <section className="grid gap-8 rounded-[2.25rem] border border-white/10 bg-white/5 p-8 lg:grid-cols-[1.1fr_0.9fr] lg:p-10">
           <div>
             <p className="text-sm uppercase tracking-[0.3em] text-slate-400">
@@ -53,13 +48,15 @@ export default async function ResumePage() {
                 <FileJson className="h-4 w-4" />
                 打开 JSON
               </a>
-              <button
-                type="button"
-                className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/70 px-4 py-2 text-sm text-slate-400"
+              <a
+                href={profile.github}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 transition hover:border-white/25 hover:bg-white/8"
               >
                 <Download className="h-4 w-4" />
-                PDF 简历入口可后续补充
-              </button>
+                GitHub 主页
+              </a>
             </div>
           </div>
 
@@ -146,7 +143,5 @@ export default async function ResumePage() {
         </section>
       </main>
 
-      <SiteFooter />
-    </div>
   );
 }

@@ -20,12 +20,12 @@ export default function NotFound() {
           >
             返回首页
           </Link>
-          <a
+          <Link
             href="/notes"
             className="inline-flex rounded-full border border-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/5"
           >
             Notes
-          </a>
+          </Link>
         </div>
       </div>
     </div>

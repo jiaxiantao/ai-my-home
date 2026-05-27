@@ -3,8 +3,6 @@ import { NoteLibrary } from "@/components/note-library";
 import { NoteManager } from "@/components/note-manager";
 import { NoteSearchDemo } from "@/components/note-search-demo";
 import { SectionHeading } from "@/components/section-heading";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
 import { listPublishedNotes } from "@/lib/notes-service";
 
 export const metadata: Metadata = {
@@ -17,10 +15,7 @@ export default async function NotesPage() {
   const publishedNotes = await listPublishedNotes();
 
   return (
-    <div className="min-h-screen bg-transparent text-foreground">
-      <SiteHeader />
-
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-14 px-6 py-10 lg:px-8 lg:py-14">
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-14 px-6 py-10 lg:px-8 lg:py-14">
         <section className="rounded-[2rem] border border-white/10 bg-white/5 p-8">
           <p className="text-sm uppercase tracking-[0.3em] text-slate-400">Notes</p>
           <h1 className="mt-4 text-3xl font-semibold text-white md:text-4xl">
@@ -61,7 +56,5 @@ export default async function NotesPage() {
         </details>
       </main>
 
-      <SiteFooter />
-    </div>
   );
 }

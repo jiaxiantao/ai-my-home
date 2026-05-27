@@ -88,7 +88,9 @@ export function WebVitalsDemo() {
       });
     }
 
-    setSamples(entries);
+    queueMicrotask(() => {
+      setSamples(entries);
+    });
 
     const observers: PerformanceObserver[] = [];
 

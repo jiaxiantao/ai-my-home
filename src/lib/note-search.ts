@@ -157,10 +157,40 @@ async function searchNotesWithPgTrgm(
   }
 }
 
-export async function searchNotesDetailed(
+export async function searchNotesMemoryOnly(
   query: string,
   limit = 8,
 ): Promise<NoteSearchResponse> {
+  const trimmed = query.trim();
+
+  if (!trimmed) {
+    return {
+      query: "",
+      engine: "memory",
+      extensionEnabled: false,
+      results: [],
+    };
+  }
+
+  const extensionEnabled = await ensurePgTrgmExtension();
+  const memoryResults = await searchNotesInMemoryAsync(trimmed, limit);
+
+  return {
+    query: trimmed,
+    engine: "memory",
+    extensionEnabled,
+    results: memoryResults,
+  };
+}
+
+export async function searchNotesDetailed(
+  query: string,
+  limit = 8,
+  options?: { forceEngine?: "memory" | "pg_trgm" },
+): Promise<NoteSearchResponse> {
+  if (options?.forceEngine === "memory") {
+    return searchNotesMemoryOnly(query, limit);
+  }
   const trimmed = query.trim();
 
   if (!trimmed) {
@@ -198,5 +228,3 @@ export async function searchNotes(query: string, limit = 5) {
   const { results } = await searchNotesDetailed(query, limit);
   return results;
 }
-
-// remove dead searchNotesInMemory sync function - I left a stub by mistake

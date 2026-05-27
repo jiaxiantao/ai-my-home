@@ -7,8 +7,6 @@ import { CopyButton } from "@/components/copy-button";
 import { HomeProofBar } from "@/components/home-proof-bar";
 import { SectionHeading } from "@/components/section-heading";
 import { SectionSkeleton } from "@/components/section-skeleton";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
 import { SystemsVisualization } from "@/components/systems-visualization";
 import { getHomepageContent } from "@/lib/content-service";
 import { getDashboardData } from "@/lib/dashboard-service";
@@ -60,10 +58,7 @@ export default async function Home() {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
   return (
-    <div className="min-h-screen bg-transparent text-foreground">
-      <SiteHeader />
-
-      <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-16 px-6 py-10 lg:px-8 lg:py-14">
+    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-16 px-6 py-10 lg:px-8 lg:py-14">
         <section className="grid gap-8 lg:grid-cols-[1fr_1fr] lg:items-start">
           <div className="space-y-6">
             <p className="text-sm uppercase tracking-[0.32em] text-slate-500">
@@ -131,7 +126,7 @@ export default async function Home() {
         <section id="tech-demos" className="space-y-6">
           <SectionHeading
             eyebrow="Engineering Demos"
-            title="可交互样例：性能 · 网络 · 渲染 · 状态 · 流"
+            title="可交互样例：性能 · 网络 · 渲染 · 状态 · 流 · Worker · 检索"
           />
           <EngineeringShowcase />
         </section>
@@ -172,9 +167,6 @@ export default async function Home() {
             <CopyButton value={`${siteUrl}/api/dashboard`} label="API" />
           </div>
         </section>
-      </main>
-
-      <SiteFooter />
-    </div>
+    </main>
   );
 }

@@ -3,8 +3,6 @@ import type { Metadata } from "next";
 import { InsightsExplorer } from "@/components/insights-explorer";
 import { JsonLd } from "@/components/json-ld";
 import { SectionHeading } from "@/components/section-heading";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
 import { insightArticles } from "@/lib/editorial-content";
 
 export const metadata: Metadata = {
@@ -17,10 +15,7 @@ export default function InsightsPage() {
   const featured = insightArticles.filter((article) => article.featured).length;
 
   return (
-    <div className="min-h-screen bg-transparent text-foreground">
-      <SiteHeader />
-
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-16 px-6 py-10 lg:px-8 lg:py-16">
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-16 px-6 py-10 lg:px-8 lg:py-16">
         <JsonLd
           data={{
             "@context": "https://schema.org",
@@ -77,7 +72,5 @@ export default function InsightsPage() {
         </section>
       </main>
 
-      <SiteFooter />
-    </div>
   );
 }

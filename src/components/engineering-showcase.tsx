@@ -1,15 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Activity, Gauge, Layers, Radio, Workflow } from "lucide-react";
+import { Activity, Cpu, Gauge, Layers, Radio, Search, Workflow } from "lucide-react";
 
 import { ApiLatencyDemo } from "@/components/demos/api-latency-demo";
 import { CheckoutFlowDemo } from "@/components/demos/checkout-flow-demo";
 import { SseInspectorDemo } from "@/components/demos/sse-inspector-demo";
+import { SearchCompareDemo } from "@/components/demos/search-compare-demo";
 import { VirtualScrollDemo } from "@/components/demos/virtual-scroll-demo";
 import { WebVitalsDemo } from "@/components/demos/web-vitals-demo";
+import { WorkerComputeDemo } from "@/components/demos/worker-compute-demo";
 
-type DemoId = "vitals" | "api" | "virtual" | "state" | "sse";
+type DemoId = "vitals" | "api" | "virtual" | "state" | "sse" | "worker" | "search";
 
 const demos: Array<{
   id: DemoId;
@@ -46,6 +48,18 @@ const demos: Array<{
     title: "SSE 帧监视",
     tech: "ReadableStream",
     icon: Radio,
+  },
+  {
+    id: "worker",
+    title: "Web Worker",
+    tech: "非阻塞计算",
+    icon: Cpu,
+  },
+  {
+    id: "search",
+    title: "检索对比",
+    tech: "pg_trgm vs memory",
+    icon: Search,
   },
 ];
 
@@ -88,6 +102,8 @@ export function EngineeringShowcase() {
         {active === "virtual" ? <VirtualScrollDemo /> : null}
         {active === "state" ? <CheckoutFlowDemo /> : null}
         {active === "sse" ? <SseInspectorDemo /> : null}
+        {active === "worker" ? <WorkerComputeDemo /> : null}
+        {active === "search" ? <SearchCompareDemo /> : null}
       </div>
     </div>
   );

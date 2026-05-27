@@ -4,8 +4,6 @@ import { notFound } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 
 import { SectionHeading } from "@/components/section-heading";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
 import {
   getPublishedNoteBySlug,
   listPublishedNotes,
@@ -75,10 +73,7 @@ export default async function NoteDetailPage({ params }: NoteDetailPageProps) {
     .slice(0, 3);
 
   return (
-    <div className="min-h-screen bg-transparent text-foreground">
-      <SiteHeader />
-
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-16 px-6 py-10 lg:px-8 lg:py-16">
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-16 px-6 py-10 lg:px-8 lg:py-16">
         <section className="rounded-[2.25rem] border border-white/10 bg-white/5 p-8 lg:p-10">
           <p className="text-sm uppercase tracking-[0.3em] text-slate-400">
             Note Detail
@@ -221,7 +216,5 @@ export default async function NoteDetailPage({ params }: NoteDetailPageProps) {
         </section>
       </main>
 
-      <SiteFooter />
-    </div>
   );
 }

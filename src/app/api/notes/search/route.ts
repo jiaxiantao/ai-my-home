@@ -16,7 +16,10 @@ export async function GET(request: Request) {
       limit: searchParams.get("limit") ?? 8,
     });
 
-    const payload = await searchNotesDetailed(parsed.q, parsed.limit);
+    const engine = searchParams.get("engine");
+    const payload = await searchNotesDetailed(parsed.q, parsed.limit, {
+      forceEngine: engine === "memory" ? "memory" : undefined,
+    });
 
     return NextResponse.json(payload);
   } catch (error) {

@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
 
 import { AssistantChat } from "@/components/assistant-chat";
-import { SectionHeading } from "@/components/section-heading";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
 
 export const metadata: Metadata = {
   title: "Assistant | XJ / Frontend Systems",
@@ -26,10 +23,7 @@ export default async function AssistantPage({
     : resolvedSearchParams.q;
 
   return (
-    <div className="min-h-screen bg-transparent text-foreground">
-      <SiteHeader />
-
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-16 px-6 py-10 lg:px-8 lg:py-16">
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-16 px-6 py-10 lg:px-8 lg:py-16">
         <section className="rounded-[2rem] border border-white/10 bg-white/5 p-8">
           <p className="text-sm uppercase tracking-[0.3em] text-slate-400">
             Assistant
@@ -50,7 +44,5 @@ export default async function AssistantPage({
         </section>
       </main>
 
-      <SiteFooter />
-    </div>
   );
 }
