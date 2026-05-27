@@ -39,7 +39,16 @@ export function getLlmConfig(): LlmConfig {
   };
 }
 
+function isLlmExplicitlyDisabled() {
+  const flag = process.env.LLM_DISABLED?.toLowerCase();
+  return flag === "1" || flag === "true" || flag === "yes";
+}
+
 export function isLlmConfigured() {
+  if (isLlmExplicitlyDisabled()) {
+    return false;
+  }
+
   try {
     getLlmConfig();
     return true;

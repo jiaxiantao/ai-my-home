@@ -16,10 +16,8 @@ jobs:
       SMOKE_BASE_URL: http://localhost:3000
       PLAYWRIGHT_BASE_URL: http://localhost:3000
       ADMIN_SECRET: ci-secret
-      LLM_PROVIDER: ollama
-      OLLAMA_BASE_URL: http://127.0.0.1:11434/v1
-      OLLAMA_MODEL: llama3.2
-      OLLAMA_API_KEY: ollama
+      # CI 不启动 Ollama；用演示回答保证 smoke / SSE 探测稳定
+      LLM_DISABLED: "1"
       HOSTNAME: "0.0.0.0"
       PORT: "3000"
     services:

@@ -73,6 +73,8 @@ function createSseStream(
         const useLlm = isLlmConfigured();
         const temperature =
           options.temperature ?? (options.regenerate ? 0.55 : 0.2);
+        let usedMock = !useLlm;
+
         const answerStream = useLlm
           ? streamAnswerQuestionWithNotes({
               question,
@@ -81,11 +83,24 @@ function createSseStream(
             })
           : streamMockAnswer(getMockStreamAnswer(question));
 
-        for await (const chunk of answerStream) {
-          send("chunk", { text: chunk });
+        try {
+          for await (const chunk of answerStream) {
+            send("chunk", { text: chunk });
+          }
+        } catch (streamError) {
+          if (!useLlm) {
+            throw streamError;
+          }
+
+          usedMock = true;
+          for await (const chunk of streamMockAnswer(
+            getMockStreamAnswer(question),
+          )) {
+            send("chunk", { text: chunk });
+          }
         }
 
-        send("done", { streamed: true, mock: !useLlm });
+        send("done", { streamed: true, mock: usedMock });
       } catch (error) {
         send("error", {
           message:
@@ -119,13 +134,35 @@ export async function POST(request: Request) {
       );
     }
 
-    const answer = await answerQuestionWithNotes({
-      question: body.question,
-      contextBlocks: matchedNotes,
-    });
+    const contextBlocks = matchedNotes.map((note) => ({
+      id: note.id,
+      title: note.title,
+      summary: note.summary,
+      contentMarkdown: note.contentMarkdown,
+      tags: note.tags,
+    }));
+
+    let answer: string;
+    let mock = false;
+
+    if (isLlmConfigured()) {
+      try {
+        answer = await answerQuestionWithNotes({
+          question: body.question,
+          contextBlocks,
+        });
+      } catch {
+        answer = getMockStreamAnswer(body.question);
+        mock = true;
+      }
+    } else {
+      answer = getMockStreamAnswer(body.question);
+      mock = true;
+    }
 
     return NextResponse.json({
       answer,
+      mock,
       references: mapReferences(matchedNotes),
     });
   } catch (error) {
