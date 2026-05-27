@@ -13,6 +13,12 @@ COPY package.json pnpm-lock.yaml ./
 COPY prisma ./prisma
 RUN pnpm install --frozen-lockfile
 
+FROM deps AS migrator
+
+COPY prisma.config.ts tsconfig.json ./
+COPY src/lib ./src/lib
+COPY prisma ./prisma
+
 FROM base AS builder
 
 COPY --from=deps /app/node_modules ./node_modules
@@ -34,3 +40,7 @@ COPY --from=builder /app/prisma ./prisma
 EXPOSE 3000
 
 CMD ["node", "server.js"]
+
+# One-shot DB init: docker compose run --rm migrate
+FROM migrator AS migrate
+CMD ["pnpm", "db:setup"]

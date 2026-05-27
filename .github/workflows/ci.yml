@@ -12,11 +12,26 @@ jobs:
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ci?schema=public
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      SMOKE_BASE_URL: http://localhost:3000
       ADMIN_SECRET: ci-secret
       LLM_PROVIDER: ollama
       OLLAMA_BASE_URL: http://127.0.0.1:11434/v1
       OLLAMA_MODEL: llama3.2
       OLLAMA_API_KEY: ollama
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
 
@@ -35,4 +50,25 @@ jobs:
 
       - run: pnpm lint
 
+      - run: pnpm db:setup
+
       - run: pnpm build
+
+      - name: API smoke (production server)
+        run: |
+          pnpm start > /tmp/next.log 2>&1 &
+          echo $! > /tmp/next.pid
+          for i in $(seq 1 30); do
+            if curl -sf "${SMOKE_BASE_URL}/api/health" > /dev/null; then
+              echo "Server ready after ${i} attempts"
+              break
+            fi
+            if [ "$i" -eq 30 ]; then
+              echo "--- next.log ---"
+              cat /tmp/next.log
+              exit 1
+            fi
+            sleep 2
+          done
+          pnpm smoke
+          kill "$(cat /tmp/next.pid)" || true

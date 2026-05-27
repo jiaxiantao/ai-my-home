@@ -73,11 +73,29 @@ Assistant（`/assistant`）与 `/api/chat` 使用同一套 LLM 配置。
 docker compose up --build
 ```
 
-数据库未初始化时站点回退到内置内容；执行 `pnpm db:push && pnpm db:seed` 后切到 DB 数据源。
+Compose 会依次启动：`db` → `migrate`（`pnpm db:setup`）→ `web`。
+
+- 容器内默认 `LLM_PROVIDER=ollama`，通过 `host.docker.internal:11434` 访问宿主机 Ollama（需本机已 `ollama serve`）
+- 仅重置数据库：`docker compose run --rm migrate`
+
+## API 冒烟测试
+
+```bash
+pnpm db:setup
+pnpm dev          # 终端 1
+pnpm smoke        # 终端 2
+```
+
+覆盖 `/api/health`、`/profile`、`/dashboard`、`/notes/search`、`/analytics/notes`。CI 在 `pnpm build` 后会启动生产服务并自动执行 `pnpm smoke`。
+
+## SEO
+
+- `/sitemap.xml` — 静态页 + cases / insights / domains
+- `/robots.txt`
 
 ## CI
 
-`main` 分支 push / PR 会运行 `pnpm typecheck`、`pnpm lint`、`pnpm build`（见 `.github/workflows/ci.yml`）。
+`main` 分支 push / PR：`typecheck` → `lint` → `db:setup` → `build` → **API smoke**（见 `.github/workflows/ci.yml`）。
 
 ## 仓库
 

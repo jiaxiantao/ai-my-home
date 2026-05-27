@@ -13,6 +13,7 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",
     "db:setup": "prisma db push && prisma db seed",
+    "smoke": "tsx scripts/smoke-api.ts",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate"
   },
