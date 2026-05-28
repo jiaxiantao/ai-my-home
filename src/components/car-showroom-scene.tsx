@@ -160,7 +160,7 @@ function AssetModel({
 
   useFrame((renderState, delta) => {
     if (rootRef.current) {
-      const t = renderState.clock.getElapsedTime();
+      const t = renderState.clock.elapsedTime;
       const y = state.engineOn ? Math.sin(t * 8) * 0.02 : 0;
       rootRef.current.position.y = THREE.MathUtils.damp(rootRef.current.position.y, y, 5, delta);
     }
@@ -280,7 +280,7 @@ function CameraRig({
     }
     const controls = controlsRef.current;
     if (autoTour) {
-      const t = renderState.clock.getElapsedTime() * 0.22;
+      const t = renderState.clock.elapsedTime * 0.22;
       const radius = 6.3;
       const targetY = 0.7 + Math.sin(t * 2) * 0.12;
       const target = new THREE.Vector3(0, 0.48, 0);
@@ -373,7 +373,7 @@ function CarModel({
   );
 
   useFrame((renderState, delta) => {
-    const t = renderState.clock.getElapsedTime();
+    const t = renderState.clock.elapsedTime;
     const hazardBlink = state.hazardOn ? (Math.sin(t * 8) > 0 ? 1 : 0.08) : 0.08;
 
     if (leftDoorRef.current) {
