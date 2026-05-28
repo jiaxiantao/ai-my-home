@@ -121,9 +121,20 @@ const checks: Array<Check & CheckRequest> = [
     path: "/api/agent",
     method: "POST",
     body: { message: "smoke: what time is it" },
-    assert: (status) => {
+    assert: (status, body) => {
       if (status !== 200) {
         throw new Error(`expected 200, got ${status}`);
+      }
+
+      const data = body as { stream?: boolean; text?: string };
+      if (!data.stream) {
+        throw new Error("agent response should be SSE stream");
+      }
+      if (!data.text?.includes("event: done")) {
+        throw new Error("agent stream missing done event");
+      }
+      if (!data.text?.includes("event: step_metric")) {
+        throw new Error("agent stream missing step_metric event");
       }
     },
   },
@@ -168,7 +179,7 @@ async function runCheck(check: Check) {
     }
 
     try {
-      check.assert(response.status, { stream: true });
+      check.assert(response.status, { stream: true, text });
     } catch (error) {
       const detail = text.slice(0, 400);
       throw new Error(

@@ -17,6 +17,7 @@ const quickLinks = [
   { href: "/api/notes/search?q=架构", label: "GET /api/notes/search" },
   { href: "/api/analytics/notes", label: "GET /api/analytics/notes" },
   { href: "/api/chat", label: "POST /api/chat (SSE)" },
+  { href: "/api/agent", label: "POST /api/agent (SSE)" },
 ];
 
 export default function StatusPage() {

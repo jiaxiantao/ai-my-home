@@ -6,5 +6,6 @@ test.describe("Status page", () => {
 
     await expect(page.getByRole("heading", { level: 1 })).toContainText(/运行时诊断/);
     await expect(page.getByRole("button", { name: "并行探测" })).toBeVisible();
+    await expect(page.getByText("SSE /api/agent")).toBeVisible();
   });
 });

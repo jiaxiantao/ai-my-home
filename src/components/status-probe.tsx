@@ -24,12 +24,21 @@ type ProbeRow = {
   detail?: string;
 };
 
+type AgentProbeMetrics = {
+  rounds: number;
+  p50Ms: number;
+  p95Ms: number;
+  avgSteps: number;
+  avgToolCalls: number;
+};
+
 const PROBES: Array<{ key: string; label: string; href: string }> = [
   { key: "health", label: "GET /api/health", href: "/api/health" },
   { key: "profile", label: "GET /api/profile", href: "/api/profile" },
   { key: "dashboard", label: "GET /api/dashboard", href: "/api/dashboard" },
   { key: "chat", label: "POST /api/chat", href: "/api/chat" },
   { key: "chat-sse", label: "SSE /api/chat (references→chunk→done)", href: "/api/chat" },
+  { key: "agent-sse", label: "SSE /api/agent (plan→tool→answer)", href: "/api/agent" },
   {
     key: "search",
     label: "GET /api/notes/search?q=架构",
@@ -47,6 +56,7 @@ export function StatusProbe() {
   const [probes, setProbes] = useState<ProbeRow[]>([]);
   const [running, setRunning] = useState(false);
   const [lastRun, setLastRun] = useState<string | null>(null);
+  const [agentMetrics, setAgentMetrics] = useState<AgentProbeMetrics | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -66,6 +76,7 @@ export function StatusProbe() {
   async function runProbes() {
     setRunning(true);
     setProbes([]);
+    setAgentMetrics(null);
 
     const results = await Promise.all(
       PROBES.map(async (probe) => {
@@ -79,6 +90,19 @@ export function StatusProbe() {
               href: probe.href,
               ms: Math.round(performance.now() - started),
               ttftMs: sse.ttftMs,
+              status: sse.status,
+              ok: sse.ok,
+              detail: sse.detail,
+            };
+          }
+          if (probe.key === "agent-sse") {
+            const sse = await runAgentSseProbe(probe.href);
+            setAgentMetrics(sse.metrics ?? null);
+            return {
+              key: probe.key,
+              label: probe.label,
+              href: probe.href,
+              ms: Math.round(performance.now() - started),
               status: sse.status,
               ok: sse.ok,
               detail: sse.detail,
@@ -158,6 +182,31 @@ export function StatusProbe() {
           detail={health?.server?.node ?? "—"}
         />
       </div>
+
+      {agentMetrics ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatusCard
+            label="Agent p50"
+            ok={true}
+            detail={`${agentMetrics.p50Ms} ms`}
+          />
+          <StatusCard
+            label="Agent p95"
+            ok={agentMetrics.p95Ms < 5000}
+            detail={`${agentMetrics.p95Ms} ms`}
+          />
+          <StatusCard
+            label="Avg Steps"
+            ok={agentMetrics.avgSteps <= 4}
+            detail={`${agentMetrics.avgSteps.toFixed(1)} steps`}
+          />
+          <StatusCard
+            label="Avg Tools"
+            ok={agentMetrics.avgToolCalls <= 4}
+            detail={`${agentMetrics.avgToolCalls.toFixed(1)} calls`}
+          />
+        </div>
+      ) : null}
 
       {/* API probes */}
       <div className="grid gap-4">
@@ -346,6 +395,164 @@ async function runChatSseProbe(url: string): Promise<{
   }
 }
 
+async function runAgentSseProbe(url: string): Promise<{
+  ok: boolean;
+  status: number;
+  detail: string;
+  metrics?: AgentProbeMetrics;
+}> {
+  const rounds = 3;
+  const totals: number[] = [];
+  const steps: number[] = [];
+  const toolCalls: number[] = [];
+
+  for (let index = 0; index < rounds; index += 1) {
+    const result = await runSingleAgentProbe(url, index + 1);
+    if (!result.ok) {
+      return {
+        ok: false,
+        status: result.status,
+        detail: result.detail,
+      };
+    }
+
+    totals.push(result.totalMs);
+    steps.push(result.steps);
+    toolCalls.push(result.toolCalls);
+  }
+
+  const sorted = [...totals].sort((a, b) => a - b);
+  const p50 = sorted[Math.floor((sorted.length - 1) * 0.5)];
+  const p95 = sorted[Math.floor((sorted.length - 1) * 0.95)];
+  const avgSteps = steps.reduce((sum, value) => sum + value, 0) / steps.length;
+  const avgToolCalls =
+    toolCalls.reduce((sum, value) => sum + value, 0) / toolCalls.length;
+
+  return {
+    ok: true,
+    status: 200,
+    detail: `p50 ${p50}ms · p95 ${p95}ms`,
+    metrics: {
+      rounds,
+      p50Ms: p50,
+      p95Ms: p95,
+      avgSteps,
+      avgToolCalls,
+    },
+  };
+}
+
+async function runSingleAgentProbe(
+  url: string,
+  round: number,
+): Promise<{
+  ok: boolean;
+  status: number;
+  detail: string;
+  totalMs: number;
+  steps: number;
+  toolCalls: number;
+}> {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 12_000);
+
+  let status = 0;
+  let sawPlan = false;
+  let sawToolCall = false;
+  let sawStepMetric = false;
+  let donePayload: { steps: number; toolCalls: number; totalMs: number } | null = null;
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+      signal: controller.signal,
+      body: JSON.stringify({
+        message:
+          round % 2
+            ? "先检索前端架构笔记，再计算 (128 + 64) * 3，并告诉我现在时间"
+            : "帮我检索性能治理笔记并给出时间",
+      }),
+    });
+
+    status = res.status;
+    if (!res.ok) {
+      return { ok: false, status, detail: "non-200", totalMs: 0, steps: 0, toolCalls: 0 };
+    }
+
+    const reader = res.body?.getReader();
+    if (!reader) {
+      return { ok: false, status, detail: "no reader", totalMs: 0, steps: 0, toolCalls: 0 };
+    }
+
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      let boundary = buffer.indexOf("\n\n");
+      while (boundary !== -1) {
+        const block = buffer.slice(0, boundary).trim();
+        buffer = buffer.slice(boundary + 2);
+
+        const event = parseSseEventName(block);
+        const payload = parseSseData(block) as
+          | { type?: string; steps?: number; toolCalls?: number; totalMs?: number }
+          | null;
+
+        if (event === "plan") sawPlan = true;
+        if (event === "tool_call") sawToolCall = true;
+        if (event === "step_metric") sawStepMetric = true;
+        if (event === "done" && payload?.steps != null && payload.toolCalls != null && payload.totalMs != null) {
+          donePayload = {
+            steps: payload.steps,
+            toolCalls: payload.toolCalls,
+            totalMs: payload.totalMs,
+          };
+          return {
+            ok: sawPlan && sawToolCall && sawStepMetric,
+            status,
+            detail:
+              sawPlan && sawToolCall && sawStepMetric
+                ? "ok"
+                : "missing plan/tool_call/step_metric",
+            totalMs: donePayload.totalMs,
+            steps: donePayload.steps,
+            toolCalls: donePayload.toolCalls,
+          };
+        }
+
+        boundary = buffer.indexOf("\n\n");
+      }
+    }
+
+    return {
+      ok: false,
+      status,
+      detail: "stream ended early",
+      totalMs: 0,
+      steps: 0,
+      toolCalls: 0,
+    };
+  } catch (error) {
+    const aborted = (error as { name?: string }).name === "AbortError";
+    return {
+      ok: false,
+      status,
+      detail: aborted ? "timeout" : "error",
+      totalMs: 0,
+      steps: 0,
+      toolCalls: 0,
+    };
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
+
 function parseSseEventName(block: string) {
   const lines = block.split("\n");
   for (const line of lines) {
@@ -354,6 +561,19 @@ function parseSseEventName(block: string) {
     }
   }
   return null;
+}
+
+function parseSseData(block: string) {
+  const lines = block.split("\n");
+  const dataLine = lines.find((line) => line.startsWith("data:"));
+  if (!dataLine) {
+    return null;
+  }
+  try {
+    return JSON.parse(dataLine.slice(5).trim()) as unknown;
+  } catch {
+    return null;
+  }
 }
 
 function StatusCard({
