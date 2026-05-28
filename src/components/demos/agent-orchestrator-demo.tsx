@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 
 import { agentToolCatalog } from "@/lib/agent/tool-catalog";
-import type { AgentPlan, AgentTraceEvent } from "@/lib/agent/types";
+import type { AgentPlan, AgentToolName, AgentTraceEvent } from "@/lib/agent/types";
 
 type TraceLine = {
   id: string;
@@ -24,6 +24,24 @@ function formatPlan(plan: AgentPlan) {
   }
 
   return `直接回答 · ${plan.reasoning || "生成最终回答"}`;
+}
+
+function formatToolResult(tool: AgentToolName, output: string) {
+  if (tool === "search_notes") {
+    if (/^未找到与「.+」相关的笔记。$/.test(output)) {
+      return `检索结果：未命中\n${output}`;
+    }
+
+    const hitCount = output
+      .split("\n")
+      .filter((line) => /^\d+\.\s/.test(line.trim())).length;
+
+    if (hitCount > 0) {
+      return `检索结果：命中 ${hitCount} 条\n${output}`;
+    }
+  }
+
+  return output;
 }
 
 function parseSseBlock(block: string) {
@@ -138,7 +156,11 @@ export function AgentOrchestratorDemo() {
             } else if (payload.type === "tool_result") {
               setLines((current) => [
                 ...current,
-                { id, kind: "result", text: payload.output },
+                {
+                  id,
+                  kind: "result",
+                  text: formatToolResult(payload.tool, payload.output),
+                },
               ]);
             } else if (payload.type === "answer") {
               setFinalAnswer(payload.text);
