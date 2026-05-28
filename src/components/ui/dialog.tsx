@@ -1,7 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import type React from "react";
 import { createPortal } from "react-dom";
 
@@ -16,12 +16,6 @@ export function Dialog({
   onOpenChange: (open: boolean) => void;
   children: React.ReactNode;
 }) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   useEffect(() => {
     if (!open) {
       return;
@@ -35,7 +29,7 @@ export function Dialog({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [onOpenChange, open]);
 
-  if (!open || !mounted) {
+  if (!open || typeof document === "undefined") {
     return null;
   }
 
