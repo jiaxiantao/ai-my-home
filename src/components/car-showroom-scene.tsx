@@ -940,7 +940,7 @@ export function CarShowroomScene({
         <OrbitControls
           ref={controlsRef}
           enablePan={false}
-          enableRotate={!autoTour && cameraPreset !== "cockpit"}
+          enableRotate={!autoTour}
           minDistance={3.8}
           maxDistance={9}
           minPolarAngle={0.6}
