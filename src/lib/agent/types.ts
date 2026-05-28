@@ -25,5 +25,10 @@ export type AgentTraceEvent =
   | { type: "tool_call"; tool: AgentToolName; args: Record<string, unknown> }
   | { type: "tool_result"; tool: AgentToolName; output: string }
   | { type: "answer"; text: string; mock?: boolean }
-  | { type: "done"; steps: number }
+  | {
+      type: "done";
+      steps: number;
+      toolCalls: number;
+      totalMs: number;
+    }
   | { type: "error"; message: string };

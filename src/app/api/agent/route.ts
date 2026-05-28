@@ -20,7 +20,9 @@ export async function POST(request: Request) {
         };
 
         try {
-          for await (const trace of runAgentLoop(body.message)) {
+          for await (const trace of runAgentLoop(body.message, {
+            signal: request.signal,
+          })) {
             send(trace.type, trace);
           }
         } catch (error) {

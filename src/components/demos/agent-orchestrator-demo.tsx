@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { agentToolCatalog } from "@/lib/agent/tool-catalog";
 import type { AgentPlan, AgentTraceEvent } from "@/lib/agent/types";
@@ -47,91 +47,132 @@ export function AgentOrchestratorDemo() {
   const [lines, setLines] = useState<TraceLine[]>([]);
   const [finalAnswer, setFinalAnswer] = useState("");
   const [running, setRunning] = useState(false);
+  const [stats, setStats] = useState<{ steps: number; toolCalls: number; totalMs: number } | null>(
+    null,
+  );
+  const abortRef = useRef<AbortController | null>(null);
+  const presets = [
+    "帮我搜索笔记里关于前端架构的内容",
+    "计算 (128 + 64) * 3",
+    "现在北京时间几点？",
+  ];
 
   async function runAgent() {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
     setRunning(true);
     setLines([]);
     setFinalAnswer("");
+    setStats(null);
 
-    const response = await fetch("/api/agent", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message }),
-    });
+    try {
+      const response = await fetch("/api/agent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+        signal: controller.signal,
+      });
 
-    if (!response.ok || !response.body) {
-      setLines([
-        {
-          id: crypto.randomUUID(),
-          kind: "error",
-          text: `HTTP ${response.status}`,
-        },
-      ]);
-      setRunning(false);
-      return;
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = "";
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-
-      let boundary = buffer.indexOf("\n\n");
-
-      while (boundary !== -1) {
-        const block = buffer.slice(0, boundary).trim();
-        buffer = buffer.slice(boundary + 2);
-
-        const parsed = parseSseBlock(block);
-
-        if (parsed?.payload) {
-          const { payload } = parsed;
-          const id = crypto.randomUUID();
-
-          if (payload.type === "trace") {
-            setLines((current) => [
-              ...current,
-              { id, kind: "trace", text: `[${payload.phase}] ${payload.message}` },
-            ]);
-          } else if (payload.type === "plan") {
-            setLines((current) => [
-              ...current,
-              { id, kind: "plan", text: formatPlan(payload.plan) },
-            ]);
-          } else if (payload.type === "tool_call") {
-            setLines((current) => [
-              ...current,
-              {
-                id,
-                kind: "tool",
-                text: `→ ${payload.tool}(${JSON.stringify(payload.args)})`,
-              },
-            ]);
-          } else if (payload.type === "tool_result") {
-            setLines((current) => [
-              ...current,
-              { id, kind: "result", text: payload.output },
-            ]);
-          } else if (payload.type === "answer") {
-            setFinalAnswer(payload.text);
-          } else if (payload.type === "error") {
-            setLines((current) => [
-              ...current,
-              { id, kind: "error", text: payload.message },
-            ]);
-          }
-        }
-
-        boundary = buffer.indexOf("\n\n");
+      if (!response.ok || !response.body) {
+        setLines([
+          {
+            id: crypto.randomUUID(),
+            kind: "error",
+            text: `HTTP ${response.status}`,
+          },
+        ]);
+        return;
       }
-    }
 
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+
+        let boundary = buffer.indexOf("\n\n");
+
+        while (boundary !== -1) {
+          const block = buffer.slice(0, boundary).trim();
+          buffer = buffer.slice(boundary + 2);
+
+          const parsed = parseSseBlock(block);
+
+          if (parsed?.payload) {
+            const { payload } = parsed;
+            const id = crypto.randomUUID();
+
+            if (payload.type === "trace") {
+              setLines((current) => [
+                ...current,
+                { id, kind: "trace", text: `[${payload.phase}] ${payload.message}` },
+              ]);
+            } else if (payload.type === "plan") {
+              setLines((current) => [
+                ...current,
+                { id, kind: "plan", text: formatPlan(payload.plan) },
+              ]);
+            } else if (payload.type === "tool_call") {
+              setLines((current) => [
+                ...current,
+                {
+                  id,
+                  kind: "tool",
+                  text: `→ ${payload.tool}(${JSON.stringify(payload.args)})`,
+                },
+              ]);
+            } else if (payload.type === "tool_result") {
+              setLines((current) => [
+                ...current,
+                { id, kind: "result", text: payload.output },
+              ]);
+            } else if (payload.type === "answer") {
+              setFinalAnswer(payload.text);
+            } else if (payload.type === "error") {
+              setLines((current) => [
+                ...current,
+                { id, kind: "error", text: payload.message },
+              ]);
+            } else if (payload.type === "done") {
+              setStats({
+                steps: payload.steps,
+                toolCalls: payload.toolCalls,
+                totalMs: payload.totalMs,
+              });
+            }
+          }
+
+          boundary = buffer.indexOf("\n\n");
+        }
+      }
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === "AbortError")) {
+        setLines((current) => [
+          ...current,
+          {
+            id: crypto.randomUUID(),
+            kind: "error",
+            text: error instanceof Error ? error.message : "请求失败",
+          },
+        ]);
+      }
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  function stopAgent() {
+    abortRef.current?.abort();
     setRunning(false);
+    setLines((current) => [
+      ...current,
+      { id: crypto.randomUUID(), kind: "trace", text: "[client] 已手动停止" },
+    ]);
   }
 
   return (
@@ -149,14 +190,43 @@ export function AgentOrchestratorDemo() {
           className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/40"
         />
 
-        <button
-          type="button"
-          onClick={() => void runAgent()}
-          disabled={running || !message.trim()}
-          className="rounded-full bg-cyan-300 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50"
-        >
-          {running ? "运行中…" : "运行 Agent 循环"}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          {presets.map((preset) => (
+            <button
+              key={preset}
+              type="button"
+              onClick={() => setMessage(preset)}
+              className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300 hover:border-white/20"
+            >
+              {preset}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => void runAgent()}
+            disabled={running || !message.trim()}
+            className="rounded-full bg-cyan-300 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50"
+          >
+            {running ? "运行中…" : "运行 Agent 循环"}
+          </button>
+          <button
+            type="button"
+            onClick={stopAgent}
+            disabled={!running}
+            className="rounded-full border border-white/10 px-4 py-2 text-sm text-slate-200 disabled:opacity-40"
+          >
+            停止
+          </button>
+        </div>
+
+        {stats ? (
+          <p className="font-mono text-xs text-slate-500">
+            steps {stats.steps} · tools {stats.toolCalls} · total {stats.totalMs} ms
+          </p>
+        ) : null}
 
         <div className="rounded-2xl border border-white/10 bg-black/30 p-4 font-mono text-xs leading-6 text-slate-300">
           {lines.length ? (

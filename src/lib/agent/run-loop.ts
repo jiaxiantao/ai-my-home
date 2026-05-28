@@ -4,15 +4,27 @@ import type { AgentTraceEvent, AgentToolResult } from "@/lib/agent/types";
 
 const MAX_STEPS = 4;
 
+function assertNotAborted(signal?: AbortSignal) {
+  if (!signal?.aborted) {
+    return;
+  }
+
+  throw new Error("Agent request aborted");
+}
+
 export async function* runAgentLoop(
   message: string,
+  options: { signal?: AbortSignal } = {},
 ): AsyncGenerator<AgentTraceEvent> {
+  const startedAt = performance.now();
   const prior: AgentToolResult[] = [];
   let steps = 0;
+  let toolCalls = 0;
 
   yield { type: "trace", phase: "start", message: "Agent 循环启动" };
 
   while (steps < MAX_STEPS) {
+    assertNotAborted(options.signal);
     steps += 1;
     yield {
       type: "trace",
@@ -25,11 +37,17 @@ export async function* runAgentLoop(
 
     if (plan.action === "answer") {
       yield { type: "answer", text: plan.answer, mock };
-      yield { type: "done", steps };
+      yield {
+        type: "done",
+        steps,
+        toolCalls,
+        totalMs: Math.round(performance.now() - startedAt),
+      };
       return;
     }
 
     yield { type: "tool_call", tool: plan.tool, args: plan.args };
+    toolCalls += 1;
 
     try {
       const result = await executeAgentTool(plan.tool, plan.args);
@@ -55,5 +73,10 @@ export async function* runAgentLoop(
       : `已达最大步数（${MAX_STEPS}），请缩小问题范围后重试。`;
 
   yield { type: "answer", text, mock };
-  yield { type: "done", steps };
+  yield {
+    type: "done",
+    steps,
+    toolCalls,
+    totalMs: Math.round(performance.now() - startedAt),
+  };
 }
