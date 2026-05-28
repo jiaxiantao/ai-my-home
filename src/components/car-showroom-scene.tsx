@@ -1,9 +1,10 @@
 "use client";
 
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
-import { useMemo, useRef } from "react";
+import { ContactShadows, Environment, OrbitControls, PerspectiveCamera } from "@react-three/drei";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 export type CarCameraPreset = "overview" | "front" | "side" | "rear" | "cockpit";
 
@@ -25,6 +26,8 @@ type CarShowroomSceneProps = {
   state: CarShowroomState;
   cameraPreset: CarCameraPreset;
   autoTour: boolean;
+  useAssetModel: boolean;
+  modelUrl?: string;
   onToggleLeftDoor: () => void;
   onToggleRightDoor: () => void;
   onToggleTrunk: () => void;
@@ -435,15 +438,58 @@ export function CarShowroomScene({
   state,
   cameraPreset,
   autoTour,
+  useAssetModel,
+  modelUrl = "/models/car-showroom.glb",
   onToggleLeftDoor,
   onToggleRightDoor,
   onToggleTrunk,
 }: CarShowroomSceneProps) {
+  const [assetScene, setAssetScene] = useState<THREE.Object3D | null>(null);
+
+  useEffect(() => {
+    if (!useAssetModel) {
+      return;
+    }
+
+    let active = true;
+    const loader = new GLTFLoader();
+    loader.load(
+      modelUrl,
+      (gltf) => {
+        if (!active) {
+          return;
+        }
+        const loadedScene = gltf.scene.clone(true);
+        loadedScene.traverse((child) => {
+          const mesh = child as THREE.Mesh;
+          if (mesh.isMesh) {
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+          }
+        });
+        loadedScene.position.set(0, 0.25, 0);
+        loadedScene.scale.set(1.2, 1.2, 1.2);
+        setAssetScene(loadedScene);
+      },
+      undefined,
+      () => {
+        if (active) {
+          setAssetScene(null);
+        }
+      },
+    );
+
+    return () => {
+      active = false;
+    };
+  }, [modelUrl, useAssetModel]);
+
   return (
     <div className="h-[520px] overflow-hidden rounded-4xl border border-white/10 bg-slate-950/80">
       <Canvas shadows>
         <CameraRig preset={cameraPreset} autoTour={autoTour} />
         <color attach="background" args={["#020617"]} />
+        <Environment preset="night" />
         <ambientLight intensity={0.42} />
         <directionalLight
           position={[5, 8, 3]}
@@ -454,12 +500,16 @@ export function CarShowroomScene({
         />
         <pointLight position={[-4, 2, -3]} intensity={0.25} color="#67e8f9" />
 
-        <CarModel
-          state={state}
-          onToggleLeftDoor={onToggleLeftDoor}
-          onToggleRightDoor={onToggleRightDoor}
-          onToggleTrunk={onToggleTrunk}
-        />
+        {useAssetModel && assetScene ? (
+          <primitive object={assetScene} />
+        ) : (
+          <CarModel
+            state={state}
+            onToggleLeftDoor={onToggleLeftDoor}
+            onToggleRightDoor={onToggleRightDoor}
+            onToggleTrunk={onToggleTrunk}
+          />
+        )}
 
         <mesh
           receiveShadow
@@ -469,6 +519,13 @@ export function CarShowroomScene({
           <circleGeometry args={[8, 64]} />
           <meshStandardMaterial color="#0f172a" roughness={0.96} metalness={0.1} />
         </mesh>
+        <ContactShadows
+          position={[0, -0.2, 0]}
+          opacity={0.48}
+          blur={2.4}
+          scale={10}
+          far={4}
+        />
 
         <OrbitControls
           enablePan={false}

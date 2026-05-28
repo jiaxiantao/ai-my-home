@@ -32,6 +32,7 @@ export default function CarShowroomPage() {
   const [sunroofOpen, setSunroofOpen] = useState(false);
   const [autoTour, setAutoTour] = useState(false);
   const [bodyColor, setBodyColor] = useState("#0ea5e9");
+  const [useAssetModel, setUseAssetModel] = useState(false);
 
   const sceneState = useMemo(
     () => ({
@@ -121,12 +122,25 @@ export default function CarShowroomPage() {
         state={sceneState}
         cameraPreset={cameraPreset}
         autoTour={autoTour}
+        useAssetModel={useAssetModel}
         onToggleLeftDoor={() => setLeftDoorOpen((value) => !value)}
         onToggleRightDoor={() => setRightDoorOpen((value) => !value)}
         onToggleTrunk={() => setTrunkOpen((value) => !value)}
       />
 
       <section className="grid gap-4 rounded-3xl border border-white/10 bg-slate-950/60 p-5">
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            variant={useAssetModel ? "default" : "outline"}
+            onClick={() => setUseAssetModel((value) => !value)}
+          >
+            {useAssetModel ? "使用几何体车模" : "尝试加载 GLB 车模"}
+          </Button>
+          <p className="text-xs text-slate-400">
+            将真实模型放到 `public/models/car-showroom.glb` 后，开启此开关即可切换为资产渲染。
+          </p>
+        </div>
+
         <div className="flex flex-wrap gap-3">
           <Button
             variant={cameraPreset === "overview" ? "default" : "outline"}
