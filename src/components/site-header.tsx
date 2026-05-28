@@ -70,7 +70,8 @@ export function SiteHeader() {
     }
     setAuthenticated(true);
     setPassword("");
-    setAuthMessage("登录成功");
+    setAuthMessage(null);
+    setAuthOpen(false);
   }
 
   async function handleLogout() {
