@@ -6,6 +6,12 @@ import { useMemo, useState } from "react";
 import type { CarCameraPreset } from "@/components/car-showroom-scene";
 import { Button } from "@/components/ui/button";
 
+const carModelOptions = [
+  { label: "概念车 CarConcept", value: "/models/cars/car-concept.glb" },
+  { label: "牛奶卡车 Cesium", value: "/models/cars/cesium-milk-truck.glb" },
+  { label: "玩具车 ToyCar", value: "/models/cars/toy-car.glb" },
+] as const;
+
 const CarShowroomScene = dynamic(
   () => import("@/components/car-showroom-scene").then((mod) => mod.CarShowroomScene),
   {
@@ -32,7 +38,10 @@ export default function CarShowroomPage() {
   const [sunroofOpen, setSunroofOpen] = useState(false);
   const [autoTour, setAutoTour] = useState(false);
   const [bodyColor, setBodyColor] = useState("#0ea5e9");
-  const [useAssetModel, setUseAssetModel] = useState(false);
+  const [useAssetModel, setUseAssetModel] = useState(true);
+  const [selectedModelUrl, setSelectedModelUrl] = useState<string>(
+    carModelOptions[0].value,
+  );
 
   const sceneState = useMemo(
     () => ({
@@ -123,6 +132,7 @@ export default function CarShowroomPage() {
         cameraPreset={cameraPreset}
         autoTour={autoTour}
         useAssetModel={useAssetModel}
+        modelUrl={selectedModelUrl}
         onToggleLeftDoor={() => setLeftDoorOpen((value) => !value)}
         onToggleRightDoor={() => setRightDoorOpen((value) => !value)}
         onToggleTrunk={() => setTrunkOpen((value) => !value)}
@@ -136,8 +146,20 @@ export default function CarShowroomPage() {
           >
             {useAssetModel ? "使用几何体车模" : "尝试加载 GLB 车模"}
           </Button>
+          {carModelOptions.map((model) => (
+            <Button
+              key={model.value}
+              variant={selectedModelUrl === model.value ? "default" : "outline"}
+              onClick={() => {
+                setSelectedModelUrl(model.value);
+                setUseAssetModel(true);
+              }}
+            >
+              {model.label}
+            </Button>
+          ))}
           <p className="text-xs text-slate-400">
-            将真实模型放到 `public/models/car-showroom.glb` 后，开启此开关即可切换为资产渲染。
+            已内置 3 个在线下载车型到 `public/models/cars`，可直接切换演示。
           </p>
         </div>
 
