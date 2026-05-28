@@ -6,7 +6,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
-export type CarCameraPreset = "overview" | "front" | "side" | "rear" | "cockpit";
+export type CarCameraPreset =
+  | "overview"
+  | "front"
+  | "side-left"
+  | "side-right"
+  | "rear"
+  | "cockpit";
 
 type CarShowroomState = {
   leftDoorOpen: boolean;
@@ -162,9 +168,15 @@ function getCameraPose(preset: CarCameraPreset) {
       target: new THREE.Vector3(-0.8, 0.5, 0),
     };
   }
-  if (preset === "side") {
+  if (preset === "side-left") {
     return {
       position: new THREE.Vector3(0.2, 1.9, 6.3),
+      target: new THREE.Vector3(0.1, 0.45, 0),
+    };
+  }
+  if (preset === "side-right") {
+    return {
+      position: new THREE.Vector3(0.2, 1.9, -6.3),
       target: new THREE.Vector3(0.1, 0.45, 0),
     };
   }

@@ -153,7 +153,7 @@ export default function CarShowroomPage() {
     setSunroofOpen(false);
     setSpeedKph(45);
     setBraking(false);
-    setCameraPreset("side");
+    setCameraPreset("side-right");
     setAutoTour(false);
   }
 
@@ -246,13 +246,22 @@ export default function CarShowroomPage() {
             前脸视角
           </Button>
           <Button
-            variant={cameraPreset === "side" ? "default" : "outline"}
+            variant={cameraPreset === "side-left" ? "default" : "outline"}
             onClick={() => {
-              setCameraPreset("side");
+              setCameraPreset("side-left");
               setAutoTour(false);
             }}
           >
-            侧面视角
+            左侧视角
+          </Button>
+          <Button
+            variant={cameraPreset === "side-right" ? "default" : "outline"}
+            onClick={() => {
+              setCameraPreset("side-right");
+              setAutoTour(false);
+            }}
+          >
+            右侧视角
           </Button>
           <Button
             variant={cameraPreset === "rear" ? "default" : "outline"}
