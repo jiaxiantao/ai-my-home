@@ -51,13 +51,13 @@ function AssetModel({
   state: CarShowroomState;
 }) {
   const rootRef = useRef<THREE.Group>(null);
-  const paintMaterialRefs = useRef<THREE.MeshStandardMaterial[]>([]);
+  const paintMaterialRefs = useRef<THREE.Material[]>([]);
 
   useEffect(() => {
     paintMaterialRefs.current = [];
     const excludeName = /(wheel|tire|rim|glass|window|light|head|tail|lamp|indicator|interior|seat|mirror|grill|exhaust|brake|caliper|steer|handle)/;
     const includeName = /(body|paint|door|hood|bonnet|fender|bumper|trunk|tailgate|hatch|shell|car)/;
-    const candidates = new Map<string, { material: THREE.MeshStandardMaterial; score: number }>();
+    const candidates = new Map<string, { material: THREE.Material; score: number }>();
 
     object.traverse((child) => {
       const mesh = child as THREE.Mesh;
@@ -77,17 +77,21 @@ function AssetModel({
 
       const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
       for (const entry of materials) {
-        if (!(entry instanceof THREE.MeshStandardMaterial)) {
+        if (!("color" in entry)) {
           continue;
         }
-        if (entry.transparent && entry.opacity < 0.98) {
+        const maybeTransparent = (entry as { transparent?: boolean; opacity?: number }).transparent;
+        const maybeOpacity = (entry as { opacity?: number }).opacity;
+        if (maybeTransparent && typeof maybeOpacity === "number" && maybeOpacity < 0.98) {
           continue;
         }
-        if (entry.emissiveIntensity > 0.15) {
+        const maybeEmissiveIntensity = (entry as { emissiveIntensity?: number }).emissiveIntensity;
+        if (typeof maybeEmissiveIntensity === "number" && maybeEmissiveIntensity > 0.15) {
           continue;
         }
 
-        const luma = 0.2126 * entry.color.r + 0.7152 * entry.color.g + 0.0722 * entry.color.b;
+        const color = (entry as { color: THREE.Color }).color;
+        const luma = 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
         if (luma < 0.1 || luma > 0.95) {
           continue;
         }
@@ -117,7 +121,13 @@ function AssetModel({
 
     const target = new THREE.Color(state.bodyColor);
     for (const material of paintMaterialRefs.current) {
-      material.color.lerp(target, THREE.MathUtils.clamp(delta * 0.35, 0, 1));
+      if (!("color" in material)) {
+        continue;
+      }
+      (material as { color: THREE.Color }).color.lerp(
+        target,
+        THREE.MathUtils.clamp(delta * 0.35, 0, 1),
+      );
     }
   });
 
