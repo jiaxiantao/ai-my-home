@@ -5,6 +5,7 @@ import { getDb } from "@/lib/db";
 
 const createProbeSchema = z.object({
   probeKey: z.string().min(1),
+  environment: z.string().min(1).max(32).optional(),
   p50Ms: z.number().int().nonnegative().optional(),
   p95Ms: z.number().int().nonnegative().optional(),
   avgSteps: z.number().nonnegative().optional(),
@@ -27,13 +28,24 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const probeKey = searchParams.get("probeKey") ?? undefined;
+  const environment = searchParams.get("environment") ?? undefined;
+  const sinceHoursRaw = Number(searchParams.get("sinceHours") ?? 0);
+  const sinceHours = Number.isFinite(sinceHoursRaw)
+    ? Math.max(0, Math.min(24 * 30, Math.floor(sinceHoursRaw)))
+    : 0;
+  const sinceDate =
+    sinceHours > 0 ? new Date(Date.now() - sinceHours * 60 * 60 * 1000) : undefined;
   const limitRaw = Number(searchParams.get("limit") ?? 20);
   const take = Number.isFinite(limitRaw)
     ? Math.max(1, Math.min(100, Math.floor(limitRaw)))
     : 20;
 
   const records = await repository.findMany({
-    where: probeKey ? { probeKey } : undefined,
+    where: {
+      ...(probeKey ? { probeKey } : {}),
+      ...(environment ? { environment } : {}),
+      ...(sinceDate ? { createdAt: { gte: sinceDate } } : {}),
+    },
     orderBy: { createdAt: "asc" },
     take,
   });
@@ -63,6 +75,7 @@ export async function POST(request: Request) {
     const created = await repository.create({
       data: {
         probeKey: payload.probeKey,
+        environment: payload.environment ?? "local",
         p50Ms: payload.p50Ms,
         p95Ms: payload.p95Ms,
         avgSteps: payload.avgSteps,
@@ -108,6 +121,7 @@ export async function DELETE(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const probeKey = searchParams.get("probeKey");
+  const environment = searchParams.get("environment");
 
   if (!probeKey) {
     return NextResponse.json(
@@ -117,7 +131,10 @@ export async function DELETE(request: Request) {
   }
 
   await repository.deleteMany({
-    where: { probeKey },
+    where: {
+      probeKey,
+      ...(environment ? { environment } : {}),
+    },
   });
 
   return NextResponse.json({ ok: true });

@@ -35,6 +35,7 @@ type AgentProbeMetrics = {
 
 type AgentProbeHistory = {
   at: string;
+  environment: string;
   p50Ms: number;
   p95Ms: number;
   avgSteps: number;
@@ -42,6 +43,42 @@ type AgentProbeHistory = {
   errorRate: number;
 };
 const AGENT_HISTORY_LIMIT = 20;
+const WINDOW_OPTIONS = [
+  { label: "最近 1 小时", value: 1 },
+  { label: "最近 24 小时", value: 24 },
+  { label: "最近 7 天", value: 24 * 7 },
+] as const;
+const ENV_OPTIONS = [
+  { label: "全部环境", value: "all" },
+  { label: "local", value: "local" },
+  { label: "preview", value: "preview" },
+  { label: "prod", value: "prod" },
+] as const;
+
+function getRuntimeEnvironment() {
+  if (typeof window === "undefined") {
+    return "local";
+  }
+
+  const host = window.location.hostname;
+  if (host === "localhost" || host === "127.0.0.1") {
+    return "local";
+  }
+  if (host.includes("preview") || host.includes("vercel.app")) {
+    return "preview";
+  }
+  return "prod";
+}
+
+function getErrorLevel(rate: number) {
+  if (rate <= 0.05) {
+    return { label: "GREEN", ok: true, threshold: "≤ 5%" };
+  }
+  if (rate <= 0.2) {
+    return { label: "YELLOW", ok: false, threshold: "5% - 20%" };
+  }
+  return { label: "RED", ok: false, threshold: "> 20%" };
+}
 
 const PROBES: Array<{ key: string; label: string; href: string }> = [
   { key: "health", label: "GET /api/health", href: "/api/health" },
@@ -69,6 +106,8 @@ export function StatusProbe() {
   const [lastRun, setLastRun] = useState<string | null>(null);
   const [agentMetrics, setAgentMetrics] = useState<AgentProbeMetrics | null>(null);
   const [agentHistory, setAgentHistory] = useState<AgentProbeHistory[]>([]);
+  const [windowHours, setWindowHours] = useState<number>(24);
+  const [environment, setEnvironment] = useState<string>(() => getRuntimeEnvironment());
 
   useEffect(() => {
     const controller = new AbortController();
@@ -87,8 +126,16 @@ export function StatusProbe() {
 
   useEffect(() => {
     const controller = new AbortController();
+    const query = new URLSearchParams({
+      probeKey: "agent-sse",
+      limit: String(AGENT_HISTORY_LIMIT),
+      sinceHours: String(windowHours),
+    });
+    if (environment !== "all") {
+      query.set("environment", environment);
+    }
 
-    fetch(`/api/status/probes?probeKey=agent-sse&limit=${AGENT_HISTORY_LIMIT}`, {
+    fetch(`/api/status/probes?${query.toString()}`, {
       cache: "no-store",
       signal: controller.signal,
     })
@@ -97,6 +144,7 @@ export function StatusProbe() {
         (data: {
           records?: Array<{
             createdAt: string;
+            environment: string | null;
             p50Ms: number | null;
             p95Ms: number | null;
             avgSteps: number | null;
@@ -110,6 +158,7 @@ export function StatusProbe() {
               at: new Date(item.createdAt).toLocaleTimeString("zh-CN", {
                 hour12: false,
               }),
+              environment: item.environment ?? "unknown",
               p50Ms: item.p50Ms ?? 0,
               p95Ms: item.p95Ms ?? 0,
               avgSteps: item.avgSteps ?? 0,
@@ -124,7 +173,7 @@ export function StatusProbe() {
       });
 
     return () => controller.abort();
-  }, []);
+  }, [windowHours, environment]);
 
   async function runProbes() {
     setRunning(true);
@@ -208,6 +257,7 @@ export function StatusProbe() {
       const errorCount = results.filter((row) => row.key === "agent-sse" && !row.ok).length;
       const entry = {
         at: new Date().toLocaleTimeString("zh-CN", { hour12: false }),
+        environment,
         p50Ms: latestAgentMetrics.p50Ms,
         p95Ms: latestAgentMetrics.p95Ms,
         avgSteps: latestAgentMetrics.avgSteps,
@@ -221,6 +271,7 @@ export function StatusProbe() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           probeKey: "agent-sse",
+          environment,
           p50Ms: entry.p50Ms,
           p95Ms: entry.p95Ms,
           avgSteps: entry.avgSteps,
@@ -300,18 +351,46 @@ export function StatusProbe() {
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200/75">
               Agent 趋势（最近 {agentHistory.length} 次）
             </p>
-            <button
-              type="button"
-              onClick={() => {
-                setAgentHistory([]);
-                void fetch("/api/status/probes?probeKey=agent-sse", {
-                  method: "DELETE",
-                });
-              }}
-              className="rounded-full border border-white/10 px-3 py-1 text-[10px] text-slate-400 hover:border-white/20 hover:text-slate-200"
-            >
-              清空历史
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                value={windowHours}
+                onChange={(event) => setWindowHours(Number(event.target.value))}
+                className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[10px] text-slate-300"
+              >
+                {WINDOW_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={environment}
+                onChange={(event) => setEnvironment(event.target.value)}
+                className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[10px] text-slate-300"
+              >
+                {ENV_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => {
+                  setAgentHistory([]);
+                  const query = new URLSearchParams({ probeKey: "agent-sse" });
+                  if (environment !== "all") {
+                    query.set("environment", environment);
+                  }
+                  void fetch(`/api/status/probes?${query.toString()}`, {
+                    method: "DELETE",
+                  });
+                }}
+                className="rounded-full border border-white/10 px-3 py-1 text-[10px] text-slate-400 hover:border-white/20 hover:text-slate-200"
+              >
+                清空历史
+              </button>
+            </div>
           </div>
 
           <div className="mt-4 space-y-2">
@@ -323,7 +402,8 @@ export function StatusProbe() {
               return (
                 <div key={`${item.at}-${index}`} className="space-y-1">
                   <p className="font-mono text-[10px] text-slate-500">
-                    {item.at} · p50 {item.p50Ms}ms · p95 {item.p95Ms}ms · steps{" "}
+                    {item.at} · {item.environment} · p50 {item.p50Ms}ms · p95{" "}
+                    {item.p95Ms}ms · steps{" "}
                     {item.avgSteps.toFixed(1)} · tools {item.avgToolCalls.toFixed(1)}
                   </p>
                   <div className="relative h-2 rounded bg-white/10">
@@ -346,13 +426,18 @@ export function StatusProbe() {
       ) : null}
 
       {agentHistory.length ? (
-        <StatusCard
-          label="Agent Error Rate"
-          ok={agentHistory[agentHistory.length - 1].errorRate <= 0.2}
-          detail={`${Math.round(
-            agentHistory[agentHistory.length - 1].errorRate * 100,
-          )}%（阈值 20%）`}
-        />
+        (() => {
+          const latest = agentHistory[agentHistory.length - 1];
+          const level = getErrorLevel(latest.errorRate);
+
+          return (
+            <StatusCard
+              label={`Agent Error Rate · ${level.label}`}
+              ok={level.ok}
+              detail={`${Math.round(latest.errorRate * 100)}%（${level.threshold}）`}
+            />
+          );
+        })()
       ) : null}
 
       {/* API probes */}

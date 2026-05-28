@@ -66,6 +66,7 @@ model Note {
 model StatusProbeHistory {
   id           String   @id @default(cuid())
   probeKey     String
+  environment  String   @default("local")
   p50Ms        Int?
   p95Ms        Int?
   avgSteps     Float?
@@ -75,6 +76,6 @@ model StatusProbeHistory {
   detail       String?
   createdAt    DateTime @default(now())
 
-  @@index([probeKey, createdAt])
+  @@index([probeKey, environment, createdAt])
   @@index([createdAt])
 }
