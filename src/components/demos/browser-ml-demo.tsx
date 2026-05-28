@@ -4,6 +4,19 @@ import { useState } from "react";
 
 type SentimentLabel = { label: string; score: number };
 
+type TransformersEnvLike = {
+  allowLocalModels?: boolean;
+  allowRemoteModels?: boolean;
+  useBrowserCache?: boolean;
+  backends?: {
+    onnx?: {
+      wasm?: {
+        numThreads?: number;
+      };
+    };
+  };
+};
+
 export function BrowserMlDemo() {
   const [text, setText] = useState(
     "Transformers.js runs entirely in the browser with ONNX Runtime Web.",
@@ -19,16 +32,30 @@ export function BrowserMlDemo() {
   async function runClassification() {
     setError(null);
     setStatus("loading");
+    setProgress("");
+    setLoadMs(null);
+    setInferMs(null);
     setLabels([]);
     const loadStarted = performance.now();
 
     try {
       const { pipeline, env } = await import("@xenova/transformers");
+      const runtimeEnv = env as TransformersEnvLike | undefined;
 
-      env.allowLocalModels = false;
-      env.useBrowserCache = true;
+      // 某些运行时下 env 字段不完整，需防御式配置
+      if (runtimeEnv) {
+        if (typeof runtimeEnv.allowLocalModels === "boolean") {
+          runtimeEnv.allowLocalModels = false;
+        }
+        if (typeof runtimeEnv.allowRemoteModels === "boolean") {
+          runtimeEnv.allowRemoteModels = true;
+        }
+        if (typeof runtimeEnv.useBrowserCache === "boolean") {
+          runtimeEnv.useBrowserCache = true;
+        }
+      }
 
-      const wasmBackend = env.backends?.onnx?.wasm;
+      const wasmBackend = runtimeEnv?.backends?.onnx?.wasm;
       setBackend(
         wasmBackend
           ? `ONNX Runtime Web · WASM threads=${String(wasmBackend.numThreads ?? "auto")}`
@@ -58,7 +85,12 @@ export function BrowserMlDemo() {
       setLabels(Array.isArray(output) ? output : [output as SentimentLabel]);
     } catch (caught) {
       setStatus("error");
-      setError(caught instanceof Error ? caught.message : "模型加载或推理失败");
+      const raw = caught instanceof Error ? caught.message : "模型加载或推理失败";
+      setError(
+        raw.includes("Cannot convert undefined or null to object")
+          ? "Transformers 运行时初始化失败，请刷新页面后重试；若仍失败，建议切换浏览器或关闭隐私扩展。"
+          : raw,
+      );
     }
   }
 
