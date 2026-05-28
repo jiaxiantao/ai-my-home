@@ -79,3 +79,13 @@ model StatusProbeHistory {
   @@index([probeKey, environment, createdAt])
   @@index([createdAt])
 }
+
+model IntelligenceProfile {
+  id          String   @id @default(cuid())
+  owner       String   @unique
+  preferences Json
+  learning    Json
+  history     Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

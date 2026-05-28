@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { useAuth } from "@/components/auth-provider";
 import { IntelligenceLearningPanel } from "@/components/intelligence-learning-panel";
 import { agentToolCatalog } from "@/lib/agent/tool-catalog";
 import type { AgentPlan, AgentToolName, AgentTraceEvent } from "@/lib/agent/types";
@@ -114,7 +115,9 @@ export function AgentOrchestratorDemo() {
   const [preferences, setPreferences] = useState(() => loadIntelligencePreferences());
   const [learningProfile, setLearningProfile] = useState(() => loadLearningProfile());
   const [historyEvents, setHistoryEvents] = useState(() => loadHistoryEvents());
+  const cloudHydrated = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
+  const { authenticated } = useAuth();
   const recommendedPromptSuffix = useMemo(
     () => getAgentPromptHint(preferences),
     [preferences],
@@ -128,6 +131,62 @@ export function AgentOrchestratorDemo() {
   useEffect(() => {
     saveHistoryEvents(historyEvents);
   }, [historyEvents]);
+
+  useEffect(() => {
+    if (!authenticated) {
+      cloudHydrated.current = false;
+      return;
+    }
+    if (cloudHydrated.current) {
+      return;
+    }
+
+    const controller = new AbortController();
+    void fetch("/api/intelligence/profile", {
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then((response) => (response.ok ? response.json() : null))
+      .then(
+        (payload:
+          | {
+              profile?: {
+                preferences?: typeof preferences;
+                learning?: typeof learningProfile;
+                history?: typeof historyEvents;
+              };
+            }
+          | null) => {
+          if (!payload?.profile) {
+            return;
+          }
+          setPreferences(payload.profile.preferences ?? defaultIntelligencePreferences);
+          setLearningProfile(payload.profile.learning ?? loadLearningProfile());
+          setHistoryEvents(payload.profile.history ?? []);
+          cloudHydrated.current = true;
+        },
+      )
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, [authenticated]);
+
+  useEffect(() => {
+    if (!authenticated || !cloudHydrated.current) {
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      void fetch("/api/intelligence/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          preferences,
+          learning: learningProfile,
+          history: historyEvents,
+        }),
+      });
+    }, 800);
+    return () => window.clearTimeout(timer);
+  }, [authenticated, historyEvents, learningProfile, preferences]);
   const presets = [
     "先检索前端架构笔记，再计算 (128 + 64) * 3，并告诉我现在时间",
     "计算 (128 + 64) * 3",

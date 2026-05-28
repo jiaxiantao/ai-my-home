@@ -8,6 +8,7 @@ import {
 } from "@/components/assistant/chat-session-sidebar";
 import { ChatComposer } from "@/components/assistant/chat-composer";
 import { IntelligenceLearningPanel } from "@/components/intelligence-learning-panel";
+import { useAuth } from "@/components/auth-provider";
 import {
   ChatMessageBubble,
   ReferenceCard,
@@ -82,6 +83,7 @@ export function AssistantChat({
 }) {
   const hasAutoRun = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
+  const cloudHydrated = useRef(false);
 
   const bootstrap = getChatSessionBootstrap();
   const [sessions, setSessions] = useState<ChatSession[]>(bootstrap.sessions);
@@ -97,6 +99,7 @@ export function AssistantChat({
   );
   const [learningProfile, setLearningProfile] = useState(() => loadLearningProfile());
   const [historyEvents, setHistoryEvents] = useState(() => loadHistoryEvents());
+  const { authenticated } = useAuth();
 
   const activeSession =
     sessions.find((session) => session.id === activeSessionId) ?? sessions[0];
@@ -116,6 +119,65 @@ export function AssistantChat({
   useEffect(() => {
     saveHistoryEvents(historyEvents);
   }, [historyEvents]);
+
+  useEffect(() => {
+    if (!authenticated) {
+      cloudHydrated.current = false;
+      return;
+    }
+    if (cloudHydrated.current) {
+      return;
+    }
+
+    const controller = new AbortController();
+    void fetch("/api/intelligence/profile", {
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then((response) => (response.ok ? response.json() : null))
+      .then(
+        (payload:
+          | {
+              profile?: {
+                preferences?: typeof intelligencePreferences;
+                learning?: typeof learningProfile;
+                history?: typeof historyEvents;
+              };
+            }
+          | null) => {
+          if (!payload?.profile) {
+            return;
+          }
+          setIntelligencePreferences(
+            payload.profile.preferences ?? defaultIntelligencePreferences,
+          );
+          setLearningProfile(payload.profile.learning ?? loadLearningProfile());
+          setHistoryEvents(payload.profile.history ?? []);
+          cloudHydrated.current = true;
+        },
+      )
+      .catch(() => undefined);
+
+    return () => controller.abort();
+  }, [authenticated]);
+
+  useEffect(() => {
+    if (!authenticated || !cloudHydrated.current) {
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      void fetch("/api/intelligence/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          preferences: intelligencePreferences,
+          learning: learningProfile,
+          history: historyEvents,
+        }),
+      });
+    }, 800);
+    return () => window.clearTimeout(timer);
+  }, [authenticated, historyEvents, intelligencePreferences, learningProfile]);
 
   const preferenceTemplate = useMemo(
     () => getPreferenceTemplate(intelligencePreferences),
