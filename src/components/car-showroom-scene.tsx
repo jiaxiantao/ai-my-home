@@ -761,6 +761,9 @@ export function CarShowroomScene({
 
         const groundedBounds = new THREE.Box3().setFromObject(loadedScene);
         loadedScene.position.y -= groundedBounds.min.y;
+        // Align asset forward axis with camera presets:
+        // camera "front" assumes vehicle nose points to -X in this scene.
+        loadedScene.rotation.y = Math.PI;
 
         setAssetScene(loadedScene);
       },
