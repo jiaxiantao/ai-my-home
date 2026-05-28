@@ -761,9 +761,9 @@ export function CarShowroomScene({
 
         const groundedBounds = new THREE.Box3().setFromObject(loadedScene);
         loadedScene.position.y -= groundedBounds.min.y;
-        // Align asset forward axis with camera presets:
-        // camera "front" assumes vehicle nose points to -X in this scene.
-        loadedScene.rotation.y = Math.PI;
+        // Align asset forward axis with camera presets.
+        // Market GLB cars are typically Z-forward; showroom presets assume -X forward.
+        loadedScene.rotation.y = -Math.PI / 2;
 
         setAssetScene(loadedScene);
       },
