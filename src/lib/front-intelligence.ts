@@ -90,6 +90,24 @@ function applyPreferenceHint(
   return `${prompt}\n${styleHint}\n${depthHint}\n${metricHint}`;
 }
 
+export function getPreferenceTemplate(preferences: IntelligencePreferences) {
+  const styleLine =
+    preferences.style === "risk"
+      ? "输出重点：风险、边界条件、回滚方案"
+      : preferences.style === "code"
+        ? "输出重点：可执行代码片段、改动位置、验证方式"
+        : "输出重点：步骤拆解、实施顺序、执行清单";
+  const depthLine =
+    preferences.depth === "brief"
+      ? "回答粒度：简略（<= 5 点）"
+      : "回答粒度：详细（背景+步骤+注意事项）";
+  const metricLine = preferences.includeMetrics
+    ? "指标要求：包含可量化验收指标"
+    : "指标要求：可省略量化指标";
+
+  return [styleLine, depthLine, metricLine];
+}
+
 function actionHints(intents: Array<{ label: IntentLabel; score: number }>) {
   const labels = intents.map((item) => item.label);
   const actions = new Set<string>();

@@ -14,10 +14,14 @@ import {
 import { streamChatQuestion, type ChatReference } from "@/lib/chat-stream";
 import type { ChatImageAttachment, ChatMessage, ChatMetrics, ChatSession } from "@/lib/chat-types";
 import { getChatSessionBootstrap } from "@/lib/chat-session-bootstrap";
-import { analyzeComposer } from "@/lib/front-intelligence";
+import { analyzeComposer, getPreferenceTemplate } from "@/lib/front-intelligence";
 import {
+  bumpLearningProfile,
   defaultIntelligencePreferences,
+  inferRecommendedPreferences,
+  loadLearningProfile,
   loadIntelligencePreferences,
+  saveLearningProfile,
   saveIntelligencePreferences,
   type IntelligenceDepth,
   type IntelligenceStyle,
@@ -84,6 +88,7 @@ export function AssistantChat({
   const [intelligencePreferences, setIntelligencePreferences] = useState(() =>
     loadIntelligencePreferences(),
   );
+  const [learningProfile, setLearningProfile] = useState(() => loadLearningProfile());
 
   const activeSession =
     sessions.find((session) => session.id === activeSessionId) ?? sessions[0];
@@ -97,6 +102,28 @@ export function AssistantChat({
   useEffect(() => {
     saveIntelligencePreferences(intelligencePreferences);
   }, [intelligencePreferences]);
+  useEffect(() => {
+    saveLearningProfile(learningProfile);
+  }, [learningProfile]);
+
+  const preferenceTemplate = useMemo(
+    () => getPreferenceTemplate(intelligencePreferences),
+    [intelligencePreferences],
+  );
+  const recommended = useMemo(
+    () => inferRecommendedPreferences(learningProfile),
+    [learningProfile],
+  );
+
+  const applyStylePreference = useCallback((style: IntelligenceStyle) => {
+    setIntelligencePreferences((current) => ({ ...current, style }));
+    setLearningProfile((current) => bumpLearningProfile(current, { style }));
+  }, []);
+
+  const applyDepthPreference = useCallback((depth: IntelligenceDepth) => {
+    setIntelligencePreferences((current) => ({ ...current, depth }));
+    setLearningProfile((current) => bumpLearningProfile(current, { depth }));
+  }, []);
 
   const persistSessions = useCallback((next: ChatSession[]) => {
     setSessions(next);
@@ -478,12 +505,7 @@ export function AssistantChat({
                 <button
                   key={item.key}
                   type="button"
-                  onClick={() =>
-                    setIntelligencePreferences((current) => ({
-                      ...current,
-                      style: item.key,
-                    }))
-                  }
+                  onClick={() => applyStylePreference(item.key)}
                   className={`rounded-full border px-3 py-1 text-[11px] ${
                     intelligencePreferences.style === item.key
                       ? "border-cyan-200/40 bg-cyan-200/15 text-cyan-100"
@@ -502,12 +524,7 @@ export function AssistantChat({
                 <button
                   key={item.key}
                   type="button"
-                  onClick={() =>
-                    setIntelligencePreferences((current) => ({
-                      ...current,
-                      depth: item.key,
-                    }))
-                  }
+                  onClick={() => applyDepthPreference(item.key)}
                   className={`rounded-full border px-3 py-1 text-[11px] ${
                     intelligencePreferences.depth === item.key
                       ? "border-emerald-200/40 bg-emerald-200/15 text-emerald-100"
@@ -535,11 +552,41 @@ export function AssistantChat({
               </button>
               <button
                 type="button"
-                onClick={() => setIntelligencePreferences(defaultIntelligencePreferences)}
+                onClick={() => {
+                  setIntelligencePreferences(defaultIntelligencePreferences);
+                  setLearningProfile(loadLearningProfile());
+                }}
                 className="rounded-full border border-white/10 px-3 py-1 text-[11px] text-slate-400"
               >
                 恢复默认
               </button>
+            </div>
+            {recommended &&
+            (recommended.style !== intelligencePreferences.style ||
+              recommended.depth !== intelligencePreferences.depth) ? (
+              <button
+                type="button"
+                onClick={() =>
+                  setIntelligencePreferences((current) => ({
+                    ...current,
+                    style: recommended.style,
+                    depth: recommended.depth,
+                  }))
+                }
+                className="mt-3 rounded-full border border-amber-200/30 bg-amber-200/10 px-3 py-1 text-[11px] text-amber-100"
+              >
+                智能建议：改为 {recommended.style} / {recommended.depth}
+              </button>
+            ) : null}
+            <div className="mt-3 rounded-xl border border-white/10 bg-black/20 p-3">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">
+                当前模板预览
+              </p>
+              <ul className="mt-2 space-y-1 text-xs text-slate-300">
+                {preferenceTemplate.map((line) => (
+                  <li key={line}>- {line}</li>
+                ))}
+              </ul>
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
               {intelligence.intents.map((intent) => (
