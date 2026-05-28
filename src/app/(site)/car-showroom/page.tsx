@@ -1,15 +1,40 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import type { CarCameraPreset } from "@/components/car-showroom-scene";
 import { Button } from "@/components/ui/button";
 
-const carModelOptions = [
-  { label: "概念车 CarConcept", value: "/models/cars/car-concept.glb" },
-  { label: "牛奶卡车 Cesium", value: "/models/cars/cesium-milk-truck.glb" },
-  { label: "玩具车 ToyCar", value: "/models/cars/toy-car.glb" },
+const marketCategoryOptions = [
+  {
+    key: "suv",
+    label: "SUV",
+    primaryUrl: "/models/market/suv-mainstream.glb",
+    fallbackUrl: "/models/cars/car-concept.glb",
+    fallbackName: "CarConcept",
+  },
+  {
+    key: "sedan",
+    label: "小轿车",
+    primaryUrl: "/models/market/sedan-mainstream.glb",
+    fallbackUrl: "/models/cars/toy-car.glb",
+    fallbackName: "ToyCar",
+  },
+  {
+    key: "offroad",
+    label: "越野车",
+    primaryUrl: "/models/market/offroad-mainstream.glb",
+    fallbackUrl: "/models/cars/cesium-milk-truck.glb",
+    fallbackName: "CesiumTruck",
+  },
+  {
+    key: "mpv",
+    label: "MPV",
+    primaryUrl: "/models/market/mpv-mainstream.glb",
+    fallbackUrl: "/models/cars/cesium-milk-truck.glb",
+    fallbackName: "CesiumTruck",
+  },
 ] as const;
 
 const CarShowroomScene = dynamic(
@@ -39,11 +64,42 @@ export default function CarShowroomPage() {
   const [autoTour, setAutoTour] = useState(false);
   const [bodyColor, setBodyColor] = useState("#0ea5e9");
   const [useAssetModel, setUseAssetModel] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<
+    (typeof marketCategoryOptions)[number]["key"]
+  >("suv");
   const [selectedModelUrl, setSelectedModelUrl] = useState<string>(
-    carModelOptions[0].value,
+    marketCategoryOptions[0].fallbackUrl,
+  );
+  const [selectedModelLabel, setSelectedModelLabel] = useState<string>(
+    `${marketCategoryOptions[0].label}（回退：${marketCategoryOptions[0].fallbackName}）`,
   );
   const [speedKph, setSpeedKph] = useState(28);
   const [braking, setBraking] = useState(false);
+
+  useEffect(() => {
+    const category = marketCategoryOptions.find((item) => item.key === selectedCategory);
+    if (!category) {
+      return;
+    }
+    let active = true;
+    void fetch(category.primaryUrl, { method: "HEAD" })
+      .then((response) => (response.ok ? category.primaryUrl : category.fallbackUrl))
+      .catch(() => category.fallbackUrl)
+      .then((url) => {
+        if (!active) {
+          return;
+        }
+        setSelectedModelUrl(url);
+        setSelectedModelLabel(
+          url === category.primaryUrl
+            ? `${category.label}（主流实车模型）`
+            : `${category.label}（回退：${category.fallbackName}）`,
+        );
+      });
+    return () => {
+      active = false;
+    };
+  }, [selectedCategory]);
 
   const sceneState = useMemo(
     () => ({
@@ -158,12 +214,12 @@ export default function CarShowroomPage() {
           >
             {useAssetModel ? "使用几何体车模" : "尝试加载 GLB 车模"}
           </Button>
-          {carModelOptions.map((model) => (
+          {marketCategoryOptions.map((model) => (
             <Button
-              key={model.value}
-              variant={selectedModelUrl === model.value ? "default" : "outline"}
+              key={model.key}
+              variant={selectedCategory === model.key ? "default" : "outline"}
               onClick={() => {
-                setSelectedModelUrl(model.value);
+                setSelectedCategory(model.key);
                 setUseAssetModel(true);
               }}
             >
@@ -171,7 +227,9 @@ export default function CarShowroomPage() {
             </Button>
           ))}
           <p className="text-xs text-slate-400">
-            已内置 3 个在线下载车型到 `public/models/cars`，可直接切换演示。
+            当前模型：{selectedModelLabel || "加载中..."}。你可将主流车型放到
+            `public/models/market/suv-mainstream.glb` / `sedan-mainstream.glb` /
+            `offroad-mainstream.glb` / `mpv-mainstream.glb`，页面会自动优先加载。
           </p>
         </div>
 
