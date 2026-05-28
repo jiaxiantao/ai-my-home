@@ -32,10 +32,18 @@ export async function* runAgentLoop(
       message: `第 ${steps} 步：规划是否需要工具`,
     };
 
+    const planStartedAt = performance.now();
     const { plan, mock } = await planAgentStep(message, prior);
+    const planMs = Math.round(performance.now() - planStartedAt);
     yield { type: "plan", plan };
 
     if (plan.action === "answer") {
+      yield {
+        type: "step_metric",
+        step: steps,
+        planMs,
+        totalMs: Math.round(performance.now() - startedAt),
+      };
       yield { type: "answer", text: plan.answer, mock };
       yield {
         type: "done",
@@ -50,9 +58,18 @@ export async function* runAgentLoop(
     toolCalls += 1;
 
     try {
+      const toolStartedAt = performance.now();
       const result = await executeAgentTool(plan.tool, plan.args);
+      const toolMs = Math.round(performance.now() - toolStartedAt);
       prior.push(result);
       yield { type: "tool_result", tool: plan.tool, output: result.output };
+      yield {
+        type: "step_metric",
+        step: steps,
+        planMs,
+        toolMs,
+        totalMs: Math.round(performance.now() - startedAt),
+      };
     } catch (error) {
       yield {
         type: "error",

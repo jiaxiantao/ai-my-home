@@ -22,6 +22,13 @@ export type AgentToolResult = {
 export type AgentTraceEvent =
   | { type: "trace"; phase: string; message: string }
   | { type: "plan"; plan: AgentPlan }
+  | {
+      type: "step_metric";
+      step: number;
+      planMs: number;
+      toolMs?: number;
+      totalMs: number;
+    }
   | { type: "tool_call"; tool: AgentToolName; args: Record<string, unknown> }
   | { type: "tool_result"; tool: AgentToolName; output: string }
   | { type: "answer"; text: string; mock?: boolean }

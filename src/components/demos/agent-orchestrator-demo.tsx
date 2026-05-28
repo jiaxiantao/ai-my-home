@@ -11,6 +11,13 @@ type TraceLine = {
   text: string;
 };
 
+type StepMetric = {
+  step: number;
+  planMs: number;
+  toolMs?: number;
+  totalMs: number;
+};
+
 function formatPlan(plan: AgentPlan) {
   if (plan.action === "tool") {
     return `调用 ${plan.tool} · ${plan.reasoning}`;
@@ -47,12 +54,13 @@ export function AgentOrchestratorDemo() {
   const [lines, setLines] = useState<TraceLine[]>([]);
   const [finalAnswer, setFinalAnswer] = useState("");
   const [running, setRunning] = useState(false);
+  const [stepMetrics, setStepMetrics] = useState<StepMetric[]>([]);
   const [stats, setStats] = useState<{ steps: number; toolCalls: number; totalMs: number } | null>(
     null,
   );
   const abortRef = useRef<AbortController | null>(null);
   const presets = [
-    "帮我搜索笔记里关于前端架构的内容",
+    "先检索前端架构笔记，再计算 (128 + 64) * 3，并告诉我现在时间",
     "计算 (128 + 64) * 3",
     "现在北京时间几点？",
   ];
@@ -65,6 +73,7 @@ export function AgentOrchestratorDemo() {
     setLines([]);
     setFinalAnswer("");
     setStats(null);
+    setStepMetrics([]);
 
     try {
       const response = await fetch("/api/agent", {
@@ -144,6 +153,16 @@ export function AgentOrchestratorDemo() {
                 toolCalls: payload.toolCalls,
                 totalMs: payload.totalMs,
               });
+            } else if (payload.type === "step_metric") {
+              setStepMetrics((current) => [
+                ...current.filter((item) => item.step !== payload.step),
+                {
+                  step: payload.step,
+                  planMs: payload.planMs,
+                  toolMs: payload.toolMs,
+                  totalMs: payload.totalMs,
+                },
+              ]);
             }
           }
 
@@ -226,6 +245,45 @@ export function AgentOrchestratorDemo() {
           <p className="font-mono text-xs text-slate-500">
             steps {stats.steps} · tools {stats.toolCalls} · total {stats.totalMs} ms
           </p>
+        ) : null}
+
+        {stepMetrics.length ? (
+          <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+            <p className="font-mono text-[11px] text-slate-500">step latency</p>
+            <div className="mt-3 space-y-2">
+              {[...stepMetrics]
+                .sort((a, b) => a.step - b.step)
+                .map((metric) => {
+                  const total = Math.max(metric.planMs + (metric.toolMs ?? 0), 1);
+                  const planWidth = Math.max((metric.planMs / total) * 100, 8);
+                  const toolWidth = metric.toolMs
+                    ? Math.max((metric.toolMs / total) * 100, 8)
+                    : 0;
+
+                  return (
+                    <div key={metric.step} className="space-y-1">
+                      <p className="font-mono text-[11px] text-slate-400">
+                        step {metric.step} · total {metric.totalMs} ms
+                      </p>
+                      <div className="flex h-2 overflow-hidden rounded bg-white/10">
+                        <div
+                          className="bg-cyan-300/80"
+                          style={{ width: `${planWidth}%` }}
+                          title={`plan ${metric.planMs}ms`}
+                        />
+                        {toolWidth ? (
+                          <div
+                            className="bg-violet-300/80"
+                            style={{ width: `${toolWidth}%` }}
+                            title={`tool ${metric.toolMs}ms`}
+                          />
+                        ) : null}
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
         ) : null}
 
         <div className="rounded-2xl border border-white/10 bg-black/30 p-4 font-mono text-xs leading-6 text-slate-300">
