@@ -16,6 +16,13 @@ import type { ChatImageAttachment, ChatMessage, ChatMetrics, ChatSession } from 
 import { getChatSessionBootstrap } from "@/lib/chat-session-bootstrap";
 import { analyzeComposer } from "@/lib/front-intelligence";
 import {
+  defaultIntelligencePreferences,
+  loadIntelligencePreferences,
+  saveIntelligencePreferences,
+  type IntelligenceDepth,
+  type IntelligenceStyle,
+} from "@/lib/front-intelligence-preferences";
+import {
   createEmptySession,
   deriveSessionTitle,
   forkBranchFromMessage,
@@ -74,15 +81,22 @@ export function AssistantChat({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [metrics, setMetrics] = useState<ChatMetrics>({});
+  const [intelligencePreferences, setIntelligencePreferences] = useState(() =>
+    loadIntelligencePreferences(),
+  );
 
   const activeSession =
     sessions.find((session) => session.id === activeSessionId) ?? sessions[0];
   const activeBranch = activeSession ? getActiveBranch(activeSession) : null;
   const messages = useMemo(() => activeBranch?.messages ?? [], [activeBranch]);
   const intelligence = useMemo(
-    () => analyzeComposer(composer, messages),
-    [composer, messages],
+    () => analyzeComposer(composer, messages, intelligencePreferences),
+    [composer, messages, intelligencePreferences],
   );
+
+  useEffect(() => {
+    saveIntelligencePreferences(intelligencePreferences);
+  }, [intelligencePreferences]);
 
   const persistSessions = useCallback((next: ChatSession[]) => {
     setSessions(next);
@@ -453,6 +467,80 @@ export function AssistantChat({
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200/80">
               Frontend Intelligence
             </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {(
+                [
+                  { key: "steps", label: "偏步骤" },
+                  { key: "risk", label: "偏风险" },
+                  { key: "code", label: "偏代码" },
+                ] as Array<{ key: IntelligenceStyle; label: string }>
+              ).map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() =>
+                    setIntelligencePreferences((current) => ({
+                      ...current,
+                      style: item.key,
+                    }))
+                  }
+                  className={`rounded-full border px-3 py-1 text-[11px] ${
+                    intelligencePreferences.style === item.key
+                      ? "border-cyan-200/40 bg-cyan-200/15 text-cyan-100"
+                      : "border-white/10 text-slate-400"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+              {(
+                [
+                  { key: "brief", label: "简略" },
+                  { key: "detailed", label: "详细" },
+                ] as Array<{ key: IntelligenceDepth; label: string }>
+              ).map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() =>
+                    setIntelligencePreferences((current) => ({
+                      ...current,
+                      depth: item.key,
+                    }))
+                  }
+                  className={`rounded-full border px-3 py-1 text-[11px] ${
+                    intelligencePreferences.depth === item.key
+                      ? "border-emerald-200/40 bg-emerald-200/15 text-emerald-100"
+                      : "border-white/10 text-slate-400"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() =>
+                  setIntelligencePreferences((current) => ({
+                    ...current,
+                    includeMetrics: !current.includeMetrics,
+                  }))
+                }
+                className={`rounded-full border px-3 py-1 text-[11px] ${
+                  intelligencePreferences.includeMetrics
+                    ? "border-violet-200/40 bg-violet-200/15 text-violet-100"
+                    : "border-white/10 text-slate-400"
+                }`}
+              >
+                指标{intelligencePreferences.includeMetrics ? "已开启" : "已关闭"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setIntelligencePreferences(defaultIntelligencePreferences)}
+                className="rounded-full border border-white/10 px-3 py-1 text-[11px] text-slate-400"
+              >
+                恢复默认
+              </button>
+            </div>
             <div className="mt-3 flex flex-wrap gap-2">
               {intelligence.intents.map((intent) => (
                 <span

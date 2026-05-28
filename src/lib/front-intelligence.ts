@@ -1,4 +1,5 @@
 import type { ChatMessage } from "@/lib/chat-types";
+import type { IntelligencePreferences } from "@/lib/front-intelligence-preferences";
 
 type IntentLabel =
   | "architecture"
@@ -66,6 +67,29 @@ function rewritePrompt(input: string, intents: Array<{ label: IntentLabel; score
   return `${normalized}\n\n${intentHint}`;
 }
 
+function applyPreferenceHint(
+  prompt: string,
+  preferences: IntelligencePreferences,
+) {
+  const styleHint =
+    preferences.style === "risk"
+      ? "优先列风险、边界条件和回滚方案。"
+      : preferences.style === "code"
+        ? "优先给可执行代码片段与改动点。"
+        : "优先给可执行步骤清单。";
+
+  const depthHint =
+    preferences.depth === "brief"
+      ? "答案尽量精炼，控制在 5 条以内。"
+      : "答案需要完整，包含背景、步骤与注意事项。";
+
+  const metricHint = preferences.includeMetrics
+    ? "请补充可量化指标和验收标准。"
+    : "无需给出量化指标。";
+
+  return `${prompt}\n${styleHint}\n${depthHint}\n${metricHint}`;
+}
+
 function actionHints(intents: Array<{ label: IntentLabel; score: number }>) {
   const labels = intents.map((item) => item.label);
   const actions = new Set<string>();
@@ -114,11 +138,15 @@ function followUpSuggestions(messages: ChatMessage[]) {
 export function analyzeComposer(
   input: string,
   messages: ChatMessage[],
+  preferences: IntelligencePreferences,
 ): ComposerIntelligence {
   const intents = scoreIntents(input);
+  const rewrittenBase = rewritePrompt(input, intents);
   return {
     intents,
-    rewrittenPrompt: rewritePrompt(input, intents),
+    rewrittenPrompt: rewrittenBase
+      ? applyPreferenceHint(rewrittenBase, preferences)
+      : null,
     actions: actionHints(intents),
     followUps: followUpSuggestions(messages),
   };
