@@ -38,7 +38,58 @@ type CarModelProps = {
   onToggleLeftDoor: () => void;
   onToggleRightDoor: () => void;
   onToggleTrunk: () => void;
+  overlayOnly?: boolean;
 };
+
+function AssetModel({
+  object,
+  state,
+}: {
+  object: THREE.Object3D;
+  state: CarShowroomState;
+}) {
+  const rootRef = useRef<THREE.Group>(null);
+  const materialRefs = useRef<THREE.MeshStandardMaterial[]>([]);
+
+  useEffect(() => {
+    materialRefs.current = [];
+    object.traverse((child) => {
+      const mesh = child as THREE.Mesh;
+      if (!mesh.isMesh) {
+        return;
+      }
+      const material = mesh.material;
+      if (Array.isArray(material)) {
+        for (const entry of material) {
+          if (entry instanceof THREE.MeshStandardMaterial) {
+            materialRefs.current.push(entry);
+          }
+        }
+      } else if (material instanceof THREE.MeshStandardMaterial) {
+        materialRefs.current.push(material);
+      }
+    });
+  }, [object]);
+
+  useFrame((renderState, delta) => {
+    if (rootRef.current) {
+      const t = renderState.clock.getElapsedTime();
+      const y = state.engineOn ? Math.sin(t * 8) * 0.02 : 0;
+      rootRef.current.position.y = THREE.MathUtils.damp(rootRef.current.position.y, y, 5, delta);
+    }
+
+    const target = new THREE.Color(state.bodyColor);
+    for (const material of materialRefs.current) {
+      material.color.lerp(target, THREE.MathUtils.clamp(delta * 0.35, 0, 1));
+    }
+  });
+
+  return (
+    <group ref={rootRef}>
+      <primitive object={object} />
+    </group>
+  );
+}
 
 function getCameraPose(preset: CarCameraPreset) {
   if (preset === "front") {
@@ -103,6 +154,7 @@ function CarModel({
   onToggleLeftDoor,
   onToggleRightDoor,
   onToggleTrunk,
+  overlayOnly = false,
 }: CarModelProps) {
   const rootRef = useRef<THREE.Group>(null);
   const leftDoorRef = useRef<THREE.Group>(null);
@@ -286,21 +338,31 @@ function CarModel({
 
   return (
     <group ref={rootRef} position={[0, 0.6, 0]}>
-      <mesh ref={bodyRef} castShadow receiveShadow>
-        <boxGeometry args={[3.2, 0.55, 1.55]} />
-        <meshStandardMaterial color="#0ea5e9" metalness={0.35} roughness={0.3} />
-      </mesh>
-      <mesh ref={cabinRef} position={[0.15, 0.45, 0]} castShadow receiveShadow>
-        <boxGeometry args={[1.9, 0.5, 1.4]} />
-        <meshStandardMaterial color="#38bdf8" metalness={0.38} roughness={0.28} />
-      </mesh>
-      <mesh position={[-0.04, 0.72, 0]} receiveShadow>
-        <boxGeometry args={[0.8, 0.05, 0.52]} />
-        <meshStandardMaterial color="#1e293b" roughness={0.78} metalness={0.15} />
-      </mesh>
+      {!overlayOnly ? (
+        <>
+          <mesh ref={bodyRef} castShadow receiveShadow>
+            <boxGeometry args={[3.2, 0.55, 1.55]} />
+            <meshStandardMaterial color="#0ea5e9" metalness={0.35} roughness={0.3} />
+          </mesh>
+          <mesh ref={cabinRef} position={[0.15, 0.45, 0]} castShadow receiveShadow>
+            <boxGeometry args={[1.9, 0.5, 1.4]} />
+            <meshStandardMaterial color="#38bdf8" metalness={0.38} roughness={0.28} />
+          </mesh>
+          <mesh position={[-0.04, 0.72, 0]} receiveShadow>
+            <boxGeometry args={[0.8, 0.05, 0.52]} />
+            <meshStandardMaterial color="#1e293b" roughness={0.78} metalness={0.15} />
+          </mesh>
+        </>
+      ) : null}
       <mesh ref={sunroofRef} position={[-0.02, 0.74, 0]} receiveShadow>
         <boxGeometry args={[0.72, 0.03, 0.42]} />
-        <meshStandardMaterial color="#020617" roughness={0.18} metalness={0.2} />
+        <meshStandardMaterial
+          color="#020617"
+          roughness={0.18}
+          metalness={0.2}
+          opacity={overlayOnly ? 0.8 : 1}
+          transparent={overlayOnly}
+        />
       </mesh>
 
       <group ref={leftDoorRef} position={[-1.0, 0.35, 0.82]}>
@@ -314,7 +376,13 @@ function CarModel({
           }}
         >
           <boxGeometry args={[1.1, 0.42, 0.08]} />
-          <meshStandardMaterial color="#0369a1" metalness={0.42} roughness={0.35} />
+          <meshStandardMaterial
+            color={overlayOnly ? "#f8fafc" : "#0369a1"}
+            metalness={0.42}
+            roughness={0.35}
+            opacity={overlayOnly ? 0.55 : 1}
+            transparent={overlayOnly}
+          />
         </mesh>
       </group>
 
@@ -329,7 +397,13 @@ function CarModel({
           }}
         >
           <boxGeometry args={[1.1, 0.42, 0.08]} />
-          <meshStandardMaterial color="#0369a1" metalness={0.42} roughness={0.35} />
+          <meshStandardMaterial
+            color={overlayOnly ? "#f8fafc" : "#0369a1"}
+            metalness={0.42}
+            roughness={0.35}
+            opacity={overlayOnly ? 0.55 : 1}
+            transparent={overlayOnly}
+          />
         </mesh>
       </group>
 
@@ -344,41 +418,50 @@ function CarModel({
           }}
         >
           <boxGeometry args={[0.16, 0.34, 1.46]} />
-          <meshStandardMaterial color="#0284c7" metalness={0.35} roughness={0.38} />
+          <meshStandardMaterial
+            color={overlayOnly ? "#e2e8f0" : "#0284c7"}
+            metalness={0.35}
+            roughness={0.38}
+            opacity={overlayOnly ? 0.55 : 1}
+            transparent={overlayOnly}
+          />
         </mesh>
       </group>
 
-      <mesh ref={seatLeftRef} position={[-0.2, 0.28, 0.35]} castShadow receiveShadow>
-        <boxGeometry args={[0.42, 0.35, 0.28]} />
-        <meshStandardMaterial color="#e2e8f0" roughness={0.75} metalness={0.08} />
-      </mesh>
-      <mesh ref={seatRightRef} position={[-0.2, 0.28, -0.35]} castShadow receiveShadow>
-        <boxGeometry args={[0.42, 0.35, 0.28]} />
-        <meshStandardMaterial color="#e2e8f0" roughness={0.75} metalness={0.08} />
-      </mesh>
-      <mesh ref={steeringRef} position={[-0.92, 0.5, 0.34]} rotation={[0, 0, Math.PI / 2]}>
-        <torusGeometry args={[0.12, 0.026, 16, 36]} />
-        <meshStandardMaterial color="#111827" metalness={0.4} roughness={0.55} />
-      </mesh>
-
-      {[[-1.1, -0.06, 0.75], [1.08, -0.06, 0.75], [-1.1, -0.06, -0.75], [1.08, -0.06, -0.75]]
-        .map((position, index) => (
-          <mesh
-            key={`wheel-${index}`}
-            ref={(node) => {
-              if (!node) {
-                return;
-              }
-              wheelRefs.current[index] = node;
-            }}
-            position={new THREE.Vector3(position[0], position[1], position[2])}
-            castShadow
-            receiveShadow
-            material={wheelMaterial}
-          >
-            <cylinderGeometry args={[0.27, 0.27, 0.22, 24]} />
+      {!overlayOnly ? (
+        <>
+          <mesh ref={seatLeftRef} position={[-0.2, 0.28, 0.35]} castShadow receiveShadow>
+            <boxGeometry args={[0.42, 0.35, 0.28]} />
+            <meshStandardMaterial color="#e2e8f0" roughness={0.75} metalness={0.08} />
           </mesh>
-        ))}
+          <mesh ref={seatRightRef} position={[-0.2, 0.28, -0.35]} castShadow receiveShadow>
+            <boxGeometry args={[0.42, 0.35, 0.28]} />
+            <meshStandardMaterial color="#e2e8f0" roughness={0.75} metalness={0.08} />
+          </mesh>
+          <mesh ref={steeringRef} position={[-0.92, 0.5, 0.34]} rotation={[0, 0, Math.PI / 2]}>
+            <torusGeometry args={[0.12, 0.026, 16, 36]} />
+            <meshStandardMaterial color="#111827" metalness={0.4} roughness={0.55} />
+          </mesh>
+          {[[-1.1, -0.06, 0.75], [1.08, -0.06, 0.75], [-1.1, -0.06, -0.75], [1.08, -0.06, -0.75]]
+            .map((position, index) => (
+              <mesh
+                key={`wheel-${index}`}
+                ref={(node) => {
+                  if (!node) {
+                    return;
+                  }
+                  wheelRefs.current[index] = node;
+                }}
+                position={new THREE.Vector3(position[0], position[1], position[2])}
+                castShadow
+                receiveShadow
+                material={wheelMaterial}
+              >
+                <cylinderGeometry args={[0.27, 0.27, 0.22, 24]} />
+              </mesh>
+            ))}
+        </>
+      ) : null}
 
       <mesh ref={leftHeadLightRef} position={[-1.56, 0.22, 0.45]}>
         <sphereGeometry args={[0.09, 20, 20]} />
@@ -422,11 +505,15 @@ function CarModel({
         </>
       ) : null}
 
-      <mesh ref={exhaustLeftRef} position={[1.7, 0.02, 0.42]}>
+      <mesh ref={exhaustLeftRef} position={[1.7, 0.02, 0.42]} visible={!overlayOnly || state.engineOn}>
         <sphereGeometry args={[0.04, 12, 12]} />
         <meshStandardMaterial color="#94a3b8" emissive="#cbd5e1" emissiveIntensity={0} />
       </mesh>
-      <mesh ref={exhaustRightRef} position={[1.7, 0.02, -0.42]}>
+      <mesh
+        ref={exhaustRightRef}
+        position={[1.7, 0.02, -0.42]}
+        visible={!overlayOnly || state.engineOn}
+      >
         <sphereGeometry args={[0.04, 12, 12]} />
         <meshStandardMaterial color="#94a3b8" emissive="#cbd5e1" emissiveIntensity={0} />
       </mesh>
@@ -501,7 +588,16 @@ export function CarShowroomScene({
         <pointLight position={[-4, 2, -3]} intensity={0.25} color="#67e8f9" />
 
         {useAssetModel && assetScene ? (
-          <primitive object={assetScene} />
+          <>
+            <AssetModel object={assetScene} state={state} />
+            <CarModel
+              state={state}
+              overlayOnly
+              onToggleLeftDoor={onToggleLeftDoor}
+              onToggleRightDoor={onToggleRightDoor}
+              onToggleTrunk={onToggleTrunk}
+            />
+          </>
         ) : (
           <CarModel
             state={state}
