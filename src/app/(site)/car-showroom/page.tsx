@@ -42,6 +42,8 @@ export default function CarShowroomPage() {
   const [selectedModelUrl, setSelectedModelUrl] = useState<string>(
     carModelOptions[0].value,
   );
+  const [speedKph, setSpeedKph] = useState(28);
+  const [braking, setBraking] = useState(false);
 
   const sceneState = useMemo(
     () => ({
@@ -56,6 +58,8 @@ export default function CarShowroomPage() {
       hazardOn,
       sunroofOpen,
       bodyColor,
+      speedKph,
+      braking,
     }),
     [
       engineOn,
@@ -68,6 +72,8 @@ export default function CarShowroomPage() {
       hazardOn,
       sunroofOpen,
       bodyColor,
+      speedKph,
+      braking,
       trunkOpen,
     ],
   );
@@ -81,6 +87,8 @@ export default function CarShowroomPage() {
     setSteeringAngle(0);
     setHazardOn(true);
     setSunroofOpen(false);
+    setSpeedKph(0);
+    setBraking(false);
     setCameraPreset("overview");
     setAutoTour(false);
   }
@@ -94,6 +102,8 @@ export default function CarShowroomPage() {
     setSteeringAngle(-16);
     setHazardOn(false);
     setSunroofOpen(false);
+    setSpeedKph(45);
+    setBraking(false);
     setCameraPreset("side");
     setAutoTour(false);
   }
@@ -112,6 +122,8 @@ export default function CarShowroomPage() {
     setCameraPreset("overview");
     setAutoTour(false);
     setBodyColor("#0ea5e9");
+    setSpeedKph(28);
+    setBraking(false);
   }
 
   return (
@@ -300,6 +312,18 @@ export default function CarShowroomPage() {
             onChange={(event) => setSteeringAngle(Number(event.target.value))}
             className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-700"
           />
+          <label htmlFor="speed-kph" className="text-sm font-medium text-slate-100">
+            目标车速：{speedKph} km/h
+          </label>
+          <input
+            id="speed-kph"
+            type="range"
+            min={0}
+            max={120}
+            value={speedKph}
+            onChange={(event) => setSpeedKph(Number(event.target.value))}
+            className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-700"
+          />
         </div>
 
         <div className="flex flex-wrap gap-3">
@@ -335,6 +359,12 @@ export default function CarShowroomPage() {
           </Button>
           <Button variant="secondary" onClick={applyDriveMode}>
             驾驶预备模式
+          </Button>
+          <Button
+            variant={braking ? "default" : "outline"}
+            onClick={() => setBraking((value) => !value)}
+          >
+            {braking ? "松开制动" : "模拟制动"}
           </Button>
           <Button variant="outline" onClick={resetAll}>
             复位全部状态

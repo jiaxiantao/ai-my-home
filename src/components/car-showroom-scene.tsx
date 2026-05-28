@@ -20,6 +20,8 @@ type CarShowroomState = {
   hazardOn: boolean;
   sunroofOpen: boolean;
   bodyColor: string;
+  speedKph: number;
+  braking: boolean;
 };
 
 type CarShowroomSceneProps = {
@@ -174,6 +176,8 @@ function CarModel({
   const exhaustRightRef = useRef<THREE.Mesh>(null);
   const frontSteerRefs = useRef<THREE.Group[]>([]);
   const wheelSpinRefs = useRef<THREE.Mesh[]>([]);
+  const velocityRef = useRef(0);
+  const lastVelocityRef = useRef(0);
 
   const wheelMaterial = useMemo(
     () =>
@@ -236,7 +240,17 @@ function CarModel({
       );
     }
 
-    const runFactor = state.engineOn ? 1 : 0;
+    const targetVelocity = state.engineOn ? state.speedKph / 3.6 : 0;
+    const brakeFactor = state.braking ? 14 : 4;
+    velocityRef.current = THREE.MathUtils.damp(
+      velocityRef.current,
+      targetVelocity,
+      brakeFactor,
+      delta,
+    );
+
+    const wheelRadius = 0.27;
+    const angularSpeed = velocityRef.current / wheelRadius;
     for (let index = 0; index < wheelSpinRefs.current.length; index += 1) {
       const wheel = wheelSpinRefs.current[index];
       if (!wheel) {
@@ -244,13 +258,33 @@ function CarModel({
       }
       // Left and right wheels should spin in opposite local directions.
       const sideDirection = index % 2 === 0 ? -1 : 1;
-      wheel.rotation.z += delta * runFactor * 6.5 * sideDirection;
+      wheel.rotation.z += delta * angularSpeed * sideDirection;
     }
-    const steerTarget = THREE.MathUtils.clamp(state.steeringAngle, -42, 42) * (Math.PI / 180);
+
+    const steerInput = THREE.MathUtils.clamp(state.steeringAngle, -42, 42) * (Math.PI / 180);
+    const wheelBase = 2.2;
+    const trackWidth = 1.48;
+    const minSteer = 0.001;
+    const steerSign = Math.sign(steerInput);
+    let leftSteerTarget = steerInput;
+    let rightSteerTarget = steerInput;
+    if (Math.abs(steerInput) > minSteer) {
+      const turnRadius = wheelBase / Math.tan(Math.abs(steerInput));
+      const inner = Math.atan(wheelBase / Math.max(0.2, turnRadius - trackWidth / 2));
+      const outer = Math.atan(wheelBase / Math.max(0.2, turnRadius + trackWidth / 2));
+      if (steerSign > 0) {
+        leftSteerTarget = outer;
+        rightSteerTarget = inner;
+      } else {
+        leftSteerTarget = -inner;
+        rightSteerTarget = -outer;
+      }
+    }
+
     if (frontSteerRefs.current[0]) {
       frontSteerRefs.current[0].rotation.y = THREE.MathUtils.damp(
         frontSteerRefs.current[0].rotation.y,
-        steerTarget,
+        leftSteerTarget,
         6,
         delta,
       );
@@ -258,7 +292,7 @@ function CarModel({
     if (frontSteerRefs.current[1]) {
       frontSteerRefs.current[1].rotation.y = THREE.MathUtils.damp(
         frontSteerRefs.current[1].rotation.y,
-        steerTarget,
+        rightSteerTarget,
         6,
         delta,
       );
@@ -267,7 +301,7 @@ function CarModel({
     if (steeringRef.current) {
       steeringRef.current.rotation.x = THREE.MathUtils.damp(
         steeringRef.current.rotation.x,
-        steerTarget,
+        steerInput,
         8,
         delta,
       );
@@ -275,15 +309,26 @@ function CarModel({
 
     if (rootRef.current) {
       const y = state.engineOn ? Math.sin(t * 8) * 0.02 : 0;
+      const acceleration = (velocityRef.current - lastVelocityRef.current) / Math.max(delta, 0.001);
+      const pitchTarget = THREE.MathUtils.clamp(-acceleration * 0.015, -0.06, 0.05);
       rootRef.current.position.y = THREE.MathUtils.damp(
         rootRef.current.position.y,
         y,
         5,
         delta,
       );
+      rootRef.current.rotation.z = THREE.MathUtils.damp(
+        rootRef.current.rotation.z,
+        pitchTarget,
+        5,
+        delta,
+      );
     }
+    lastVelocityRef.current = velocityRef.current;
 
-    const enginePulse = state.engineOn ? 0.45 + 0.25 * Math.sin(t * 18) : 0;
+    const enginePulse = state.engineOn
+      ? 0.35 + 0.2 * Math.sin(t * (14 + state.speedKph * 0.08))
+      : 0;
     if (exhaustLeftRef.current) {
       exhaustLeftRef.current.scale.setScalar(0.7 + enginePulse);
       (exhaustLeftRef.current.material as THREE.MeshStandardMaterial).emissiveIntensity =
