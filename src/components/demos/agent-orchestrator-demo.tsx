@@ -1,9 +1,17 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { agentToolCatalog } from "@/lib/agent/tool-catalog";
 import type { AgentPlan, AgentToolName, AgentTraceEvent } from "@/lib/agent/types";
+import {
+  defaultIntelligencePreferences,
+  loadIntelligencePreferences,
+  saveIntelligencePreferences,
+  type IntelligenceDepth,
+  type IntelligencePreferences,
+  type IntelligenceStyle,
+} from "@/lib/front-intelligence-preferences";
 
 type TraceLine = {
   id: string;
@@ -44,6 +52,22 @@ function formatToolResult(tool: AgentToolName, output: string) {
   return output;
 }
 
+function getAgentPromptHint(preferences: IntelligencePreferences) {
+  const styleHint =
+    preferences.style === "risk"
+      ? "优先识别风险并给回滚策略。"
+      : preferences.style === "code"
+        ? "优先输出可执行动作和参数。"
+        : "优先输出可执行步骤。";
+  const depthHint =
+    preferences.depth === "brief" ? "答案保持简短。" : "答案保持完整并解释原因。";
+  const metricHint = preferences.includeMetrics
+    ? "补充量化指标（延迟、步数、成功率）。"
+    : "无需强制量化指标。";
+
+  return `${styleHint} ${depthHint} ${metricHint}`;
+}
+
 function parseSseBlock(block: string) {
   let event = "message";
   let data = "";
@@ -76,7 +100,15 @@ export function AgentOrchestratorDemo() {
   const [stats, setStats] = useState<{ steps: number; toolCalls: number; totalMs: number } | null>(
     null,
   );
+  const [preferences, setPreferences] = useState(() => loadIntelligencePreferences());
   const abortRef = useRef<AbortController | null>(null);
+  const recommendedPromptSuffix = useMemo(
+    () => getAgentPromptHint(preferences),
+    [preferences],
+  );
+  useEffect(() => {
+    saveIntelligencePreferences(preferences);
+  }, [preferences]);
   const presets = [
     "先检索前端架构笔记，再计算 (128 + 64) * 3，并告诉我现在时间",
     "计算 (128 + 64) * 3",
@@ -97,7 +129,9 @@ export function AgentOrchestratorDemo() {
       const response = await fetch("/api/agent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({
+          message: `${message.trim()}\n\n[偏好约束] ${recommendedPromptSuffix}`.trim(),
+        }),
         signal: controller.signal,
       });
 
@@ -230,6 +264,85 @@ export function AgentOrchestratorDemo() {
           rows={3}
           className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/40"
         />
+
+        <div className="flex flex-wrap gap-2">
+          {(
+            [
+              { key: "steps", label: "偏步骤" },
+              { key: "risk", label: "偏风险" },
+              { key: "code", label: "偏代码" },
+            ] as Array<{ key: IntelligenceStyle; label: string }>
+          ).map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() =>
+                setPreferences((current) => ({
+                  ...current,
+                  style: item.key,
+                }))
+              }
+              className={`rounded-full border px-3 py-1 text-xs ${
+                preferences.style === item.key
+                  ? "border-cyan-200/40 bg-cyan-200/15 text-cyan-100"
+                  : "border-white/10 text-slate-400"
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+          {(
+            [
+              { key: "brief", label: "简略" },
+              { key: "detailed", label: "详细" },
+            ] as Array<{ key: IntelligenceDepth; label: string }>
+          ).map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() =>
+                setPreferences((current) => ({
+                  ...current,
+                  depth: item.key,
+                }))
+              }
+              className={`rounded-full border px-3 py-1 text-xs ${
+                preferences.depth === item.key
+                  ? "border-emerald-200/40 bg-emerald-200/15 text-emerald-100"
+                  : "border-white/10 text-slate-400"
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() =>
+              setPreferences((current) => ({
+                ...current,
+                includeMetrics: !current.includeMetrics,
+              }))
+            }
+            className={`rounded-full border px-3 py-1 text-xs ${
+              preferences.includeMetrics
+                ? "border-violet-200/40 bg-violet-200/15 text-violet-100"
+                : "border-white/10 text-slate-400"
+            }`}
+          >
+            指标{preferences.includeMetrics ? "开启" : "关闭"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setPreferences(defaultIntelligencePreferences)}
+            className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-400"
+          >
+            恢复默认
+          </button>
+        </div>
+
+        <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-[11px] text-slate-300">
+          Agent 偏好约束：{recommendedPromptSuffix}
+        </div>
 
         <div className="flex flex-wrap gap-2">
           {presets.map((preset) => (
