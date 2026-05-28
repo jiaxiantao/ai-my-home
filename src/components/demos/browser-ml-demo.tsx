@@ -29,6 +29,34 @@ export function BrowserMlDemo() {
   const [labels, setLabels] = useState<SentimentLabel[]>([]);
   const [error, setError] = useState<string | null>(null);
 
+  function runMockClassification(input: string) {
+    const normalized = input.toLowerCase();
+    const positiveHints = ["great", "good", "fast", "stable", "awesome", "love"];
+    const negativeHints = ["bad", "slow", "error", "fail", "broken", "hate"];
+
+    const positiveHit = positiveHints.some((word) => normalized.includes(word));
+    const negativeHit = negativeHints.some((word) => normalized.includes(word));
+
+    if (positiveHit && !negativeHit) {
+      return [
+        { label: "POSITIVE", score: 0.91 },
+        { label: "NEGATIVE", score: 0.09 },
+      ] as SentimentLabel[];
+    }
+
+    if (negativeHit && !positiveHit) {
+      return [
+        { label: "NEGATIVE", score: 0.88 },
+        { label: "POSITIVE", score: 0.12 },
+      ] as SentimentLabel[];
+    }
+
+    return [
+      { label: "POSITIVE", score: 0.56 },
+      { label: "NEGATIVE", score: 0.44 },
+    ] as SentimentLabel[];
+  }
+
   async function runClassification() {
     setError(null);
     setStatus("loading");
@@ -94,6 +122,16 @@ export function BrowserMlDemo() {
     }
   }
 
+  function useMockResult() {
+    setStatus("ready");
+    setError(null);
+    setProgress("demo fallback");
+    setBackend("Demo fallback · heuristic sentiment");
+    setLoadMs(0);
+    setInferMs(0);
+    setLabels(runMockClassification(text));
+  }
+
   return (
     <div className="space-y-4">
       <p className="text-sm leading-7 text-slate-400">
@@ -118,6 +156,14 @@ export function BrowserMlDemo() {
           className="rounded-full bg-cyan-300 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50"
         >
           {status === "loading" ? "加载模型…" : "浏览器内推理"}
+        </button>
+        <button
+          type="button"
+          onClick={useMockResult}
+          disabled={status === "loading" || !text.trim()}
+          className="rounded-full border border-white/10 px-4 py-2 text-sm text-slate-200 disabled:opacity-50"
+        >
+          使用演示结果
         </button>
         {progress ? (
           <span className="self-center font-mono text-xs text-slate-500">{progress}</span>
