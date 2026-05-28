@@ -10,5 +10,6 @@ test.describe("Status page", () => {
     await expect(page.getByText("SSE /api/agent")).toBeVisible();
     await runButton.click();
     await expect(page.getByText("Agent p50")).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText("Agent 趋势")).toBeVisible({ timeout: 20_000 });
   });
 });

@@ -62,3 +62,19 @@ model Note {
   @@index([isPublished])
   @@index([updatedAt])
 }
+
+model StatusProbeHistory {
+  id           String   @id @default(cuid())
+  probeKey     String
+  p50Ms        Int?
+  p95Ms        Int?
+  avgSteps     Float?
+  avgToolCalls Float?
+  errorRate    Float?
+  ok           Boolean  @default(true)
+  detail       String?
+  createdAt    DateTime @default(now())
+
+  @@index([probeKey, createdAt])
+  @@index([createdAt])
+}

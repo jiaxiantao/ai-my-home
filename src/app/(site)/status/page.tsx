@@ -18,6 +18,7 @@ const quickLinks = [
   { href: "/api/analytics/notes", label: "GET /api/analytics/notes" },
   { href: "/api/chat", label: "POST /api/chat (SSE)" },
   { href: "/api/agent", label: "POST /api/agent (SSE)" },
+  { href: "/api/status/probes?probeKey=agent-sse&limit=20", label: "GET /api/status/probes" },
 ];
 
 export default function StatusPage() {

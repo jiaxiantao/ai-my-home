@@ -41,8 +41,6 @@ type AgentProbeHistory = {
   avgToolCalls: number;
   errorRate: number;
 };
-
-const AGENT_HISTORY_KEY = "ai-my-home.status.agent-history.v1";
 const AGENT_HISTORY_LIMIT = 20;
 
 const PROBES: Array<{ key: string; label: string; href: string }> = [
@@ -64,40 +62,13 @@ const PROBES: Array<{ key: string; label: string; href: string }> = [
   },
 ];
 
-function loadAgentHistory() {
-  if (typeof window === "undefined") {
-    return [] as AgentProbeHistory[];
-  }
-
-  try {
-    const raw = window.localStorage.getItem(AGENT_HISTORY_KEY);
-    if (!raw) {
-      return [] as AgentProbeHistory[];
-    }
-
-    const parsed = JSON.parse(raw) as AgentProbeHistory[];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [] as AgentProbeHistory[];
-  }
-}
-
-function saveAgentHistory(history: AgentProbeHistory[]) {
-  if (typeof window === "undefined") {
-    return;
-  }
-  window.localStorage.setItem(AGENT_HISTORY_KEY, JSON.stringify(history));
-}
-
 export function StatusProbe() {
   const [health, setHealth] = useState<HealthData | null>(null);
   const [probes, setProbes] = useState<ProbeRow[]>([]);
   const [running, setRunning] = useState(false);
   const [lastRun, setLastRun] = useState<string | null>(null);
   const [agentMetrics, setAgentMetrics] = useState<AgentProbeMetrics | null>(null);
-  const [agentHistory, setAgentHistory] = useState<AgentProbeHistory[]>(() =>
-    loadAgentHistory(),
-  );
+  const [agentHistory, setAgentHistory] = useState<AgentProbeHistory[]>([]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -109,6 +80,47 @@ export function StatusProbe() {
         if ((err as { name?: string }).name !== "AbortError") {
           setHealth(null);
         }
+      });
+
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetch(`/api/status/probes?probeKey=agent-sse&limit=${AGENT_HISTORY_LIMIT}`, {
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then((res) => res.json())
+      .then(
+        (data: {
+          records?: Array<{
+            createdAt: string;
+            p50Ms: number | null;
+            p95Ms: number | null;
+            avgSteps: number | null;
+            avgToolCalls: number | null;
+            errorRate: number | null;
+          }>;
+        }) => {
+          const history = (data.records ?? [])
+            .filter((item) => item.p50Ms != null && item.p95Ms != null)
+            .map((item) => ({
+              at: new Date(item.createdAt).toLocaleTimeString("zh-CN", {
+                hour12: false,
+              }),
+              p50Ms: item.p50Ms ?? 0,
+              p95Ms: item.p95Ms ?? 0,
+              avgSteps: item.avgSteps ?? 0,
+              avgToolCalls: item.avgToolCalls ?? 0,
+              errorRate: item.errorRate ?? 0,
+            }));
+          setAgentHistory(history);
+        },
+      )
+      .catch(() => {
+        setAgentHistory([]);
       });
 
     return () => controller.abort();
@@ -194,20 +206,30 @@ export function StatusProbe() {
 
     if (latestAgentMetrics) {
       const errorCount = results.filter((row) => row.key === "agent-sse" && !row.ok).length;
-      const nextHistory = [
-        ...agentHistory,
-        {
-          at: new Date().toLocaleTimeString("zh-CN", { hour12: false }),
-          p50Ms: latestAgentMetrics.p50Ms,
-          p95Ms: latestAgentMetrics.p95Ms,
-          avgSteps: latestAgentMetrics.avgSteps,
-          avgToolCalls: latestAgentMetrics.avgToolCalls,
-          errorRate: Number((errorCount / 1).toFixed(2)),
-        },
-      ].slice(-AGENT_HISTORY_LIMIT);
+      const entry = {
+        at: new Date().toLocaleTimeString("zh-CN", { hour12: false }),
+        p50Ms: latestAgentMetrics.p50Ms,
+        p95Ms: latestAgentMetrics.p95Ms,
+        avgSteps: latestAgentMetrics.avgSteps,
+        avgToolCalls: latestAgentMetrics.avgToolCalls,
+        errorRate: Number((errorCount / 1).toFixed(2)),
+      };
 
-      setAgentHistory(nextHistory);
-      saveAgentHistory(nextHistory);
+      setAgentHistory((current) => [...current, entry].slice(-AGENT_HISTORY_LIMIT));
+      void fetch("/api/status/probes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          probeKey: "agent-sse",
+          p50Ms: entry.p50Ms,
+          p95Ms: entry.p95Ms,
+          avgSteps: entry.avgSteps,
+          avgToolCalls: entry.avgToolCalls,
+          errorRate: entry.errorRate,
+          ok: errorCount === 0,
+          detail: "status-probe",
+        }),
+      });
     }
 
     setRunning(false);
@@ -282,7 +304,9 @@ export function StatusProbe() {
               type="button"
               onClick={() => {
                 setAgentHistory([]);
-                saveAgentHistory([]);
+                void fetch("/api/status/probes?probeKey=agent-sse", {
+                  method: "DELETE",
+                });
               }}
               className="rounded-full border border-white/10 px-3 py-1 text-[10px] text-slate-400 hover:border-white/20 hover:text-slate-200"
             >
@@ -319,6 +343,16 @@ export function StatusProbe() {
             })}
           </div>
         </div>
+      ) : null}
+
+      {agentHistory.length ? (
+        <StatusCard
+          label="Agent Error Rate"
+          ok={agentHistory[agentHistory.length - 1].errorRate <= 0.2}
+          detail={`${Math.round(
+            agentHistory[agentHistory.length - 1].errorRate * 100,
+          )}%（阈值 20%）`}
+        />
       ) : null}
 
       {/* API probes */}

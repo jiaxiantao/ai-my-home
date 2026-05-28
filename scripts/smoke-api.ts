@@ -153,6 +153,20 @@ const checks: Array<Check & CheckRequest> = [
       }
     },
   },
+  {
+    name: "status-probes",
+    path: "/api/status/probes?probeKey=agent-sse&limit=5",
+    assert: (status, body) => {
+      if (status !== 200) {
+        throw new Error(`expected 200, got ${status}`);
+      }
+
+      const data = body as { records?: unknown[] };
+      if (!Array.isArray(data.records)) {
+        throw new Error("missing records array");
+      }
+    },
+  },
 ];
 
 async function runCheck(check: Check) {
