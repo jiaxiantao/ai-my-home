@@ -16,11 +16,15 @@ type CarShowroomState = {
   seatDriverOffset: number;
   seatPassengerOffset: number;
   steeringAngle: number;
+  hazardOn: boolean;
+  sunroofOpen: boolean;
+  bodyColor: string;
 };
 
 type CarShowroomSceneProps = {
   state: CarShowroomState;
   cameraPreset: CarCameraPreset;
+  autoTour: boolean;
   onToggleLeftDoor: () => void;
   onToggleRightDoor: () => void;
   onToggleTrunk: () => void;
@@ -64,10 +68,24 @@ function getCameraPose(preset: CarCameraPreset) {
   };
 }
 
-function CameraRig({ preset }: { preset: CarCameraPreset }) {
+function CameraRig({ preset, autoTour }: { preset: CarCameraPreset; autoTour: boolean }) {
   const cameraRef = useRef<THREE.PerspectiveCamera>(null);
-  useFrame((_, delta) => {
+  useFrame((renderState, delta) => {
     if (!cameraRef.current) {
+      return;
+    }
+    if (autoTour) {
+      const t = renderState.clock.getElapsedTime() * 0.22;
+      const radius = 6.3;
+      const targetY = 0.7 + Math.sin(t * 2) * 0.12;
+      const target = new THREE.Vector3(0, 0.48, 0);
+      const position = new THREE.Vector3(
+        Math.cos(t) * radius,
+        2 + targetY,
+        Math.sin(t) * radius,
+      );
+      cameraRef.current.position.lerp(position, THREE.MathUtils.clamp(delta * 2, 0, 1));
+      cameraRef.current.lookAt(target);
       return;
     }
     const pose = getCameraPose(preset);
@@ -90,6 +108,13 @@ function CarModel({
   const seatLeftRef = useRef<THREE.Mesh>(null);
   const seatRightRef = useRef<THREE.Mesh>(null);
   const steeringRef = useRef<THREE.Mesh>(null);
+  const bodyRef = useRef<THREE.Mesh>(null);
+  const cabinRef = useRef<THREE.Mesh>(null);
+  const sunroofRef = useRef<THREE.Mesh>(null);
+  const leftHeadLightRef = useRef<THREE.Mesh>(null);
+  const rightHeadLightRef = useRef<THREE.Mesh>(null);
+  const leftTailLightRef = useRef<THREE.Mesh>(null);
+  const rightTailLightRef = useRef<THREE.Mesh>(null);
   const exhaustLeftRef = useRef<THREE.Mesh>(null);
   const exhaustRightRef = useRef<THREE.Mesh>(null);
   const wheelRefs = useRef<THREE.Mesh[]>([]);
@@ -105,6 +130,9 @@ function CarModel({
   );
 
   useFrame((renderState, delta) => {
+    const t = renderState.clock.getElapsedTime();
+    const hazardBlink = state.hazardOn ? (Math.sin(t * 8) > 0 ? 1 : 0.08) : 0.08;
+
     if (leftDoorRef.current) {
       const target = state.leftDoorOpen ? Math.PI * 0.62 : 0;
       leftDoorRef.current.rotation.y = THREE.MathUtils.damp(
@@ -184,7 +212,6 @@ function CarModel({
     }
 
     if (rootRef.current) {
-      const t = renderState.clock.getElapsedTime();
       const y = state.engineOn ? Math.sin(t * 8) * 0.02 : 0;
       rootRef.current.position.y = THREE.MathUtils.damp(
         rootRef.current.position.y,
@@ -194,7 +221,6 @@ function CarModel({
       );
     }
 
-    const t = renderState.clock.getElapsedTime();
     const enginePulse = state.engineOn ? 0.45 + 0.25 * Math.sin(t * 18) : 0;
     if (exhaustLeftRef.current) {
       exhaustLeftRef.current.scale.setScalar(0.7 + enginePulse);
@@ -206,17 +232,72 @@ function CarModel({
       (exhaustRightRef.current.material as THREE.MeshStandardMaterial).emissiveIntensity =
         enginePulse;
     }
+
+    if (sunroofRef.current) {
+      sunroofRef.current.position.x = THREE.MathUtils.damp(
+        sunroofRef.current.position.x,
+        state.sunroofOpen ? 0.3 : -0.02,
+        7,
+        delta,
+      );
+    }
+
+    const bodyColor = new THREE.Color(state.bodyColor);
+    if (bodyRef.current) {
+      const mat = bodyRef.current.material as THREE.MeshStandardMaterial;
+      mat.color.lerp(bodyColor, THREE.MathUtils.clamp(delta * 4, 0, 1));
+    }
+    if (cabinRef.current) {
+      const mat = cabinRef.current.material as THREE.MeshStandardMaterial;
+      const cabinTarget = bodyColor.clone().offsetHSL(0, 0.02, 0.08);
+      mat.color.lerp(cabinTarget, THREE.MathUtils.clamp(delta * 4, 0, 1));
+    }
+
+    const frontIntensity = state.lightsOn ? (state.engineOn ? 2.6 : 2.1) : 0.2;
+    const rearIntensity = state.lightsOn ? 0.5 + hazardBlink * 1.7 : hazardBlink * 1.7;
+    for (const lightRef of [leftHeadLightRef, rightHeadLightRef]) {
+      if (!lightRef.current) {
+        continue;
+      }
+      const mat = lightRef.current.material as THREE.MeshStandardMaterial;
+      mat.emissiveIntensity = THREE.MathUtils.damp(
+        mat.emissiveIntensity,
+        frontIntensity,
+        9,
+        delta,
+      );
+    }
+    for (const lightRef of [leftTailLightRef, rightTailLightRef]) {
+      if (!lightRef.current) {
+        continue;
+      }
+      const mat = lightRef.current.material as THREE.MeshStandardMaterial;
+      mat.emissiveIntensity = THREE.MathUtils.damp(
+        mat.emissiveIntensity,
+        rearIntensity,
+        9,
+        delta,
+      );
+    }
   });
 
   return (
     <group ref={rootRef} position={[0, 0.6, 0]}>
-      <mesh castShadow receiveShadow>
+      <mesh ref={bodyRef} castShadow receiveShadow>
         <boxGeometry args={[3.2, 0.55, 1.55]} />
         <meshStandardMaterial color="#0ea5e9" metalness={0.35} roughness={0.3} />
       </mesh>
-      <mesh position={[0.15, 0.45, 0]} castShadow receiveShadow>
+      <mesh ref={cabinRef} position={[0.15, 0.45, 0]} castShadow receiveShadow>
         <boxGeometry args={[1.9, 0.5, 1.4]} />
         <meshStandardMaterial color="#38bdf8" metalness={0.38} roughness={0.28} />
+      </mesh>
+      <mesh position={[-0.04, 0.72, 0]} receiveShadow>
+        <boxGeometry args={[0.8, 0.05, 0.52]} />
+        <meshStandardMaterial color="#1e293b" roughness={0.78} metalness={0.15} />
+      </mesh>
+      <mesh ref={sunroofRef} position={[-0.02, 0.74, 0]} receiveShadow>
+        <boxGeometry args={[0.72, 0.03, 0.42]} />
+        <meshStandardMaterial color="#020617" roughness={0.18} metalness={0.2} />
       </mesh>
 
       <group ref={leftDoorRef} position={[-1.0, 0.35, 0.82]}>
@@ -296,7 +377,7 @@ function CarModel({
           </mesh>
         ))}
 
-      <mesh position={[-1.56, 0.22, 0.45]}>
+      <mesh ref={leftHeadLightRef} position={[-1.56, 0.22, 0.45]}>
         <sphereGeometry args={[0.09, 20, 20]} />
         <meshStandardMaterial
           emissive={state.lightsOn ? "#fde68a" : "#0f172a"}
@@ -304,13 +385,21 @@ function CarModel({
           color={state.lightsOn ? "#fef3c7" : "#334155"}
         />
       </mesh>
-      <mesh position={[-1.56, 0.22, -0.45]}>
+      <mesh ref={rightHeadLightRef} position={[-1.56, 0.22, -0.45]}>
         <sphereGeometry args={[0.09, 20, 20]} />
         <meshStandardMaterial
           emissive={state.lightsOn ? "#fde68a" : "#0f172a"}
           emissiveIntensity={state.lightsOn ? 2.1 : 0.2}
           color={state.lightsOn ? "#fef3c7" : "#334155"}
         />
+      </mesh>
+      <mesh ref={leftTailLightRef} position={[1.57, 0.2, 0.44]}>
+        <sphereGeometry args={[0.07, 16, 16]} />
+        <meshStandardMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={0.2} />
+      </mesh>
+      <mesh ref={rightTailLightRef} position={[1.57, 0.2, -0.44]}>
+        <sphereGeometry args={[0.07, 16, 16]} />
+        <meshStandardMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={0.2} />
       </mesh>
 
       {state.lightsOn ? (
@@ -345,6 +434,7 @@ function CarModel({
 export function CarShowroomScene({
   state,
   cameraPreset,
+  autoTour,
   onToggleLeftDoor,
   onToggleRightDoor,
   onToggleTrunk,
@@ -352,7 +442,7 @@ export function CarShowroomScene({
   return (
     <div className="h-[520px] overflow-hidden rounded-4xl border border-white/10 bg-slate-950/80">
       <Canvas shadows>
-        <CameraRig preset={cameraPreset} />
+        <CameraRig preset={cameraPreset} autoTour={autoTour} />
         <color attach="background" args={["#020617"]} />
         <ambientLight intensity={0.42} />
         <directionalLight
@@ -382,7 +472,7 @@ export function CarShowroomScene({
 
         <OrbitControls
           enablePan={false}
-          enableRotate={cameraPreset !== "cockpit"}
+          enableRotate={!autoTour && cameraPreset !== "cockpit"}
           minDistance={3.8}
           maxDistance={9}
           minPolarAngle={0.6}

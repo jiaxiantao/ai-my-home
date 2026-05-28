@@ -28,6 +28,10 @@ export default function CarShowroomPage() {
   const [seatPassengerOffset, setSeatPassengerOffset] = useState(0);
   const [steeringAngle, setSteeringAngle] = useState(0);
   const [cameraPreset, setCameraPreset] = useState<CarCameraPreset>("overview");
+  const [hazardOn, setHazardOn] = useState(false);
+  const [sunroofOpen, setSunroofOpen] = useState(false);
+  const [autoTour, setAutoTour] = useState(false);
+  const [bodyColor, setBodyColor] = useState("#0ea5e9");
 
   const sceneState = useMemo(
     () => ({
@@ -39,6 +43,9 @@ export default function CarShowroomPage() {
       seatDriverOffset,
       seatPassengerOffset,
       steeringAngle,
+      hazardOn,
+      sunroofOpen,
+      bodyColor,
     }),
     [
       engineOn,
@@ -48,6 +55,9 @@ export default function CarShowroomPage() {
       seatDriverOffset,
       seatPassengerOffset,
       steeringAngle,
+      hazardOn,
+      sunroofOpen,
+      bodyColor,
       trunkOpen,
     ],
   );
@@ -59,7 +69,10 @@ export default function CarShowroomPage() {
     setLightsOn(true);
     setEngineOn(false);
     setSteeringAngle(0);
+    setHazardOn(true);
+    setSunroofOpen(false);
     setCameraPreset("overview");
+    setAutoTour(false);
   }
 
   function applyDriveMode() {
@@ -69,7 +82,10 @@ export default function CarShowroomPage() {
     setLightsOn(true);
     setEngineOn(true);
     setSteeringAngle(-16);
+    setHazardOn(false);
+    setSunroofOpen(false);
     setCameraPreset("side");
+    setAutoTour(false);
   }
 
   function resetAll() {
@@ -81,7 +97,11 @@ export default function CarShowroomPage() {
     setSeatDriverOffset(0);
     setSeatPassengerOffset(0);
     setSteeringAngle(0);
+    setHazardOn(false);
+    setSunroofOpen(false);
     setCameraPreset("overview");
+    setAutoTour(false);
+    setBodyColor("#0ea5e9");
   }
 
   return (
@@ -100,6 +120,7 @@ export default function CarShowroomPage() {
       <CarShowroomScene
         state={sceneState}
         cameraPreset={cameraPreset}
+        autoTour={autoTour}
         onToggleLeftDoor={() => setLeftDoorOpen((value) => !value)}
         onToggleRightDoor={() => setRightDoorOpen((value) => !value)}
         onToggleTrunk={() => setTrunkOpen((value) => !value)}
@@ -109,33 +130,54 @@ export default function CarShowroomPage() {
         <div className="flex flex-wrap gap-3">
           <Button
             variant={cameraPreset === "overview" ? "default" : "outline"}
-            onClick={() => setCameraPreset("overview")}
+            onClick={() => {
+              setCameraPreset("overview");
+              setAutoTour(false);
+            }}
           >
             全景视角
           </Button>
           <Button
             variant={cameraPreset === "front" ? "default" : "outline"}
-            onClick={() => setCameraPreset("front")}
+            onClick={() => {
+              setCameraPreset("front");
+              setAutoTour(false);
+            }}
           >
             前脸视角
           </Button>
           <Button
             variant={cameraPreset === "side" ? "default" : "outline"}
-            onClick={() => setCameraPreset("side")}
+            onClick={() => {
+              setCameraPreset("side");
+              setAutoTour(false);
+            }}
           >
             侧面视角
           </Button>
           <Button
             variant={cameraPreset === "rear" ? "default" : "outline"}
-            onClick={() => setCameraPreset("rear")}
+            onClick={() => {
+              setCameraPreset("rear");
+              setAutoTour(false);
+            }}
           >
             车尾视角
           </Button>
           <Button
             variant={cameraPreset === "cockpit" ? "default" : "outline"}
-            onClick={() => setCameraPreset("cockpit")}
+            onClick={() => {
+              setCameraPreset("cockpit");
+              setAutoTour(false);
+            }}
           >
             驾舱视角
+          </Button>
+          <Button
+            variant={autoTour ? "default" : "outline"}
+            onClick={() => setAutoTour((value) => !value)}
+          >
+            {autoTour ? "停止环车巡检" : "自动环车巡检"}
           </Button>
         </div>
 
@@ -169,6 +211,18 @@ export default function CarShowroomPage() {
             onClick={() => setEngineOn((value) => !value)}
           >
             {engineOn ? "熄火" : "启动车辆"}
+          </Button>
+          <Button
+            variant={hazardOn ? "default" : "outline"}
+            onClick={() => setHazardOn((value) => !value)}
+          >
+            {hazardOn ? "关闭双闪" : "开启双闪"}
+          </Button>
+          <Button
+            variant={sunroofOpen ? "default" : "outline"}
+            onClick={() => setSunroofOpen((value) => !value)}
+          >
+            {sunroofOpen ? "关闭天窗" : "打开天窗"}
           </Button>
         </div>
 
@@ -213,6 +267,33 @@ export default function CarShowroomPage() {
         </div>
 
         <div className="flex flex-wrap gap-3">
+          <Button
+            variant={bodyColor === "#0ea5e9" ? "default" : "outline"}
+            onClick={() => setBodyColor("#0ea5e9")}
+          >
+            冰川蓝
+          </Button>
+          <Button
+            variant={bodyColor === "#f43f5e" ? "default" : "outline"}
+            onClick={() => setBodyColor("#f43f5e")}
+          >
+            熔岩红
+          </Button>
+          <Button
+            variant={bodyColor === "#22c55e" ? "default" : "outline"}
+            onClick={() => setBodyColor("#22c55e")}
+          >
+            森野绿
+          </Button>
+          <Button
+            variant={bodyColor === "#a855f7" ? "default" : "outline"}
+            onClick={() => setBodyColor("#a855f7")}
+          >
+            星幕紫
+          </Button>
+        </div>
+
+        <div className="flex flex-wrap gap-3">
           <Button variant="secondary" onClick={applyWelcomeMode}>
             迎宾模式
           </Button>
@@ -223,7 +304,7 @@ export default function CarShowroomPage() {
             复位全部状态
           </Button>
           <p className="text-xs text-slate-400">
-            提示：启动车辆后可看到车轮转动、车身轻微抖动与尾部动力反馈；驾驶预备模式会自动切到侧视角。
+            提示：双闪会联动车尾灯闪烁，环车巡检会自动锁定镜头轨迹；如需手动拖拽观察，请先停止巡检。
           </p>
         </div>
       </section>
