@@ -51,26 +51,61 @@ function AssetModel({
   state: CarShowroomState;
 }) {
   const rootRef = useRef<THREE.Group>(null);
-  const materialRefs = useRef<THREE.MeshStandardMaterial[]>([]);
+  const paintMaterialRefs = useRef<THREE.MeshStandardMaterial[]>([]);
 
   useEffect(() => {
-    materialRefs.current = [];
+    paintMaterialRefs.current = [];
+    const excludeName = /(wheel|tire|rim|glass|window|light|head|tail|lamp|indicator|interior|seat|mirror|grill|exhaust|brake|caliper|steer|handle)/;
+    const includeName = /(body|paint|door|hood|bonnet|fender|bumper|trunk|tailgate|hatch|shell|car)/;
+    const candidates = new Map<string, { material: THREE.MeshStandardMaterial; score: number }>();
+
     object.traverse((child) => {
       const mesh = child as THREE.Mesh;
       if (!mesh.isMesh) {
         return;
       }
-      const material = mesh.material;
-      if (Array.isArray(material)) {
-        for (const entry of material) {
-          if (entry instanceof THREE.MeshStandardMaterial) {
-            materialRefs.current.push(entry);
-          }
+      const geometry = mesh.geometry;
+      geometry.computeBoundingBox();
+      const box = geometry.boundingBox;
+      const size = new THREE.Vector3();
+      box?.getSize(size);
+      const diagonal = size.length();
+      const meshName = `${mesh.name} ${mesh.parent?.name ?? ""}`.toLowerCase();
+      if (excludeName.test(meshName)) {
+        return;
+      }
+
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      for (const entry of materials) {
+        if (!(entry instanceof THREE.MeshStandardMaterial)) {
+          continue;
         }
-      } else if (material instanceof THREE.MeshStandardMaterial) {
-        materialRefs.current.push(material);
+        if (entry.transparent && entry.opacity < 0.98) {
+          continue;
+        }
+        if (entry.emissiveIntensity > 0.15) {
+          continue;
+        }
+
+        const luma = 0.2126 * entry.color.r + 0.7152 * entry.color.g + 0.0722 * entry.color.b;
+        if (luma < 0.1 || luma > 0.95) {
+          continue;
+        }
+
+        const bonus = includeName.test(meshName) ? 2 : 1;
+        const score = Math.max(0.001, diagonal) * bonus;
+        const prev = candidates.get(entry.uuid);
+        if (!prev || prev.score < score) {
+          candidates.set(entry.uuid, { material: entry, score });
+        }
       }
     });
+
+    const picked = [...candidates.values()]
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 8)
+      .map((entry) => entry.material);
+    paintMaterialRefs.current = picked;
   }, [object]);
 
   useFrame((renderState, delta) => {
@@ -81,7 +116,7 @@ function AssetModel({
     }
 
     const target = new THREE.Color(state.bodyColor);
-    for (const material of materialRefs.current) {
+    for (const material of paintMaterialRefs.current) {
       material.color.lerp(target, THREE.MathUtils.clamp(delta * 0.35, 0, 1));
     }
   });
@@ -185,6 +220,16 @@ function CarModel({
         color: "#0f172a",
         metalness: 0.25,
         roughness: 0.65,
+      }),
+    [],
+  );
+  const hiddenHitboxMaterial = useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        colorWrite: false,
       }),
     [],
   );
@@ -408,13 +453,11 @@ function CarModel({
       ) : null}
       <mesh ref={sunroofRef} position={[-0.02, 0.74, 0]} receiveShadow>
         <boxGeometry args={[0.72, 0.03, 0.42]} />
-        <meshStandardMaterial
-          color="#020617"
-          roughness={0.18}
-          metalness={0.2}
-          opacity={overlayOnly ? 0.8 : 1}
-          transparent={overlayOnly}
-        />
+        {overlayOnly ? (
+          <primitive object={hiddenHitboxMaterial} attach="material" />
+        ) : (
+          <meshStandardMaterial color="#020617" roughness={0.18} metalness={0.2} />
+        )}
       </mesh>
 
       <group ref={leftDoorRef} position={[-1.0, 0.35, 0.82]}>
@@ -428,13 +471,11 @@ function CarModel({
           }}
         >
           <boxGeometry args={[1.1, 0.42, 0.08]} />
-          <meshStandardMaterial
-            color={overlayOnly ? "#f8fafc" : "#0369a1"}
-            metalness={0.42}
-            roughness={0.35}
-            opacity={overlayOnly ? 0.55 : 1}
-            transparent={overlayOnly}
-          />
+          {overlayOnly ? (
+            <primitive object={hiddenHitboxMaterial} attach="material" />
+          ) : (
+            <meshStandardMaterial color="#0369a1" metalness={0.42} roughness={0.35} />
+          )}
         </mesh>
       </group>
 
@@ -449,13 +490,11 @@ function CarModel({
           }}
         >
           <boxGeometry args={[1.1, 0.42, 0.08]} />
-          <meshStandardMaterial
-            color={overlayOnly ? "#f8fafc" : "#0369a1"}
-            metalness={0.42}
-            roughness={0.35}
-            opacity={overlayOnly ? 0.55 : 1}
-            transparent={overlayOnly}
-          />
+          {overlayOnly ? (
+            <primitive object={hiddenHitboxMaterial} attach="material" />
+          ) : (
+            <meshStandardMaterial color="#0369a1" metalness={0.42} roughness={0.35} />
+          )}
         </mesh>
       </group>
 
@@ -470,13 +509,11 @@ function CarModel({
           }}
         >
           <boxGeometry args={[0.16, 0.34, 1.46]} />
-          <meshStandardMaterial
-            color={overlayOnly ? "#e2e8f0" : "#0284c7"}
-            metalness={0.35}
-            roughness={0.38}
-            opacity={overlayOnly ? 0.55 : 1}
-            transparent={overlayOnly}
-          />
+          {overlayOnly ? (
+            <primitive object={hiddenHitboxMaterial} attach="material" />
+          ) : (
+            <meshStandardMaterial color="#0284c7" metalness={0.35} roughness={0.38} />
+          )}
         </mesh>
       </group>
 
@@ -532,7 +569,7 @@ function CarModel({
         </>
       ) : null}
 
-      <mesh ref={leftHeadLightRef} position={[-1.56, 0.22, 0.45]}>
+      <mesh ref={leftHeadLightRef} position={[-1.56, 0.22, 0.45]} visible={!overlayOnly}>
         <sphereGeometry args={[0.09, 20, 20]} />
         <meshStandardMaterial
           emissive={state.lightsOn ? "#fde68a" : "#0f172a"}
@@ -540,7 +577,7 @@ function CarModel({
           color={state.lightsOn ? "#fef3c7" : "#334155"}
         />
       </mesh>
-      <mesh ref={rightHeadLightRef} position={[-1.56, 0.22, -0.45]}>
+      <mesh ref={rightHeadLightRef} position={[-1.56, 0.22, -0.45]} visible={!overlayOnly}>
         <sphereGeometry args={[0.09, 20, 20]} />
         <meshStandardMaterial
           emissive={state.lightsOn ? "#fde68a" : "#0f172a"}
@@ -548,16 +585,16 @@ function CarModel({
           color={state.lightsOn ? "#fef3c7" : "#334155"}
         />
       </mesh>
-      <mesh ref={leftTailLightRef} position={[1.57, 0.2, 0.44]}>
+      <mesh ref={leftTailLightRef} position={[1.57, 0.2, 0.44]} visible={!overlayOnly}>
         <sphereGeometry args={[0.07, 16, 16]} />
         <meshStandardMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={0.2} />
       </mesh>
-      <mesh ref={rightTailLightRef} position={[1.57, 0.2, -0.44]}>
+      <mesh ref={rightTailLightRef} position={[1.57, 0.2, -0.44]} visible={!overlayOnly}>
         <sphereGeometry args={[0.07, 16, 16]} />
         <meshStandardMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={0.2} />
       </mesh>
 
-      {state.lightsOn ? (
+      {state.lightsOn && !overlayOnly ? (
         <>
           <pointLight
             position={[-2.2, 0.24, 0.45]}
