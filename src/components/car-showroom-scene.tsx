@@ -903,7 +903,7 @@ export function CarShowroomScene({
 
   return (
     <div className="h-[520px] overflow-hidden rounded-4xl border border-white/10 bg-slate-950/80">
-      <Canvas shadows>
+      <Canvas shadows={{ type: THREE.PCFShadowMap }}>
         <CameraRig preset={cameraPreset} autoTour={autoTour} controlsRef={controlsRef} />
         <color attach="background" args={["#020617"]} />
         <Environment preset="night" />
