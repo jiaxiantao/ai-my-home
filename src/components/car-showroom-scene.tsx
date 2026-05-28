@@ -193,10 +193,10 @@ function getCameraPose(preset: CarCameraPreset) {
   }
   if (preset === "cockpit") {
     return {
-      // Keep cockpit camera slightly lower and farther back to avoid clipping
-      // into roof pillars across different market GLB cabins.
-      position: new THREE.Vector3(-0.12, 0.9, 0.22),
-      target: new THREE.Vector3(-2.6, 0.88, 0.16),
+      // Cockpit pivot is anchored near the driver's head position so drag
+      // rotation spins around the driver seat instead of the windshield.
+      position: new THREE.Vector3(-0.2, 1.02, 0.58),
+      target: new THREE.Vector3(-0.42, 0.92, 0.32),
     };
   }
   return {
