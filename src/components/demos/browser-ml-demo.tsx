@@ -28,6 +28,9 @@ export function BrowserMlDemo() {
   const [inferMs, setInferMs] = useState<number | null>(null);
   const [labels, setLabels] = useState<SentimentLabel[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [resultSource, setResultSource] = useState<"model" | "fallback" | null>(
+    null,
+  );
 
   function runMockClassification(input: string) {
     const normalized = input.toLowerCase();
@@ -64,6 +67,7 @@ export function BrowserMlDemo() {
     setLoadMs(null);
     setInferMs(null);
     setLabels([]);
+    setResultSource(null);
     const loadStarted = performance.now();
 
     try {
@@ -111,6 +115,7 @@ export function BrowserMlDemo() {
       const output = (await classifier(text)) as SentimentLabel[];
       setInferMs(Math.round(performance.now() - inferStarted));
       setLabels(Array.isArray(output) ? output : [output as SentimentLabel]);
+      setResultSource("model");
     } catch (caught) {
       setStatus("error");
       const raw = caught instanceof Error ? caught.message : "模型加载或推理失败";
@@ -130,6 +135,7 @@ export function BrowserMlDemo() {
     setLoadMs(0);
     setInferMs(0);
     setLabels(runMockClassification(text));
+    setResultSource("fallback");
   }
 
   return (
@@ -178,6 +184,18 @@ export function BrowserMlDemo() {
         <p className="font-mono text-xs text-slate-500">
           模型就绪 {loadMs} ms
           {inferMs != null ? ` · 推理 ${inferMs} ms` : null}
+        </p>
+      ) : null}
+
+      {resultSource ? (
+        <p
+          className={`inline-flex rounded-full border px-3 py-1 text-[11px] ${
+            resultSource === "model"
+              ? "border-emerald-300/30 bg-emerald-300/10 text-emerald-200"
+              : "border-amber-300/30 bg-amber-300/10 text-amber-200"
+          }`}
+        >
+          {resultSource === "model" ? "真实模型结果" : "演示兜底结果"}
         </p>
       ) : null}
 
