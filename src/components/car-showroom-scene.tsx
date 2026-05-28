@@ -52,12 +52,15 @@ function AssetModel({
 }) {
   const rootRef = useRef<THREE.Group>(null);
   const paintMaterialRefs = useRef<THREE.Material[]>([]);
+  const allColorMaterialRefs = useRef<THREE.Material[]>([]);
 
   useEffect(() => {
     paintMaterialRefs.current = [];
+    allColorMaterialRefs.current = [];
     const excludeName = /(wheel|tire|rim|glass|window|light|head|tail|lamp|indicator|interior|seat|mirror|grill|exhaust|brake|caliper|steer|handle)/;
     const includeName = /(body|paint|door|hood|bonnet|fender|bumper|trunk|tailgate|hatch|shell|car)/;
     const candidates = new Map<string, { material: THREE.Material; score: number }>();
+    const broadCandidates = new Map<string, { material: THREE.Material; score: number }>();
 
     object.traverse((child) => {
       const mesh = child as THREE.Mesh;
@@ -80,6 +83,13 @@ function AssetModel({
         if (!("color" in entry)) {
           continue;
         }
+        const color = (entry as { color: THREE.Color }).color;
+        if (!broadCandidates.has(entry.uuid)) {
+          broadCandidates.set(entry.uuid, {
+            material: entry,
+            score: Math.max(0.001, diagonal),
+          });
+        }
         const maybeTransparent = (entry as { transparent?: boolean; opacity?: number }).transparent;
         const maybeOpacity = (entry as { opacity?: number }).opacity;
         if (maybeTransparent && typeof maybeOpacity === "number" && maybeOpacity < 0.98) {
@@ -90,7 +100,6 @@ function AssetModel({
           continue;
         }
 
-        const color = (entry as { color: THREE.Color }).color;
         const luma = 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
         if (luma < 0.1 || luma > 0.95) {
           continue;
@@ -109,25 +118,33 @@ function AssetModel({
       .sort((a, b) => b.score - a.score)
       .slice(0, 8)
       .map((entry) => entry.material);
-    paintMaterialRefs.current = picked;
+    paintMaterialRefs.current = picked.length
+      ? picked
+      : [...broadCandidates.values()]
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 6)
+          .map((entry) => entry.material);
+    allColorMaterialRefs.current = [...broadCandidates.values()].map((entry) => entry.material);
   }, [object]);
+
+  useEffect(() => {
+    const target = new THREE.Color(state.bodyColor);
+    const targets = paintMaterialRefs.current.length
+      ? paintMaterialRefs.current
+      : allColorMaterialRefs.current;
+    for (const material of targets) {
+      if (!("color" in material)) {
+        continue;
+      }
+      (material as { color: THREE.Color }).color.copy(target);
+    }
+  }, [state.bodyColor]);
 
   useFrame((renderState, delta) => {
     if (rootRef.current) {
       const t = renderState.clock.getElapsedTime();
       const y = state.engineOn ? Math.sin(t * 8) * 0.02 : 0;
       rootRef.current.position.y = THREE.MathUtils.damp(rootRef.current.position.y, y, 5, delta);
-    }
-
-    const target = new THREE.Color(state.bodyColor);
-    for (const material of paintMaterialRefs.current) {
-      if (!("color" in material)) {
-        continue;
-      }
-      (material as { color: THREE.Color }).color.lerp(
-        target,
-        THREE.MathUtils.clamp(delta * 0.35, 0, 1),
-      );
     }
   });
 
