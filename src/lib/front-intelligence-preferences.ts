@@ -103,6 +103,14 @@ export function saveLearningProfile(profile: IntelligenceLearningProfile) {
   window.localStorage.setItem(LEARNING_STORAGE_KEY, JSON.stringify(profile));
 }
 
+export function resetLearningProfile() {
+  if (typeof window === "undefined") {
+    return defaultLearningProfile;
+  }
+  window.localStorage.removeItem(LEARNING_STORAGE_KEY);
+  return defaultLearningProfile;
+}
+
 export function bumpLearningProfile(
   profile: IntelligenceLearningProfile,
   signal: Partial<{

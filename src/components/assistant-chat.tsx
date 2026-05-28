@@ -7,6 +7,7 @@ import {
   ChatSessionSidebar,
 } from "@/components/assistant/chat-session-sidebar";
 import { ChatComposer } from "@/components/assistant/chat-composer";
+import { IntelligenceLearningPanel } from "@/components/intelligence-learning-panel";
 import {
   ChatMessageBubble,
   ReferenceCard,
@@ -18,9 +19,9 @@ import { analyzeComposer, getPreferenceTemplate } from "@/lib/front-intelligence
 import {
   bumpLearningProfile,
   defaultIntelligencePreferences,
-  inferRecommendedPreferences,
   loadLearningProfile,
   loadIntelligencePreferences,
+  resetLearningProfile,
   saveLearningProfile,
   saveIntelligencePreferences,
   type IntelligenceDepth,
@@ -109,10 +110,6 @@ export function AssistantChat({
   const preferenceTemplate = useMemo(
     () => getPreferenceTemplate(intelligencePreferences),
     [intelligencePreferences],
-  );
-  const recommended = useMemo(
-    () => inferRecommendedPreferences(learningProfile),
-    [learningProfile],
   );
 
   const applyStylePreference = useCallback((style: IntelligenceStyle) => {
@@ -554,30 +551,13 @@ export function AssistantChat({
                 type="button"
                 onClick={() => {
                   setIntelligencePreferences(defaultIntelligencePreferences);
-                  setLearningProfile(loadLearningProfile());
+                  setLearningProfile(resetLearningProfile());
                 }}
                 className="rounded-full border border-white/10 px-3 py-1 text-[11px] text-slate-400"
               >
                 恢复默认
               </button>
             </div>
-            {recommended &&
-            (recommended.style !== intelligencePreferences.style ||
-              recommended.depth !== intelligencePreferences.depth) ? (
-              <button
-                type="button"
-                onClick={() =>
-                  setIntelligencePreferences((current) => ({
-                    ...current,
-                    style: recommended.style,
-                    depth: recommended.depth,
-                  }))
-                }
-                className="mt-3 rounded-full border border-amber-200/30 bg-amber-200/10 px-3 py-1 text-[11px] text-amber-100"
-              >
-                智能建议：改为 {recommended.style} / {recommended.depth}
-              </button>
-            ) : null}
             <div className="mt-3 rounded-xl border border-white/10 bg-black/20 p-3">
               <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">
                 当前模板预览
@@ -587,6 +567,20 @@ export function AssistantChat({
                   <li key={line}>- {line}</li>
                 ))}
               </ul>
+            </div>
+            <div className="mt-3">
+              <IntelligenceLearningPanel
+                learningProfile={learningProfile}
+                preferences={intelligencePreferences}
+                onApplyRecommendation={(next) =>
+                  setIntelligencePreferences((current) => ({
+                    ...current,
+                    style: next.style,
+                    depth: next.depth,
+                  }))
+                }
+                onResetLearning={() => setLearningProfile(resetLearningProfile())}
+              />
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
               {intelligence.intents.map((intent) => (

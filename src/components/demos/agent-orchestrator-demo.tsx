@@ -2,11 +2,16 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { IntelligenceLearningPanel } from "@/components/intelligence-learning-panel";
 import { agentToolCatalog } from "@/lib/agent/tool-catalog";
 import type { AgentPlan, AgentToolName, AgentTraceEvent } from "@/lib/agent/types";
 import {
+  bumpLearningProfile,
   defaultIntelligencePreferences,
+  loadLearningProfile,
   loadIntelligencePreferences,
+  resetLearningProfile,
+  saveLearningProfile,
   saveIntelligencePreferences,
   type IntelligenceDepth,
   type IntelligencePreferences,
@@ -101,6 +106,7 @@ export function AgentOrchestratorDemo() {
     null,
   );
   const [preferences, setPreferences] = useState(() => loadIntelligencePreferences());
+  const [learningProfile, setLearningProfile] = useState(() => loadLearningProfile());
   const abortRef = useRef<AbortController | null>(null);
   const recommendedPromptSuffix = useMemo(
     () => getAgentPromptHint(preferences),
@@ -109,6 +115,9 @@ export function AgentOrchestratorDemo() {
   useEffect(() => {
     saveIntelligencePreferences(preferences);
   }, [preferences]);
+  useEffect(() => {
+    saveLearningProfile(learningProfile);
+  }, [learningProfile]);
   const presets = [
     "先检索前端架构笔记，再计算 (128 + 64) * 3，并告诉我现在时间",
     "计算 (128 + 64) * 3",
@@ -276,12 +285,15 @@ export function AgentOrchestratorDemo() {
             <button
               key={item.key}
               type="button"
-              onClick={() =>
-                setPreferences((current) => ({
-                  ...current,
-                  style: item.key,
-                }))
-              }
+                onClick={() => {
+                  setPreferences((current) => ({
+                    ...current,
+                    style: item.key,
+                  }));
+                  setLearningProfile((current) =>
+                    bumpLearningProfile(current, { style: item.key }),
+                  );
+                }}
               className={`rounded-full border px-3 py-1 text-xs ${
                 preferences.style === item.key
                   ? "border-cyan-200/40 bg-cyan-200/15 text-cyan-100"
@@ -300,12 +312,15 @@ export function AgentOrchestratorDemo() {
             <button
               key={item.key}
               type="button"
-              onClick={() =>
-                setPreferences((current) => ({
-                  ...current,
-                  depth: item.key,
-                }))
-              }
+                onClick={() => {
+                  setPreferences((current) => ({
+                    ...current,
+                    depth: item.key,
+                  }));
+                  setLearningProfile((current) =>
+                    bumpLearningProfile(current, { depth: item.key }),
+                  );
+                }}
               className={`rounded-full border px-3 py-1 text-xs ${
                 preferences.depth === item.key
                   ? "border-emerald-200/40 bg-emerald-200/15 text-emerald-100"
@@ -333,7 +348,10 @@ export function AgentOrchestratorDemo() {
           </button>
           <button
             type="button"
-            onClick={() => setPreferences(defaultIntelligencePreferences)}
+            onClick={() => {
+              setPreferences(defaultIntelligencePreferences);
+              setLearningProfile(resetLearningProfile());
+            }}
             className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-400"
           >
             恢复默认
@@ -343,6 +361,18 @@ export function AgentOrchestratorDemo() {
         <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-[11px] text-slate-300">
           Agent 偏好约束：{recommendedPromptSuffix}
         </div>
+        <IntelligenceLearningPanel
+          learningProfile={learningProfile}
+          preferences={preferences}
+          onApplyRecommendation={(next) =>
+            setPreferences((current) => ({
+              ...current,
+              style: next.style,
+              depth: next.depth,
+            }))
+          }
+          onResetLearning={() => setLearningProfile(resetLearningProfile())}
+        />
 
         <div className="flex flex-wrap gap-2">
           {presets.map((preset) => (
