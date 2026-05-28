@@ -30,6 +30,24 @@ const marketCategoryOptions = [
   },
 ] as const;
 
+type PaintOption = {
+  id: string;
+  label: string;
+  primary: string;
+  secondary?: string;
+};
+
+const paintOptions: PaintOption[] = [
+  { id: "glacier-blue", label: "冰川蓝", primary: "#0ea5e9" },
+  { id: "lava-red", label: "熔岩红", primary: "#f43f5e" },
+  { id: "forest-green", label: "森野绿", primary: "#22c55e" },
+  { id: "star-purple", label: "星幕紫", primary: "#a855f7" },
+  { id: "pearl-white", label: "珍珠白", primary: "#e2e8f0" },
+  { id: "obsidian-black", label: "曜石黑", primary: "#111827" },
+  { id: "sunset-gradient", label: "日落渐变", primary: "#fb7185", secondary: "#f59e0b" },
+  { id: "aurora-gradient", label: "极光渐变", primary: "#06b6d4", secondary: "#8b5cf6" },
+] as const;
+
 const CarShowroomScene = dynamic(
   () => import("@/components/car-showroom-scene").then((mod) => mod.CarShowroomScene),
   {
@@ -55,7 +73,9 @@ export default function CarShowroomPage() {
   const [hazardOn, setHazardOn] = useState(false);
   const [sunroofOpen, setSunroofOpen] = useState(false);
   const [autoTour, setAutoTour] = useState(false);
-  const [bodyColor, setBodyColor] = useState("#0ea5e9");
+  const [selectedPaintId, setSelectedPaintId] = useState<(typeof paintOptions)[number]["id"]>(
+    "glacier-blue",
+  );
   const [useAssetModel, setUseAssetModel] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<
     (typeof marketCategoryOptions)[number]["key"]
@@ -94,6 +114,11 @@ export default function CarShowroomPage() {
     };
   }, [selectedCategory]);
 
+  const selectedPaint = useMemo(
+    () => paintOptions.find((paint) => paint.id === selectedPaintId) ?? paintOptions[0],
+    [selectedPaintId],
+  );
+
   const sceneState = useMemo(
     () => ({
       leftDoorOpen,
@@ -106,7 +131,8 @@ export default function CarShowroomPage() {
       steeringAngle,
       hazardOn,
       sunroofOpen,
-      bodyColor,
+      bodyColor: selectedPaint.primary,
+      bodyColorSecondary: selectedPaint.secondary ?? null,
       speedKph,
       braking,
     }),
@@ -120,7 +146,7 @@ export default function CarShowroomPage() {
       steeringAngle,
       hazardOn,
       sunroofOpen,
-      bodyColor,
+      selectedPaint,
       speedKph,
       braking,
       trunkOpen,
@@ -170,7 +196,7 @@ export default function CarShowroomPage() {
     setSunroofOpen(false);
     setCameraPreset("overview");
     setAutoTour(false);
-    setBodyColor("#0ea5e9");
+    setSelectedPaintId("glacier-blue");
     setSpeedKph(28);
     setBraking(false);
   }
@@ -387,30 +413,15 @@ export default function CarShowroomPage() {
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <Button
-            variant={bodyColor === "#0ea5e9" ? "default" : "outline"}
-            onClick={() => setBodyColor("#0ea5e9")}
-          >
-            冰川蓝
-          </Button>
-          <Button
-            variant={bodyColor === "#f43f5e" ? "default" : "outline"}
-            onClick={() => setBodyColor("#f43f5e")}
-          >
-            熔岩红
-          </Button>
-          <Button
-            variant={bodyColor === "#22c55e" ? "default" : "outline"}
-            onClick={() => setBodyColor("#22c55e")}
-          >
-            森野绿
-          </Button>
-          <Button
-            variant={bodyColor === "#a855f7" ? "default" : "outline"}
-            onClick={() => setBodyColor("#a855f7")}
-          >
-            星幕紫
-          </Button>
+          {paintOptions.map((paint) => (
+            <Button
+              key={paint.id}
+              variant={selectedPaintId === paint.id ? "default" : "outline"}
+              onClick={() => setSelectedPaintId(paint.id)}
+            >
+              {paint.label}
+            </Button>
+          ))}
         </div>
 
         <div className="flex flex-wrap gap-3">

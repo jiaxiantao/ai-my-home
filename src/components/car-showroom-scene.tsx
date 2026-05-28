@@ -31,6 +31,7 @@ type CarShowroomState = {
   hazardOn: boolean;
   sunroofOpen: boolean;
   bodyColor: string;
+  bodyColorSecondary: string | null;
   speedKph: number;
   braking: boolean;
 };
@@ -139,17 +140,23 @@ function AssetModel({
   }, [object]);
 
   useEffect(() => {
-    const target = new THREE.Color(state.bodyColor);
+    const primary = new THREE.Color(state.bodyColor);
+    const secondary = state.bodyColorSecondary ? new THREE.Color(state.bodyColorSecondary) : null;
     const targets = paintMaterialRefs.current.length
       ? paintMaterialRefs.current
       : allColorMaterialRefs.current;
-    for (const material of targets) {
+    const denominator = Math.max(1, targets.length - 1);
+    for (const [index, material] of targets.entries()) {
       if (!("color" in material)) {
         continue;
       }
+      const gradientRatio = denominator === 0 ? 0 : index / denominator;
+      const target = secondary
+        ? primary.clone().lerp(secondary, THREE.MathUtils.clamp(gradientRatio, 0, 1))
+        : primary;
       (material as { color: THREE.Color }).color.copy(target);
     }
-  }, [state.bodyColor]);
+  }, [state.bodyColor, state.bodyColorSecondary]);
 
   useFrame((renderState, delta) => {
     if (rootRef.current) {
@@ -525,14 +532,23 @@ function CarModel({
       );
     }
 
-    const bodyColor = new THREE.Color(state.bodyColor);
+    const bodyColorPrimary = new THREE.Color(state.bodyColor);
+    const bodyColorSecondary = state.bodyColorSecondary
+      ? new THREE.Color(state.bodyColorSecondary)
+      : null;
+    const bodyColor = bodyColorSecondary
+      ? bodyColorPrimary.clone().lerp(bodyColorSecondary, 0.32)
+      : bodyColorPrimary;
     if (bodyRef.current) {
       const mat = bodyRef.current.material as THREE.MeshStandardMaterial;
       mat.color.lerp(bodyColor, THREE.MathUtils.clamp(delta * 4, 0, 1));
     }
     if (cabinRef.current) {
       const mat = cabinRef.current.material as THREE.MeshStandardMaterial;
-      const cabinTarget = bodyColor.clone().offsetHSL(0, 0.02, 0.08);
+      const cabinBase = bodyColorSecondary
+        ? bodyColorPrimary.clone().lerp(bodyColorSecondary, 0.72)
+        : bodyColor.clone();
+      const cabinTarget = cabinBase.offsetHSL(0, 0.02, 0.08);
       mat.color.lerp(cabinTarget, THREE.MathUtils.clamp(delta * 4, 0, 1));
     }
 
