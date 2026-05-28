@@ -1,54 +1,28 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
+import { useAuth } from "@/components/auth-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export function AdminAuthPanel() {
-  const [loading, setLoading] = useState(true);
-  const [authenticated, setAuthenticated] = useState(false);
+  const { loading, authenticated, message, login, logout } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch("/api/auth/session", { cache: "no-store", signal: controller.signal })
-      .then((res) => res.json())
-      .then((data: { authenticated?: boolean }) => {
-        setAuthenticated(Boolean(data.authenticated));
-      })
-      .catch(() => {
-        setAuthenticated(false);
-      })
-      .finally(() => setLoading(false));
-    return () => controller.abort();
-  }, []);
 
   async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setMessage(null);
-    const response = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
-    const payload = (await response.json()) as { error?: string };
-    if (!response.ok) {
-      setMessage(payload.error ?? "登录失败");
+    const ok = await login(username, password);
+    if (!ok) {
       return;
     }
-    setAuthenticated(true);
     setPassword("");
-    setMessage("登录成功，已获得管理员 Token");
   }
 
   async function handleLogout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    setAuthenticated(false);
-    setMessage("已退出管理员登录");
+    await logout();
   }
 
   if (loading) {

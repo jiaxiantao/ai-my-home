@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { useAuth } from "@/components/auth-provider";
+
 type HealthData = {
   ok?: boolean;
   ready?: boolean;
@@ -108,8 +110,8 @@ export function StatusProbe() {
   const [agentHistory, setAgentHistory] = useState<AgentProbeHistory[]>([]);
   const [windowHours, setWindowHours] = useState<number>(24);
   const [environment, setEnvironment] = useState<string>(() => getRuntimeEnvironment());
-  const [adminAuthenticated, setAdminAuthenticated] = useState(false);
   const [authHint, setAuthHint] = useState<string | null>(null);
+  const { authenticated: adminAuthenticated } = useAuth();
 
   useEffect(() => {
     const controller = new AbortController();
@@ -123,19 +125,6 @@ export function StatusProbe() {
         }
       });
 
-    return () => controller.abort();
-  }, []);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch("/api/auth/session", { cache: "no-store", signal: controller.signal })
-      .then((res) => res.json())
-      .then((data: { authenticated?: boolean }) => {
-        setAdminAuthenticated(Boolean(data.authenticated));
-      })
-      .catch(() => {
-        setAdminAuthenticated(false);
-      });
     return () => controller.abort();
   }, []);
 

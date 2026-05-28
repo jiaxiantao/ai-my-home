@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { useAuth } from "@/components/auth-provider";
 import { NoteCard } from "@/components/note-card";
 import type { NoteRecord } from "@/lib/notes-service";
 
@@ -50,25 +51,19 @@ export function NoteManager() {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<NoteFormErrors>({});
   const [formState, setFormState] = useState<CreateFormState>(initialFormState);
-  const [authLoading, setAuthLoading] = useState(true);
-  const [authenticated, setAuthenticated] = useState(false);
   const [loginState, setLoginState] = useState({ username: "", password: "" });
+  const { authenticated, loading: authLoading, message, login, logout } = useAuth();
 
   useEffect(() => {
     let cancelled = false;
 
     async function bootstrap() {
       try {
-        const [notesResponse, sessionResponse] = await Promise.all([
-          fetch("/api/notes", { cache: "no-store" }),
-          fetch("/api/auth/session", { cache: "no-store" }),
-        ]);
+        const notesResponse = await fetch("/api/notes", { cache: "no-store" });
         const notesPayload = (await notesResponse.json()) as { notes: NoteRecord[] };
-        const sessionPayload = (await sessionResponse.json()) as { authenticated?: boolean };
 
         if (!cancelled) {
           setNotes(notesPayload.notes ?? []);
-          setAuthenticated(Boolean(sessionPayload.authenticated));
         }
       } catch {
         if (!cancelled) {
@@ -77,7 +72,6 @@ export function NoteManager() {
       } finally {
         if (!cancelled) {
           setIsLoading(false);
-          setAuthLoading(false);
         }
       }
     }
@@ -96,19 +90,10 @@ export function NoteManager() {
   async function handleLogin() {
     setError(null);
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: loginState.username,
-          password: loginState.password,
-        }),
-      });
-      const payload = (await response.json()) as { error?: string };
-      if (!response.ok) {
-        throw new Error(payload.error ?? "登录失败");
+      const ok = await login(loginState.username, loginState.password);
+      if (!ok) {
+        return;
       }
-      setAuthenticated(true);
       setLoginState((current) => ({ ...current, password: "" }));
     } catch (loginError) {
       setError(loginError instanceof Error ? loginError.message : "登录失败");
@@ -118,8 +103,7 @@ export function NoteManager() {
   async function handleLogout() {
     setError(null);
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      setAuthenticated(false);
+      await logout();
     } catch {
       setError("退出登录失败");
     }
@@ -324,6 +308,10 @@ export function NoteManager() {
         {error ? (
           <div className="mt-4 rounded-2xl border border-rose-400/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">
             {error}
+          </div>
+        ) : message ? (
+          <div className="mt-4 rounded-2xl border border-cyan-300/20 bg-cyan-300/10 px-4 py-3 text-sm text-cyan-100">
+            {message}
           </div>
         ) : null}
 

@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { Menu } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
+import { useAuth } from "@/components/auth-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,51 +34,23 @@ const navItems = [
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
-  const [checkingSession, setCheckingSession] = useState(true);
-  const [authenticated, setAuthenticated] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [authMessage, setAuthMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch("/api/auth/session", { cache: "no-store", signal: controller.signal })
-      .then((response) => response.json())
-      .then((payload: { authenticated?: boolean }) => {
-        setAuthenticated(Boolean(payload.authenticated));
-      })
-      .catch(() => {
-        setAuthenticated(false);
-      })
-      .finally(() => {
-        setCheckingSession(false);
-      });
-    return () => controller.abort();
-  }, []);
+  const { authenticated, loading, message, clearMessage, login, logout } = useAuth();
 
   async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setAuthMessage(null);
-    const response = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
-    const payload = (await response.json()) as { error?: string };
-    if (!response.ok) {
-      setAuthMessage(payload.error ?? "登录失败");
+    clearMessage();
+    const ok = await login(username, password);
+    if (!ok) {
       return;
     }
-    setAuthenticated(true);
     setPassword("");
-    setAuthMessage(null);
     setAuthOpen(false);
   }
 
   async function handleLogout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    setAuthenticated(false);
-    setAuthMessage("已退出登录");
+    await logout();
   }
 
   return (
@@ -115,7 +88,7 @@ export function SiteHeader() {
             )}
             aria-label="打开登录弹窗"
           >
-            {checkingSession ? "..." : authenticated ? "admin" : "游客"}
+            {loading ? "..." : authenticated ? "admin" : "游客"}
           </button>
         </nav>
 
@@ -131,7 +104,7 @@ export function SiteHeader() {
             )}
             aria-label="打开登录弹窗"
           >
-            {checkingSession ? "..." : authenticated ? "admin" : "游客"}
+            {loading ? "..." : authenticated ? "admin" : "游客"}
           </button>
           <Button
             type="button"
@@ -178,7 +151,7 @@ export function SiteHeader() {
         <DialogContent
           onClose={() => {
             setAuthOpen(false);
-            setAuthMessage(null);
+            clearMessage();
           }}
         >
           <DialogHeader>
@@ -217,8 +190,8 @@ export function SiteHeader() {
             </form>
           )}
 
-          {authMessage ? (
-            <p className="mt-4 text-sm text-cyan-200/90">{authMessage}</p>
+          {message ? (
+            <p className="mt-4 text-sm text-cyan-200/90">{message}</p>
           ) : null}
         </DialogContent>
       </Dialog>
