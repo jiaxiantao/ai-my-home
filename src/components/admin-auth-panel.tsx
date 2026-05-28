@@ -2,6 +2,10 @@
 
 import { useEffect, useState } from "react";
 
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
 export function AdminAuthPanel() {
   const [loading, setLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
@@ -52,8 +56,10 @@ export function AdminAuthPanel() {
   }
 
   return (
-    <div className="space-y-4 rounded-[2rem] border border-white/10 bg-slate-950/70 p-6">
-      <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Admin Auth</p>
+    <div className="space-y-4 rounded-4xl border border-white/10 bg-gradient-to-b from-slate-900/70 to-slate-950/80 p-6">
+      <Badge variant={authenticated ? "secondary" : "default"} className="w-fit">
+        {authenticated ? "Admin Online" : "Guest"}
+      </Badge>
       <p className="text-sm text-slate-300">
         当前状态：
         <span className={authenticated ? "text-emerald-300" : "text-slate-200"}>
@@ -61,34 +67,25 @@ export function AdminAuthPanel() {
         </span>
       </p>
       {authenticated ? (
-        <button
-          type="button"
-          onClick={() => void handleLogout()}
-          className="rounded-full border border-white/10 px-4 py-2 text-sm text-slate-200 hover:border-white/20"
-        >
+        <Button type="button" variant="outline" onClick={() => void handleLogout()}>
           退出登录
-        </button>
+        </Button>
       ) : (
         <form onSubmit={handleLogin} className="grid gap-3 md:grid-cols-3">
-          <input
+          <Input
             value={username}
             onChange={(event) => setUsername(event.target.value)}
-            className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none"
             placeholder="管理员账号"
           />
-          <input
+          <Input
             type="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none"
             placeholder="管理员密码"
           />
-          <button
-            type="submit"
-            className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-cyan-100"
-          >
+          <Button type="submit" className="rounded-xl">
             登录
-          </button>
+          </Button>
         </form>
       )}
       {message ? <p className="text-sm text-cyan-200/90">{message}</p> : null}
