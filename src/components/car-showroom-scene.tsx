@@ -653,6 +653,8 @@ export function CarShowroomScene({
           return;
         }
         const loadedScene = gltf.scene.clone(true);
+        const meshWorldBounds: THREE.Box3[] = [];
+        const meshDiagonals: number[] = [];
         loadedScene.traverse((child) => {
           const mesh = child as THREE.Mesh;
           if (mesh.isMesh) {
@@ -668,10 +670,57 @@ export function CarShowroomScene({
             }
           }
         });
+        loadedScene.updateWorldMatrix(true, true);
+
+        loadedScene.traverse((child) => {
+          const mesh = child as THREE.Mesh;
+          if (!mesh.isMesh || !mesh.visible) {
+            return;
+          }
+          const material = mesh.material;
+          const primaryMaterial = Array.isArray(material) ? material[0] : material;
+          if (
+            primaryMaterial instanceof THREE.MeshStandardMaterial &&
+            primaryMaterial.transparent &&
+            primaryMaterial.opacity < 0.02
+          ) {
+            return;
+          }
+          mesh.geometry.computeBoundingBox();
+          const localBox = mesh.geometry.boundingBox;
+          if (!localBox) {
+            return;
+          }
+          const worldBox = localBox.clone().applyMatrix4(mesh.matrixWorld);
+          const size = new THREE.Vector3();
+          worldBox.getSize(size);
+          const diagonal = size.length();
+          if (!Number.isFinite(diagonal) || diagonal < 1e-4) {
+            return;
+          }
+          meshWorldBounds.push(worldBox);
+          meshDiagonals.push(diagonal);
+        });
 
         // Normalize asset transform so different market models load at a consistent
         // scale and stay centered in the showroom camera focus.
-        const normalizedBounds = new THREE.Box3().setFromObject(loadedScene);
+        let normalizedBounds: THREE.Box3;
+        if (meshWorldBounds.length > 0) {
+          const sorted = [...meshDiagonals].sort((a, b) => a - b);
+          const median = sorted[Math.floor(sorted.length / 2)] ?? 1;
+          const p90 = sorted[Math.floor(sorted.length * 0.9)] ?? median;
+          const filtered = meshWorldBounds.filter((box, index) => {
+            const d = meshDiagonals[index] ?? median;
+            return d >= median * 0.18 && d <= p90 * 1.8;
+          });
+          const activeBounds = filtered.length > 0 ? filtered : meshWorldBounds;
+          normalizedBounds = activeBounds.reduce(
+            (acc, box) => acc.union(box),
+            activeBounds[0]!.clone(),
+          );
+        } else {
+          normalizedBounds = new THREE.Box3().setFromObject(loadedScene);
+        }
         const normalizedSize = new THREE.Vector3();
         const normalizedCenter = new THREE.Vector3();
         normalizedBounds.getSize(normalizedSize);
