@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
 
+import type { CarCameraPreset } from "@/components/car-showroom-scene";
 import { Button } from "@/components/ui/button";
 
 const CarShowroomScene = dynamic(
@@ -23,7 +24,10 @@ export default function CarShowroomPage() {
   const [trunkOpen, setTrunkOpen] = useState(false);
   const [lightsOn, setLightsOn] = useState(false);
   const [engineOn, setEngineOn] = useState(false);
-  const [seatOffset, setSeatOffset] = useState(0);
+  const [seatDriverOffset, setSeatDriverOffset] = useState(0);
+  const [seatPassengerOffset, setSeatPassengerOffset] = useState(0);
+  const [steeringAngle, setSteeringAngle] = useState(0);
+  const [cameraPreset, setCameraPreset] = useState<CarCameraPreset>("overview");
 
   const sceneState = useMemo(
     () => ({
@@ -32,10 +36,53 @@ export default function CarShowroomPage() {
       trunkOpen,
       lightsOn,
       engineOn,
-      seatOffset,
+      seatDriverOffset,
+      seatPassengerOffset,
+      steeringAngle,
     }),
-    [engineOn, leftDoorOpen, lightsOn, rightDoorOpen, seatOffset, trunkOpen],
+    [
+      engineOn,
+      leftDoorOpen,
+      lightsOn,
+      rightDoorOpen,
+      seatDriverOffset,
+      seatPassengerOffset,
+      steeringAngle,
+      trunkOpen,
+    ],
   );
+
+  function applyWelcomeMode() {
+    setLeftDoorOpen(true);
+    setRightDoorOpen(true);
+    setTrunkOpen(false);
+    setLightsOn(true);
+    setEngineOn(false);
+    setSteeringAngle(0);
+    setCameraPreset("overview");
+  }
+
+  function applyDriveMode() {
+    setLeftDoorOpen(false);
+    setRightDoorOpen(false);
+    setTrunkOpen(false);
+    setLightsOn(true);
+    setEngineOn(true);
+    setSteeringAngle(-16);
+    setCameraPreset("side");
+  }
+
+  function resetAll() {
+    setLeftDoorOpen(false);
+    setRightDoorOpen(false);
+    setTrunkOpen(false);
+    setLightsOn(false);
+    setEngineOn(false);
+    setSeatDriverOffset(0);
+    setSeatPassengerOffset(0);
+    setSteeringAngle(0);
+    setCameraPreset("overview");
+  }
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-6 py-10 lg:px-8 lg:py-14">
@@ -45,19 +92,53 @@ export default function CarShowroomPage() {
           3D 看车交互舱
         </h1>
         <p className="max-w-3xl text-sm leading-7 text-slate-300">
-          支持开关车门、后备箱、灯光，启动车辆动态效果，以及座椅前后调节。可通过下方面板或直接点击 3D
-          模型中的车门/后备箱完成交互。
+          支持开关车门、后备箱、灯光，启动车辆动态效果、主副驾座椅独立调节、方向盘转向，以及视角预设切换。
+          可通过下方面板或直接点击 3D 模型中的车门/后备箱完成交互。
         </p>
       </section>
 
       <CarShowroomScene
         state={sceneState}
+        cameraPreset={cameraPreset}
         onToggleLeftDoor={() => setLeftDoorOpen((value) => !value)}
         onToggleRightDoor={() => setRightDoorOpen((value) => !value)}
         onToggleTrunk={() => setTrunkOpen((value) => !value)}
       />
 
       <section className="grid gap-4 rounded-3xl border border-white/10 bg-slate-950/60 p-5">
+        <div className="flex flex-wrap gap-3">
+          <Button
+            variant={cameraPreset === "overview" ? "default" : "outline"}
+            onClick={() => setCameraPreset("overview")}
+          >
+            全景视角
+          </Button>
+          <Button
+            variant={cameraPreset === "front" ? "default" : "outline"}
+            onClick={() => setCameraPreset("front")}
+          >
+            前脸视角
+          </Button>
+          <Button
+            variant={cameraPreset === "side" ? "default" : "outline"}
+            onClick={() => setCameraPreset("side")}
+          >
+            侧面视角
+          </Button>
+          <Button
+            variant={cameraPreset === "rear" ? "default" : "outline"}
+            onClick={() => setCameraPreset("rear")}
+          >
+            车尾视角
+          </Button>
+          <Button
+            variant={cameraPreset === "cockpit" ? "default" : "outline"}
+            onClick={() => setCameraPreset("cockpit")}
+          >
+            驾舱视角
+          </Button>
+        </div>
+
         <div className="flex flex-wrap gap-3">
           <Button
             variant={leftDoorOpen ? "default" : "outline"}
@@ -91,21 +172,58 @@ export default function CarShowroomPage() {
           </Button>
         </div>
 
-        <div className="grid gap-2">
-          <label htmlFor="seat-offset" className="text-sm font-medium text-slate-100">
-            座椅调节：{seatOffset > 0 ? "向后" : seatOffset < 0 ? "向前" : "中间"}
+        <div className="grid gap-3">
+          <label htmlFor="driver-seat-offset" className="text-sm font-medium text-slate-100">
+            主驾座椅：{seatDriverOffset > 0 ? "向后" : seatDriverOffset < 0 ? "向前" : "中间"}
           </label>
           <input
-            id="seat-offset"
+            id="driver-seat-offset"
             type="range"
             min={-45}
             max={45}
-            value={Math.round(seatOffset * 100)}
-            onChange={(event) => setSeatOffset(Number(event.target.value) / 100)}
+            value={Math.round(seatDriverOffset * 100)}
+            onChange={(event) => setSeatDriverOffset(Number(event.target.value) / 100)}
             className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-700"
           />
+          <label htmlFor="passenger-seat-offset" className="text-sm font-medium text-slate-100">
+            副驾座椅：
+            {seatPassengerOffset > 0 ? "向后" : seatPassengerOffset < 0 ? "向前" : "中间"}
+          </label>
+          <input
+            id="passenger-seat-offset"
+            type="range"
+            min={-45}
+            max={45}
+            value={Math.round(seatPassengerOffset * 100)}
+            onChange={(event) => setSeatPassengerOffset(Number(event.target.value) / 100)}
+            className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-700"
+          />
+          <label htmlFor="steering-angle" className="text-sm font-medium text-slate-100">
+            方向盘角度：{steeringAngle > 0 ? `右转 ${steeringAngle}°` : steeringAngle < 0 ? `左转 ${Math.abs(steeringAngle)}°` : "居中"}
+          </label>
+          <input
+            id="steering-angle"
+            type="range"
+            min={-42}
+            max={42}
+            value={Math.round(steeringAngle)}
+            onChange={(event) => setSteeringAngle(Number(event.target.value))}
+            className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-700"
+          />
+        </div>
+
+        <div className="flex flex-wrap gap-3">
+          <Button variant="secondary" onClick={applyWelcomeMode}>
+            迎宾模式
+          </Button>
+          <Button variant="secondary" onClick={applyDriveMode}>
+            驾驶预备模式
+          </Button>
+          <Button variant="outline" onClick={resetAll}>
+            复位全部状态
+          </Button>
           <p className="text-xs text-slate-400">
-            提示：启动车辆后可看到车轮转动和车身轻微抖动，模拟车辆通电状态。
+            提示：启动车辆后可看到车轮转动、车身轻微抖动与尾部动力反馈；驾驶预备模式会自动切到侧视角。
           </p>
         </div>
       </section>

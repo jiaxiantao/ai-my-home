@@ -1,9 +1,11 @@
 "use client";
 
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
+import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
+
+export type CarCameraPreset = "overview" | "front" | "side" | "rear" | "cockpit";
 
 type CarShowroomState = {
   leftDoorOpen: boolean;
@@ -11,28 +13,85 @@ type CarShowroomState = {
   trunkOpen: boolean;
   lightsOn: boolean;
   engineOn: boolean;
-  seatOffset: number;
+  seatDriverOffset: number;
+  seatPassengerOffset: number;
+  steeringAngle: number;
 };
 
 type CarShowroomSceneProps = {
+  state: CarShowroomState;
+  cameraPreset: CarCameraPreset;
+  onToggleLeftDoor: () => void;
+  onToggleRightDoor: () => void;
+  onToggleTrunk: () => void;
+};
+
+type CarModelProps = {
   state: CarShowroomState;
   onToggleLeftDoor: () => void;
   onToggleRightDoor: () => void;
   onToggleTrunk: () => void;
 };
 
+function getCameraPose(preset: CarCameraPreset) {
+  if (preset === "front") {
+    return {
+      position: new THREE.Vector3(-5.6, 1.8, 0),
+      target: new THREE.Vector3(-0.8, 0.5, 0),
+    };
+  }
+  if (preset === "side") {
+    return {
+      position: new THREE.Vector3(0.2, 1.9, 6.3),
+      target: new THREE.Vector3(0.1, 0.45, 0),
+    };
+  }
+  if (preset === "rear") {
+    return {
+      position: new THREE.Vector3(5.9, 1.9, 0),
+      target: new THREE.Vector3(1.2, 0.6, 0),
+    };
+  }
+  if (preset === "cockpit") {
+    return {
+      position: new THREE.Vector3(-0.35, 1.05, 0.3),
+      target: new THREE.Vector3(-2, 1.05, 0.3),
+    };
+  }
+  return {
+    position: new THREE.Vector3(5.2, 2.4, 4.6),
+    target: new THREE.Vector3(0, 0.45, 0),
+  };
+}
+
+function CameraRig({ preset }: { preset: CarCameraPreset }) {
+  const cameraRef = useRef<THREE.PerspectiveCamera>(null);
+  useFrame((_, delta) => {
+    if (!cameraRef.current) {
+      return;
+    }
+    const pose = getCameraPose(preset);
+    cameraRef.current.position.lerp(pose.position, THREE.MathUtils.clamp(delta * 2.3, 0, 1));
+    cameraRef.current.lookAt(pose.target);
+  });
+  return <PerspectiveCamera ref={cameraRef} makeDefault fov={45} position={[5.2, 2.4, 4.6]} />;
+}
+
 function CarModel({
   state,
   onToggleLeftDoor,
   onToggleRightDoor,
   onToggleTrunk,
-}: CarShowroomSceneProps) {
+}: CarModelProps) {
   const rootRef = useRef<THREE.Group>(null);
   const leftDoorRef = useRef<THREE.Group>(null);
   const rightDoorRef = useRef<THREE.Group>(null);
   const trunkRef = useRef<THREE.Group>(null);
   const seatLeftRef = useRef<THREE.Mesh>(null);
   const seatRightRef = useRef<THREE.Mesh>(null);
+  const steeringRef = useRef<THREE.Mesh>(null);
+  const exhaustLeftRef = useRef<THREE.Mesh>(null);
+  const exhaustRightRef = useRef<THREE.Mesh>(null);
   const wheelRefs = useRef<THREE.Mesh[]>([]);
 
   const wheelMaterial = useMemo(
@@ -74,11 +133,12 @@ function CarModel({
       );
     }
 
-    const seatTarget = THREE.MathUtils.clamp(state.seatOffset, -0.45, 0.45);
+    const seatDriverTarget = THREE.MathUtils.clamp(state.seatDriverOffset, -0.45, 0.45);
+    const seatPassengerTarget = THREE.MathUtils.clamp(state.seatPassengerOffset, -0.45, 0.45);
     if (seatLeftRef.current) {
       seatLeftRef.current.position.z = THREE.MathUtils.damp(
         seatLeftRef.current.position.z,
-        0.2 + seatTarget,
+        0.2 + seatDriverTarget,
         9,
         delta,
       );
@@ -86,7 +146,7 @@ function CarModel({
     if (seatRightRef.current) {
       seatRightRef.current.position.z = THREE.MathUtils.damp(
         seatRightRef.current.position.z,
-        0.2 + seatTarget,
+        0.2 + seatPassengerTarget,
         9,
         delta,
       );
@@ -95,6 +155,32 @@ function CarModel({
     const runFactor = state.engineOn ? 1 : 0;
     for (const wheel of wheelRefs.current) {
       wheel.rotation.x += delta * runFactor * 6.5;
+    }
+    const steerTarget = THREE.MathUtils.clamp(state.steeringAngle, -42, 42) * (Math.PI / 180);
+    if (wheelRefs.current[0]) {
+      wheelRefs.current[0].rotation.y = THREE.MathUtils.damp(
+        wheelRefs.current[0].rotation.y,
+        steerTarget,
+        6,
+        delta,
+      );
+    }
+    if (wheelRefs.current[2]) {
+      wheelRefs.current[2].rotation.y = THREE.MathUtils.damp(
+        wheelRefs.current[2].rotation.y,
+        steerTarget,
+        6,
+        delta,
+      );
+    }
+
+    if (steeringRef.current) {
+      steeringRef.current.rotation.x = THREE.MathUtils.damp(
+        steeringRef.current.rotation.x,
+        steerTarget,
+        8,
+        delta,
+      );
     }
 
     if (rootRef.current) {
@@ -106,6 +192,19 @@ function CarModel({
         5,
         delta,
       );
+    }
+
+    const t = renderState.clock.getElapsedTime();
+    const enginePulse = state.engineOn ? 0.45 + 0.25 * Math.sin(t * 18) : 0;
+    if (exhaustLeftRef.current) {
+      exhaustLeftRef.current.scale.setScalar(0.7 + enginePulse);
+      (exhaustLeftRef.current.material as THREE.MeshStandardMaterial).emissiveIntensity =
+        enginePulse;
+    }
+    if (exhaustRightRef.current) {
+      exhaustRightRef.current.scale.setScalar(0.7 + enginePulse);
+      (exhaustRightRef.current.material as THREE.MeshStandardMaterial).emissiveIntensity =
+        enginePulse;
     }
   });
 
@@ -173,6 +272,10 @@ function CarModel({
         <boxGeometry args={[0.42, 0.35, 0.28]} />
         <meshStandardMaterial color="#e2e8f0" roughness={0.75} metalness={0.08} />
       </mesh>
+      <mesh ref={steeringRef} position={[-0.92, 0.5, 0.34]} rotation={[0, 0, Math.PI / 2]}>
+        <torusGeometry args={[0.12, 0.026, 16, 36]} />
+        <meshStandardMaterial color="#111827" metalness={0.4} roughness={0.55} />
+      </mesh>
 
       {[[-1.1, -0.06, 0.75], [1.08, -0.06, 0.75], [-1.1, -0.06, -0.75], [1.08, -0.06, -0.75]]
         .map((position, index) => (
@@ -212,28 +315,44 @@ function CarModel({
 
       {state.lightsOn ? (
         <>
-          <pointLight position={[-2.2, 0.24, 0.45]} intensity={3.8} distance={5.5} color="#fef3c7" />
+          <pointLight
+            position={[-2.2, 0.24, 0.45]}
+            intensity={state.engineOn ? 4.8 : 3.8}
+            distance={5.5}
+            color="#fef3c7"
+          />
           <pointLight
             position={[-2.2, 0.24, -0.45]}
-            intensity={3.8}
+            intensity={state.engineOn ? 4.8 : 3.8}
             distance={5.5}
             color="#fef3c7"
           />
         </>
       ) : null}
+
+      <mesh ref={exhaustLeftRef} position={[1.7, 0.02, 0.42]}>
+        <sphereGeometry args={[0.04, 12, 12]} />
+        <meshStandardMaterial color="#94a3b8" emissive="#cbd5e1" emissiveIntensity={0} />
+      </mesh>
+      <mesh ref={exhaustRightRef} position={[1.7, 0.02, -0.42]}>
+        <sphereGeometry args={[0.04, 12, 12]} />
+        <meshStandardMaterial color="#94a3b8" emissive="#cbd5e1" emissiveIntensity={0} />
+      </mesh>
     </group>
   );
 }
 
 export function CarShowroomScene({
   state,
+  cameraPreset,
   onToggleLeftDoor,
   onToggleRightDoor,
   onToggleTrunk,
 }: CarShowroomSceneProps) {
   return (
     <div className="h-[520px] overflow-hidden rounded-4xl border border-white/10 bg-slate-950/80">
-      <Canvas camera={{ position: [5.2, 2.4, 4.6], fov: 45 }} shadows>
+      <Canvas shadows>
+        <CameraRig preset={cameraPreset} />
         <color attach="background" args={["#020617"]} />
         <ambientLight intensity={0.42} />
         <directionalLight
@@ -263,6 +382,7 @@ export function CarShowroomScene({
 
         <OrbitControls
           enablePan={false}
+          enableRotate={cameraPreset !== "cockpit"}
           minDistance={3.8}
           maxDistance={9}
           minPolarAngle={0.6}
