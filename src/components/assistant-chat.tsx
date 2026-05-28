@@ -19,9 +19,15 @@ import { analyzeComposer, getPreferenceTemplate } from "@/lib/front-intelligence
 import {
   bumpLearningProfile,
   defaultIntelligencePreferences,
+  exportIntelligenceConfig,
+  importIntelligenceConfig,
+  loadHistoryEvents,
   loadLearningProfile,
   loadIntelligencePreferences,
+  pushHistoryEvent,
+  resetHistoryEvents,
   resetLearningProfile,
+  saveHistoryEvents,
   saveLearningProfile,
   saveIntelligencePreferences,
   type IntelligenceDepth,
@@ -90,6 +96,7 @@ export function AssistantChat({
     loadIntelligencePreferences(),
   );
   const [learningProfile, setLearningProfile] = useState(() => loadLearningProfile());
+  const [historyEvents, setHistoryEvents] = useState(() => loadHistoryEvents());
 
   const activeSession =
     sessions.find((session) => session.id === activeSessionId) ?? sessions[0];
@@ -106,6 +113,9 @@ export function AssistantChat({
   useEffect(() => {
     saveLearningProfile(learningProfile);
   }, [learningProfile]);
+  useEffect(() => {
+    saveHistoryEvents(historyEvents);
+  }, [historyEvents]);
 
   const preferenceTemplate = useMemo(
     () => getPreferenceTemplate(intelligencePreferences),
@@ -113,12 +123,20 @@ export function AssistantChat({
   );
 
   const applyStylePreference = useCallback((style: IntelligenceStyle) => {
-    setIntelligencePreferences((current) => ({ ...current, style }));
+    setIntelligencePreferences((current) => {
+      const next = { ...current, style };
+      setHistoryEvents((history) => pushHistoryEvent(history, next));
+      return next;
+    });
     setLearningProfile((current) => bumpLearningProfile(current, { style }));
   }, []);
 
   const applyDepthPreference = useCallback((depth: IntelligenceDepth) => {
-    setIntelligencePreferences((current) => ({ ...current, depth }));
+    setIntelligencePreferences((current) => {
+      const next = { ...current, depth };
+      setHistoryEvents((history) => pushHistoryEvent(history, next));
+      return next;
+    });
     setLearningProfile((current) => bumpLearningProfile(current, { depth }));
   }, []);
 
@@ -534,10 +552,14 @@ export function AssistantChat({
               <button
                 type="button"
                 onClick={() =>
-                  setIntelligencePreferences((current) => ({
-                    ...current,
-                    includeMetrics: !current.includeMetrics,
-                  }))
+                  setIntelligencePreferences((current) => {
+                    const next = {
+                      ...current,
+                      includeMetrics: !current.includeMetrics,
+                    };
+                    setHistoryEvents((history) => pushHistoryEvent(history, next));
+                    return next;
+                  })
                 }
                 className={`rounded-full border px-3 py-1 text-[11px] ${
                   intelligencePreferences.includeMetrics
@@ -551,6 +573,9 @@ export function AssistantChat({
                 type="button"
                 onClick={() => {
                   setIntelligencePreferences(defaultIntelligencePreferences);
+                  setHistoryEvents((history) =>
+                    pushHistoryEvent(history, defaultIntelligencePreferences),
+                  );
                   setLearningProfile(resetLearningProfile());
                 }}
                 className="rounded-full border border-white/10 px-3 py-1 text-[11px] text-slate-400"
@@ -573,13 +598,50 @@ export function AssistantChat({
                 learningProfile={learningProfile}
                 preferences={intelligencePreferences}
                 onApplyRecommendation={(next) =>
-                  setIntelligencePreferences((current) => ({
-                    ...current,
-                    style: next.style,
-                    depth: next.depth,
-                  }))
+                  setIntelligencePreferences((current) => {
+                    const merged = {
+                      ...current,
+                      style: next.style,
+                      depth: next.depth,
+                    };
+                    setHistoryEvents((history) => pushHistoryEvent(history, merged));
+                    return merged;
+                  })
                 }
-                onResetLearning={() => setLearningProfile(resetLearningProfile())}
+                history={historyEvents}
+                onResetLearning={() => {
+                  setLearningProfile(resetLearningProfile());
+                  setHistoryEvents(resetHistoryEvents());
+                }}
+                onExport={() => {
+                  const blob = new Blob(
+                    [
+                      exportIntelligenceConfig({
+                        preferences: intelligencePreferences,
+                        learning: learningProfile,
+                        history: historyEvents,
+                      }),
+                    ],
+                    { type: "application/json" },
+                  );
+                  const url = URL.createObjectURL(blob);
+                  const link = document.createElement("a");
+                  link.href = url;
+                  link.download = "assistant-intelligence-config.json";
+                  link.click();
+                  URL.revokeObjectURL(url);
+                }}
+                onImport={(raw) => {
+                  const imported = importIntelligenceConfig(raw);
+                  if (!imported) {
+                    setError("导入失败：配置格式无效");
+                    return;
+                  }
+                  setIntelligencePreferences(imported.preferences);
+                  setLearningProfile(imported.learning);
+                  setHistoryEvents(imported.history);
+                  setError(null);
+                }}
               />
             </div>
             <div className="mt-3 flex flex-wrap gap-2">

@@ -2,6 +2,7 @@
 
 import {
   inferRecommendedPreferences,
+  type IntelligenceHistoryEvent,
   type IntelligenceLearningProfile,
   type IntelligencePreferences,
 } from "@/lib/front-intelligence-preferences";
@@ -9,13 +10,19 @@ import {
 export function IntelligenceLearningPanel({
   learningProfile,
   preferences,
+  history,
   onApplyRecommendation,
   onResetLearning,
+  onExport,
+  onImport,
 }: {
   learningProfile: IntelligenceLearningProfile;
   preferences: IntelligencePreferences;
+  history: IntelligenceHistoryEvent[];
   onApplyRecommendation: (next: { style: IntelligencePreferences["style"]; depth: IntelligencePreferences["depth"] }) => void;
   onResetLearning: () => void;
+  onExport: () => void;
+  onImport: (value: string) => void;
 }) {
   const recommended = inferRecommendedPreferences(learningProfile);
 
@@ -54,6 +61,52 @@ export function IntelligenceLearningPanel({
       >
         重置学习画像
       </button>
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={onExport}
+          className="rounded-full border border-white/10 px-3 py-1 text-[11px] text-slate-300"
+        >
+          导出配置
+        </button>
+        <label className="cursor-pointer rounded-full border border-white/10 px-3 py-1 text-[11px] text-slate-300">
+          导入配置
+          <input
+            type="file"
+            accept="application/json"
+            className="hidden"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (!file) return;
+              const reader = new FileReader();
+              reader.onload = () => {
+                if (typeof reader.result === "string") {
+                  onImport(reader.result);
+                }
+              };
+              reader.readAsText(file);
+              event.currentTarget.value = "";
+            }}
+          />
+        </label>
+      </div>
+
+      <div className="mt-3 rounded-lg border border-white/10 bg-white/5 p-2">
+        <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">最近 20 次偏好</p>
+        <ul className="mt-2 max-h-32 space-y-1 overflow-y-auto text-[11px] text-slate-300">
+          {history.length ? (
+            [...history].reverse().map((item, index) => (
+              <li key={`${item.at}-${index}`}>
+                {new Date(item.at).toLocaleTimeString("zh-CN", { hour12: false })} ·{" "}
+                {item.style}/{item.depth}/{item.includeMetrics ? "metric" : "plain"}
+              </li>
+            ))
+          ) : (
+            <li className="text-slate-500">暂无记录</li>
+          )}
+        </ul>
+      </div>
     </div>
   );
 }

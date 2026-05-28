@@ -8,9 +8,15 @@ import type { AgentPlan, AgentToolName, AgentTraceEvent } from "@/lib/agent/type
 import {
   bumpLearningProfile,
   defaultIntelligencePreferences,
+  exportIntelligenceConfig,
+  importIntelligenceConfig,
+  loadHistoryEvents,
   loadLearningProfile,
   loadIntelligencePreferences,
+  pushHistoryEvent,
+  resetHistoryEvents,
   resetLearningProfile,
+  saveHistoryEvents,
   saveLearningProfile,
   saveIntelligencePreferences,
   type IntelligenceDepth,
@@ -107,6 +113,7 @@ export function AgentOrchestratorDemo() {
   );
   const [preferences, setPreferences] = useState(() => loadIntelligencePreferences());
   const [learningProfile, setLearningProfile] = useState(() => loadLearningProfile());
+  const [historyEvents, setHistoryEvents] = useState(() => loadHistoryEvents());
   const abortRef = useRef<AbortController | null>(null);
   const recommendedPromptSuffix = useMemo(
     () => getAgentPromptHint(preferences),
@@ -118,6 +125,9 @@ export function AgentOrchestratorDemo() {
   useEffect(() => {
     saveLearningProfile(learningProfile);
   }, [learningProfile]);
+  useEffect(() => {
+    saveHistoryEvents(historyEvents);
+  }, [historyEvents]);
   const presets = [
     "先检索前端架构笔记，再计算 (128 + 64) * 3，并告诉我现在时间",
     "计算 (128 + 64) * 3",
@@ -286,10 +296,14 @@ export function AgentOrchestratorDemo() {
               key={item.key}
               type="button"
                 onClick={() => {
-                  setPreferences((current) => ({
-                    ...current,
-                    style: item.key,
-                  }));
+                  setPreferences((current) => {
+                    const next = {
+                      ...current,
+                      style: item.key,
+                    };
+                    setHistoryEvents((history) => pushHistoryEvent(history, next));
+                    return next;
+                  });
                   setLearningProfile((current) =>
                     bumpLearningProfile(current, { style: item.key }),
                   );
@@ -313,10 +327,14 @@ export function AgentOrchestratorDemo() {
               key={item.key}
               type="button"
                 onClick={() => {
-                  setPreferences((current) => ({
-                    ...current,
-                    depth: item.key,
-                  }));
+                  setPreferences((current) => {
+                    const next = {
+                      ...current,
+                      depth: item.key,
+                    };
+                    setHistoryEvents((history) => pushHistoryEvent(history, next));
+                    return next;
+                  });
                   setLearningProfile((current) =>
                     bumpLearningProfile(current, { depth: item.key }),
                   );
@@ -333,10 +351,14 @@ export function AgentOrchestratorDemo() {
           <button
             type="button"
             onClick={() =>
-              setPreferences((current) => ({
-                ...current,
-                includeMetrics: !current.includeMetrics,
-              }))
+              setPreferences((current) => {
+                const next = {
+                  ...current,
+                  includeMetrics: !current.includeMetrics,
+                };
+                setHistoryEvents((history) => pushHistoryEvent(history, next));
+                return next;
+              })
             }
             className={`rounded-full border px-3 py-1 text-xs ${
               preferences.includeMetrics
@@ -350,6 +372,9 @@ export function AgentOrchestratorDemo() {
             type="button"
             onClick={() => {
               setPreferences(defaultIntelligencePreferences);
+              setHistoryEvents((history) =>
+                pushHistoryEvent(history, defaultIntelligencePreferences),
+              );
               setLearningProfile(resetLearningProfile());
             }}
             className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-400"
@@ -365,13 +390,56 @@ export function AgentOrchestratorDemo() {
           learningProfile={learningProfile}
           preferences={preferences}
           onApplyRecommendation={(next) =>
-            setPreferences((current) => ({
-              ...current,
-              style: next.style,
-              depth: next.depth,
-            }))
+            setPreferences((current) => {
+              const merged = {
+                ...current,
+                style: next.style,
+                depth: next.depth,
+              };
+              setHistoryEvents((history) => pushHistoryEvent(history, merged));
+              return merged;
+            })
           }
-          onResetLearning={() => setLearningProfile(resetLearningProfile())}
+          history={historyEvents}
+          onResetLearning={() => {
+            setLearningProfile(resetLearningProfile());
+            setHistoryEvents(resetHistoryEvents());
+          }}
+          onExport={() => {
+            const blob = new Blob(
+              [
+                exportIntelligenceConfig({
+                  preferences,
+                  learning: learningProfile,
+                  history: historyEvents,
+                }),
+              ],
+              { type: "application/json" },
+            );
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "agent-intelligence-config.json";
+            link.click();
+            URL.revokeObjectURL(url);
+          }}
+          onImport={(raw) => {
+            const imported = importIntelligenceConfig(raw);
+            if (!imported) {
+              setLines((current) => [
+                ...current,
+                {
+                  id: crypto.randomUUID(),
+                  kind: "error",
+                  text: "导入失败：配置格式无效",
+                },
+              ]);
+              return;
+            }
+            setPreferences(imported.preferences);
+            setLearningProfile(imported.learning);
+            setHistoryEvents(imported.history);
+          }}
         />
 
         <div className="flex flex-wrap gap-2">

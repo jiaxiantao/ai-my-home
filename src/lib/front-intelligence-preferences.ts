@@ -12,8 +12,16 @@ export type IntelligenceLearningProfile = {
   depthScores: Record<IntelligenceDepth, number>;
 };
 
+export type IntelligenceHistoryEvent = {
+  at: string;
+  style: IntelligenceStyle;
+  depth: IntelligenceDepth;
+  includeMetrics: boolean;
+};
+
 const STORAGE_KEY = "assistant-intelligence-preferences-v1";
 const LEARNING_STORAGE_KEY = "assistant-intelligence-learning-v1";
+const HISTORY_STORAGE_KEY = "assistant-intelligence-history-v1";
 
 export const defaultIntelligencePreferences: IntelligencePreferences = {
   style: "steps",
@@ -155,4 +163,120 @@ export function inferRecommendedPreferences(
   }
 
   return { style, depth };
+}
+
+export function loadHistoryEvents(): IntelligenceHistoryEvent[] {
+  if (typeof window === "undefined") {
+    return [];
+  }
+  try {
+    const raw = window.localStorage.getItem(HISTORY_STORAGE_KEY);
+    if (!raw) {
+      return [];
+    }
+    const parsed = JSON.parse(raw) as IntelligenceHistoryEvent[];
+    return Array.isArray(parsed) ? parsed.slice(-20) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveHistoryEvents(events: IntelligenceHistoryEvent[]) {
+  if (typeof window === "undefined") {
+    return;
+  }
+  window.localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(events.slice(-20)));
+}
+
+export function pushHistoryEvent(
+  events: IntelligenceHistoryEvent[],
+  preferences: IntelligencePreferences,
+) {
+  const next: IntelligenceHistoryEvent = {
+    at: new Date().toISOString(),
+    style: preferences.style,
+    depth: preferences.depth,
+    includeMetrics: preferences.includeMetrics,
+  };
+  const latest = events[events.length - 1];
+  if (
+    latest &&
+    latest.style === next.style &&
+    latest.depth === next.depth &&
+    latest.includeMetrics === next.includeMetrics
+  ) {
+    return events;
+  }
+  return [...events, next].slice(-20);
+}
+
+export function resetHistoryEvents() {
+  if (typeof window === "undefined") {
+    return [];
+  }
+  window.localStorage.removeItem(HISTORY_STORAGE_KEY);
+  return [];
+}
+
+export function exportIntelligenceConfig(data: {
+  preferences: IntelligencePreferences;
+  learning: IntelligenceLearningProfile;
+  history: IntelligenceHistoryEvent[];
+}) {
+  return JSON.stringify(
+    {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      preferences: data.preferences,
+      learning: data.learning,
+      history: data.history.slice(-20),
+    },
+    null,
+    2,
+  );
+}
+
+export function importIntelligenceConfig(raw: string): {
+  preferences: IntelligencePreferences;
+  learning: IntelligenceLearningProfile;
+  history: IntelligenceHistoryEvent[];
+} | null {
+  try {
+    const parsed = JSON.parse(raw) as {
+      preferences?: Partial<IntelligencePreferences>;
+      learning?: Partial<IntelligenceLearningProfile>;
+      history?: IntelligenceHistoryEvent[];
+    };
+    const preferences: IntelligencePreferences = {
+      style:
+        parsed.preferences?.style === "steps" ||
+        parsed.preferences?.style === "risk" ||
+        parsed.preferences?.style === "code"
+          ? parsed.preferences.style
+          : defaultIntelligencePreferences.style,
+      depth:
+        parsed.preferences?.depth === "brief" || parsed.preferences?.depth === "detailed"
+          ? parsed.preferences.depth
+          : defaultIntelligencePreferences.depth,
+      includeMetrics:
+        typeof parsed.preferences?.includeMetrics === "boolean"
+          ? parsed.preferences.includeMetrics
+          : defaultIntelligencePreferences.includeMetrics,
+    };
+    const learning: IntelligenceLearningProfile = {
+      styleScores: {
+        steps: Number(parsed.learning?.styleScores?.steps ?? 0),
+        risk: Number(parsed.learning?.styleScores?.risk ?? 0),
+        code: Number(parsed.learning?.styleScores?.code ?? 0),
+      },
+      depthScores: {
+        brief: Number(parsed.learning?.depthScores?.brief ?? 0),
+        detailed: Number(parsed.learning?.depthScores?.detailed ?? 0),
+      },
+    };
+    const history = Array.isArray(parsed.history) ? parsed.history.slice(-20) : [];
+    return { preferences, learning, history };
+  } catch {
+    return null;
+  }
 }
