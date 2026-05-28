@@ -22,6 +22,7 @@ type ProbeRow = {
   status?: number;
   ok?: boolean;
   detail?: string;
+  agentMetrics?: AgentProbeMetrics;
 };
 
 type AgentProbeMetrics = {
@@ -31,6 +32,18 @@ type AgentProbeMetrics = {
   avgSteps: number;
   avgToolCalls: number;
 };
+
+type AgentProbeHistory = {
+  at: string;
+  p50Ms: number;
+  p95Ms: number;
+  avgSteps: number;
+  avgToolCalls: number;
+  errorRate: number;
+};
+
+const AGENT_HISTORY_KEY = "ai-my-home.status.agent-history.v1";
+const AGENT_HISTORY_LIMIT = 20;
 
 const PROBES: Array<{ key: string; label: string; href: string }> = [
   { key: "health", label: "GET /api/health", href: "/api/health" },
@@ -51,12 +64,40 @@ const PROBES: Array<{ key: string; label: string; href: string }> = [
   },
 ];
 
+function loadAgentHistory() {
+  if (typeof window === "undefined") {
+    return [] as AgentProbeHistory[];
+  }
+
+  try {
+    const raw = window.localStorage.getItem(AGENT_HISTORY_KEY);
+    if (!raw) {
+      return [] as AgentProbeHistory[];
+    }
+
+    const parsed = JSON.parse(raw) as AgentProbeHistory[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [] as AgentProbeHistory[];
+  }
+}
+
+function saveAgentHistory(history: AgentProbeHistory[]) {
+  if (typeof window === "undefined") {
+    return;
+  }
+  window.localStorage.setItem(AGENT_HISTORY_KEY, JSON.stringify(history));
+}
+
 export function StatusProbe() {
   const [health, setHealth] = useState<HealthData | null>(null);
   const [probes, setProbes] = useState<ProbeRow[]>([]);
   const [running, setRunning] = useState(false);
   const [lastRun, setLastRun] = useState<string | null>(null);
   const [agentMetrics, setAgentMetrics] = useState<AgentProbeMetrics | null>(null);
+  const [agentHistory, setAgentHistory] = useState<AgentProbeHistory[]>(() =>
+    loadAgentHistory(),
+  );
 
   useEffect(() => {
     const controller = new AbortController();
@@ -97,7 +138,6 @@ export function StatusProbe() {
           }
           if (probe.key === "agent-sse") {
             const sse = await runAgentSseProbe(probe.href);
-            setAgentMetrics(sse.metrics ?? null);
             return {
               key: probe.key,
               label: probe.label,
@@ -106,6 +146,7 @@ export function StatusProbe() {
               status: sse.status,
               ok: sse.ok,
               detail: sse.detail,
+              agentMetrics: sse.metrics,
             };
           }
 
@@ -144,8 +185,31 @@ export function StatusProbe() {
       }),
     );
 
+    const latestAgentMetrics =
+      results.find((row) => row.key === "agent-sse")?.agentMetrics ?? null;
+
     setProbes(results);
     setLastRun(new Date().toLocaleTimeString("zh-CN", { hour12: false }));
+    setAgentMetrics(latestAgentMetrics);
+
+    if (latestAgentMetrics) {
+      const errorCount = results.filter((row) => row.key === "agent-sse" && !row.ok).length;
+      const nextHistory = [
+        ...agentHistory,
+        {
+          at: new Date().toLocaleTimeString("zh-CN", { hour12: false }),
+          p50Ms: latestAgentMetrics.p50Ms,
+          p95Ms: latestAgentMetrics.p95Ms,
+          avgSteps: latestAgentMetrics.avgSteps,
+          avgToolCalls: latestAgentMetrics.avgToolCalls,
+          errorRate: Number((errorCount / 1).toFixed(2)),
+        },
+      ].slice(-AGENT_HISTORY_LIMIT);
+
+      setAgentHistory(nextHistory);
+      saveAgentHistory(nextHistory);
+    }
+
     setRunning(false);
   }
 
@@ -205,6 +269,55 @@ export function StatusProbe() {
             ok={agentMetrics.avgToolCalls <= 4}
             detail={`${agentMetrics.avgToolCalls.toFixed(1)} calls`}
           />
+        </div>
+      ) : null}
+
+      {agentHistory.length ? (
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200/75">
+              Agent 趋势（最近 {agentHistory.length} 次）
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setAgentHistory([]);
+                saveAgentHistory([]);
+              }}
+              className="rounded-full border border-white/10 px-3 py-1 text-[10px] text-slate-400 hover:border-white/20 hover:text-slate-200"
+            >
+              清空历史
+            </button>
+          </div>
+
+          <div className="mt-4 space-y-2">
+            {agentHistory.map((item, index) => {
+              const maxMs = Math.max(item.p95Ms, 1);
+              const p50Width = Math.max((item.p50Ms / maxMs) * 100, 5);
+              const p95Width = 100;
+
+              return (
+                <div key={`${item.at}-${index}`} className="space-y-1">
+                  <p className="font-mono text-[10px] text-slate-500">
+                    {item.at} · p50 {item.p50Ms}ms · p95 {item.p95Ms}ms · steps{" "}
+                    {item.avgSteps.toFixed(1)} · tools {item.avgToolCalls.toFixed(1)}
+                  </p>
+                  <div className="relative h-2 rounded bg-white/10">
+                    <div
+                      className="absolute inset-y-0 left-0 rounded bg-violet-300/50"
+                      style={{ width: `${p95Width}%` }}
+                      title={`p95 ${item.p95Ms}ms`}
+                    />
+                    <div
+                      className="absolute inset-y-0 left-0 rounded bg-cyan-300/90"
+                      style={{ width: `${p50Width}%` }}
+                      title={`p50 ${item.p50Ms}ms`}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       ) : null}
 
