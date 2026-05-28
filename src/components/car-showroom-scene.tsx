@@ -6,6 +6,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
+type OrbitControlsLike = {
+  target: THREE.Vector3;
+  update: () => void;
+};
+
 export type CarCameraPreset =
   | "overview"
   | "front"
@@ -198,12 +203,73 @@ function getCameraPose(preset: CarCameraPreset) {
   };
 }
 
-function CameraRig({ preset, autoTour }: { preset: CarCameraPreset; autoTour: boolean }) {
+function CameraRig({
+  preset,
+  autoTour,
+  controlsRef,
+}: {
+  preset: CarCameraPreset;
+  autoTour: boolean;
+  controlsRef: { current: OrbitControlsLike | null | undefined };
+}) {
   const cameraRef = useRef<THREE.PerspectiveCamera>(null);
+  const fromPositionRef = useRef(new THREE.Vector3(5.2, 2.4, 4.6));
+  const toPositionRef = useRef(new THREE.Vector3(5.2, 2.4, 4.6));
+  const fromTargetRef = useRef(new THREE.Vector3(0, 0.45, 0));
+  const toTargetRef = useRef(new THREE.Vector3(0, 0.45, 0));
+  const transitionProgressRef = useRef(1);
+  const prevPresetRef = useRef<CarCameraPreset | null>(null);
+  const prevAutoTourRef = useRef(autoTour);
+
+  useEffect(() => {
+    if (autoTour) {
+      prevPresetRef.current = preset;
+      return;
+    }
+    if (prevPresetRef.current === preset) {
+      return;
+    }
+    const camera = cameraRef.current;
+    if (!camera) {
+      prevPresetRef.current = preset;
+      return;
+    }
+    const controls = controlsRef.current;
+    const currentTarget = controls?.target.clone() ?? toTargetRef.current.clone();
+    fromPositionRef.current.copy(camera.position);
+    fromTargetRef.current.copy(currentTarget);
+    const nextPose = getCameraPose(preset);
+    toPositionRef.current.copy(nextPose.position);
+    toTargetRef.current.copy(nextPose.target);
+    transitionProgressRef.current = 0;
+    prevPresetRef.current = preset;
+  }, [autoTour, controlsRef, preset]);
+
+  useEffect(() => {
+    const wasAutoTour = prevAutoTourRef.current;
+    prevAutoTourRef.current = autoTour;
+    if (autoTour || !wasAutoTour) {
+      return;
+    }
+    const camera = cameraRef.current;
+    if (!camera) {
+      return;
+    }
+    const controls = controlsRef.current;
+    const currentTarget = controls?.target.clone() ?? toTargetRef.current.clone();
+    const nextPose = getCameraPose(preset);
+    fromPositionRef.current.copy(camera.position);
+    fromTargetRef.current.copy(currentTarget);
+    toPositionRef.current.copy(nextPose.position);
+    toTargetRef.current.copy(nextPose.target);
+    transitionProgressRef.current = 0;
+  }, [autoTour, controlsRef, preset]);
+
   useFrame((renderState, delta) => {
     if (!cameraRef.current) {
       return;
     }
+    const controls = controlsRef.current;
     if (autoTour) {
       const t = renderState.clock.getElapsedTime() * 0.22;
       const radius = 6.3;
@@ -215,12 +281,36 @@ function CameraRig({ preset, autoTour }: { preset: CarCameraPreset; autoTour: bo
         Math.sin(t) * radius,
       );
       cameraRef.current.position.lerp(position, THREE.MathUtils.clamp(delta * 2, 0, 1));
-      cameraRef.current.lookAt(target);
+      if (controls) {
+        controls.target.copy(target);
+        controls.update();
+      } else {
+        cameraRef.current.lookAt(target);
+      }
       return;
     }
-    const pose = getCameraPose(preset);
-    cameraRef.current.position.lerp(pose.position, THREE.MathUtils.clamp(delta * 2.3, 0, 1));
-    cameraRef.current.lookAt(pose.target);
+
+    if (transitionProgressRef.current < 1) {
+      transitionProgressRef.current = Math.min(1, transitionProgressRef.current + delta * 2.3);
+      const alpha = THREE.MathUtils.smootherstep(transitionProgressRef.current, 0, 1);
+      const nextPosition = new THREE.Vector3().lerpVectors(
+        fromPositionRef.current,
+        toPositionRef.current,
+        alpha,
+      );
+      const nextTarget = new THREE.Vector3().lerpVectors(
+        fromTargetRef.current,
+        toTargetRef.current,
+        alpha,
+      );
+      cameraRef.current.position.copy(nextPosition);
+      if (controls) {
+        controls.target.copy(nextTarget);
+        controls.update();
+      } else {
+        cameraRef.current.lookAt(nextTarget);
+      }
+    }
   });
   return <PerspectiveCamera ref={cameraRef} makeDefault fov={45} position={[5.2, 2.4, 4.6]} />;
 }
@@ -677,6 +767,7 @@ export function CarShowroomScene({
   onToggleTrunk,
 }: CarShowroomSceneProps) {
   const [assetScene, setAssetScene] = useState<THREE.Object3D | null>(null);
+  const controlsRef = useRef(null);
 
   useEffect(() => {
     if (!useAssetModel) {
@@ -795,7 +886,7 @@ export function CarShowroomScene({
   return (
     <div className="h-[520px] overflow-hidden rounded-4xl border border-white/10 bg-slate-950/80">
       <Canvas shadows>
-        <CameraRig preset={cameraPreset} autoTour={autoTour} />
+        <CameraRig preset={cameraPreset} autoTour={autoTour} controlsRef={controlsRef} />
         <color attach="background" args={["#020617"]} />
         <Environment preset="night" />
         <ambientLight intensity={0.42} />
@@ -845,6 +936,7 @@ export function CarShowroomScene({
         />
 
         <OrbitControls
+          ref={controlsRef}
           enablePan={false}
           enableRotate={!autoTour && cameraPreset !== "cockpit"}
           minDistance={3.8}
