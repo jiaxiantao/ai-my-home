@@ -58,6 +58,7 @@ const exploreLinks = [
   { href: "/notes", label: "Notes" },
   { href: "/assistant", label: "Assistant" },
   { href: "/agents", label: "Agents" },
+  { href: "/car-showroom", label: "3D看车" },
   { href: "/experience", label: "Experience" },
   { href: "/playbooks", label: "Playbooks" },
 ] as const;
