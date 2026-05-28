@@ -172,7 +172,8 @@ function CarModel({
   const rightTailLightRef = useRef<THREE.Mesh>(null);
   const exhaustLeftRef = useRef<THREE.Mesh>(null);
   const exhaustRightRef = useRef<THREE.Mesh>(null);
-  const wheelRefs = useRef<THREE.Mesh[]>([]);
+  const frontSteerRefs = useRef<THREE.Group[]>([]);
+  const wheelSpinRefs = useRef<THREE.Mesh[]>([]);
 
   const wheelMaterial = useMemo(
     () =>
@@ -236,21 +237,27 @@ function CarModel({
     }
 
     const runFactor = state.engineOn ? 1 : 0;
-    for (const wheel of wheelRefs.current) {
-      wheel.rotation.x += delta * runFactor * 6.5;
+    for (let index = 0; index < wheelSpinRefs.current.length; index += 1) {
+      const wheel = wheelSpinRefs.current[index];
+      if (!wheel) {
+        continue;
+      }
+      // Left and right wheels should spin in opposite local directions.
+      const sideDirection = index % 2 === 0 ? -1 : 1;
+      wheel.rotation.z += delta * runFactor * 6.5 * sideDirection;
     }
     const steerTarget = THREE.MathUtils.clamp(state.steeringAngle, -42, 42) * (Math.PI / 180);
-    if (wheelRefs.current[0]) {
-      wheelRefs.current[0].rotation.y = THREE.MathUtils.damp(
-        wheelRefs.current[0].rotation.y,
+    if (frontSteerRefs.current[0]) {
+      frontSteerRefs.current[0].rotation.y = THREE.MathUtils.damp(
+        frontSteerRefs.current[0].rotation.y,
         steerTarget,
         6,
         delta,
       );
     }
-    if (wheelRefs.current[2]) {
-      wheelRefs.current[2].rotation.y = THREE.MathUtils.damp(
-        wheelRefs.current[2].rotation.y,
+    if (frontSteerRefs.current[1]) {
+      frontSteerRefs.current[1].rotation.y = THREE.MathUtils.damp(
+        frontSteerRefs.current[1].rotation.y,
         steerTarget,
         6,
         delta,
@@ -369,7 +376,7 @@ function CarModel({
         <mesh
           castShadow
           receiveShadow
-          position={[0.55, 0, -0.22]}
+          position={[0.56, 0, -0.04]}
           onClick={(event) => {
             event.stopPropagation();
             onToggleLeftDoor();
@@ -390,7 +397,7 @@ function CarModel({
         <mesh
           castShadow
           receiveShadow
-          position={[0.55, 0, 0.22]}
+          position={[0.56, 0, 0.04]}
           onClick={(event) => {
             event.stopPropagation();
             onToggleRightDoor();
@@ -442,24 +449,41 @@ function CarModel({
             <torusGeometry args={[0.12, 0.026, 16, 36]} />
             <meshStandardMaterial color="#111827" metalness={0.4} roughness={0.55} />
           </mesh>
-          {[[-1.1, -0.06, 0.75], [1.08, -0.06, 0.75], [-1.1, -0.06, -0.75], [1.08, -0.06, -0.75]]
-            .map((position, index) => (
-              <mesh
+          {[
+            { x: -1.1, y: -0.06, z: 0.75, steer: true },
+            { x: 1.08, y: -0.06, z: 0.75, steer: false },
+            { x: -1.1, y: -0.06, z: -0.75, steer: true },
+            { x: 1.08, y: -0.06, z: -0.75, steer: false },
+          ].map((position, index) => {
+            const frontSteerIndex = index === 0 ? 0 : index === 2 ? 1 : -1;
+            return (
+              <group
                 key={`wheel-${index}`}
                 ref={(node) => {
-                  if (!node) {
+                  if (!node || frontSteerIndex < 0) {
                     return;
                   }
-                  wheelRefs.current[index] = node;
+                  frontSteerRefs.current[frontSteerIndex] = node;
                 }}
-                position={new THREE.Vector3(position[0], position[1], position[2])}
-                castShadow
-                receiveShadow
-                material={wheelMaterial}
+                position={[position.x, position.y, position.z]}
               >
-                <cylinderGeometry args={[0.27, 0.27, 0.22, 24]} />
-              </mesh>
-            ))}
+                <mesh
+                  ref={(node) => {
+                    if (!node) {
+                      return;
+                    }
+                    wheelSpinRefs.current[index] = node;
+                  }}
+                  castShadow
+                  receiveShadow
+                  material={wheelMaterial}
+                  rotation={[Math.PI / 2, 0, 0]}
+                >
+                  <cylinderGeometry args={[0.27, 0.27, 0.22, 24]} />
+                </mesh>
+              </group>
+            );
+          })}
         </>
       ) : null}
 
