@@ -20,10 +20,10 @@ type StepMetric = {
 
 function formatPlan(plan: AgentPlan) {
   if (plan.action === "tool") {
-    return `调用 ${plan.tool} · ${plan.reasoning}`;
+    return `调用 ${plan.tool} · ${plan.reasoning || "执行工具步骤"}`;
   }
 
-  return `直接回答 · ${plan.reasoning}`;
+  return `直接回答 · ${plan.reasoning || "生成最终回答"}`;
 }
 
 function parseSseBlock(block: string) {

@@ -79,14 +79,29 @@ function mockPlan(message: string, prior: AgentToolResult[]): AgentPlan {
 }
 
 function parsePlanJson(raw: string): AgentPlan {
-  const parsed = JSON.parse(raw) as AgentPlan;
+  const parsed = JSON.parse(raw) as Partial<AgentPlan> & {
+    action?: "tool" | "answer";
+    tool?: AgentToolResult["tool"];
+    args?: Record<string, unknown>;
+    answer?: string;
+    reasoning?: string;
+  };
 
-  if (parsed.action === "tool" && parsed.tool && parsed.args) {
-    return parsed;
+  if (parsed.action === "tool" && parsed.tool) {
+    return {
+      action: "tool",
+      tool: parsed.tool,
+      args: parsed.args ?? {},
+      reasoning: parsed.reasoning?.trim() || `调用 ${parsed.tool} 完成当前步骤`,
+    };
   }
 
   if (parsed.action === "answer" && parsed.answer) {
-    return parsed;
+    return {
+      action: "answer",
+      answer: parsed.answer,
+      reasoning: parsed.reasoning?.trim() || "基于已有信息直接回答",
+    };
   }
 
   throw new Error("Planner JSON 格式无效");
