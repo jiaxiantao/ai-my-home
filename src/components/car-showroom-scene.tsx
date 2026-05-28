@@ -653,11 +653,6 @@ export function CarShowroomScene({
           return;
         }
         const loadedScene = gltf.scene.clone(true);
-        const sceneBounds = new THREE.Box3().setFromObject(loadedScene);
-        const sceneSize = new THREE.Vector3();
-        sceneBounds.getSize(sceneSize);
-        const sceneMaxDimension = Math.max(sceneSize.x, sceneSize.y, sceneSize.z, 1);
-
         loadedScene.traverse((child) => {
           const mesh = child as THREE.Mesh;
           if (mesh.isMesh) {
@@ -671,34 +666,26 @@ export function CarShowroomScene({
               mesh.visible = false;
               return;
             }
-
-            // Some sample GLB assets include camera markers as small red helper meshes.
-            // Hide tiny bright-red helper primitives while keeping the vehicle body.
-            const geometry = mesh.geometry;
-            geometry.computeBoundingBox();
-            const box = geometry.boundingBox;
-            if (!box) {
-              return;
-            }
-            const size = new THREE.Vector3();
-            box.getSize(size);
-            const material = mesh.material;
-            const primaryMaterial = Array.isArray(material) ? material[0] : material;
-            if (!(primaryMaterial instanceof THREE.MeshStandardMaterial)) {
-              return;
-            }
-            const color = primaryMaterial.color;
-            const isSmallHelper =
-              size.length() < sceneMaxDimension * 0.12 &&
-              Math.max(size.x, size.y, size.z) < sceneMaxDimension * 0.08;
-            const isRedHelperColor = color.r > 0.55 && color.g < 0.3 && color.b < 0.3;
-            if (isSmallHelper && isRedHelperColor) {
-              mesh.visible = false;
-            }
           }
         });
-        loadedScene.position.set(0, 0.25, 0);
-        loadedScene.scale.set(1.2, 1.2, 1.2);
+
+        // Normalize asset transform so different market models load at a consistent
+        // scale and stay centered in the showroom camera focus.
+        const normalizedBounds = new THREE.Box3().setFromObject(loadedScene);
+        const normalizedSize = new THREE.Vector3();
+        const normalizedCenter = new THREE.Vector3();
+        normalizedBounds.getSize(normalizedSize);
+        normalizedBounds.getCenter(normalizedCenter);
+        loadedScene.position.sub(normalizedCenter);
+
+        const maxDim = Math.max(normalizedSize.x, normalizedSize.y, normalizedSize.z, 1);
+        const targetSize = 3.8;
+        const scaleFactor = targetSize / maxDim;
+        loadedScene.scale.setScalar(scaleFactor);
+
+        const groundedBounds = new THREE.Box3().setFromObject(loadedScene);
+        loadedScene.position.y -= groundedBounds.min.y;
+
         setAssetScene(loadedScene);
       },
       undefined,

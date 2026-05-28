@@ -28,13 +28,6 @@ const marketCategoryOptions = [
     fallbackUrl: "/models/cars/cesium-milk-truck.glb",
     fallbackName: "CesiumTruck",
   },
-  {
-    key: "mpv",
-    label: "MPV",
-    primaryUrl: "/models/market/mpv-mainstream.glb",
-    fallbackUrl: "/models/cars/cesium-milk-truck.glb",
-    fallbackName: "CesiumTruck",
-  },
 ] as const;
 
 const CarShowroomScene = dynamic(
@@ -229,7 +222,7 @@ export default function CarShowroomPage() {
           <p className="text-xs text-slate-400">
             当前模型：{selectedModelLabel || "加载中..."}。你可将主流车型放到
             `public/models/market/suv-mainstream.glb` / `sedan-mainstream.glb` /
-            `offroad-mainstream.glb` / `mpv-mainstream.glb`，页面会自动优先加载。
+            `offroad-mainstream.glb`，页面会自动优先加载。
           </p>
         </div>
 
