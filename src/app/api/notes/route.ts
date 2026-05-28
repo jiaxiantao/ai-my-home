@@ -3,8 +3,7 @@ import { z } from "zod";
 
 import {
   AdminAuthError,
-  assertAdminSecret,
-  getAdminSecretFromRequest,
+  assertAdminTokenFromRequest,
 } from "@/lib/admin-auth";
 import { createNote, listNotes } from "@/lib/notes-service";
 
@@ -17,7 +16,6 @@ const createNoteSchema = z.object({
     .default([])
     .transform((tags) => tags.filter(Boolean)),
   isPublished: z.boolean().optional(),
-  adminSecret: z.string().trim().optional(),
 });
 
 export async function GET() {
@@ -29,10 +27,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = createNoteSchema.parse(await request.json());
-
-    assertAdminSecret(
-      body.adminSecret ?? getAdminSecretFromRequest(request),
-    );
+    assertAdminTokenFromRequest(request);
 
     const note = await createNote({
       title: body.title,

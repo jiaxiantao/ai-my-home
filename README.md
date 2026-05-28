@@ -38,7 +38,8 @@ pnpm dev
 ### 环境变量（`.env.example`）
 
 - `DATABASE_URL` — PostgreSQL
-- `ADMIN_SECRET` — Notes 增删
+- `AUTH_TOKEN_SECRET` — 管理员 Token 签名密钥
+- `ADMIN_USERNAME` / `ADMIN_PASSWORD` — 管理员登录凭据
 - `LLM_PROVIDER=ollama` — 本地 Ollama（`OLLAMA_BASE_URL` / `OLLAMA_MODEL`）
 - 云端模型：设 `LLM_PROVIDER=openai` 并填写 `OPENAI_*`
 

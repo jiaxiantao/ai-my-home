@@ -16,6 +16,7 @@ const navItems = [
   { href: "/agents", label: "Agents" },
   { href: "/cases", label: "Cases" },
   { href: "/status", label: "Status" },
+  { href: "/admin", label: "Admin" },
 ] as const;
 
 export function SiteHeader() {

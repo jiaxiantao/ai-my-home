@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { AdminAuthError, assertAdminTokenFromRequest } from "@/lib/admin-auth";
 import { getDb } from "@/lib/db";
 
 const createProbeSchema = z.object({
@@ -54,6 +55,15 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  try {
+    assertAdminTokenFromRequest(request);
+  } catch (error) {
+    if (error instanceof AdminAuthError) {
+      return NextResponse.json({ error: error.message }, { status: 401 });
+    }
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const db = getDb();
   if (!db) {
     return NextResponse.json(
@@ -103,6 +113,15 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  try {
+    assertAdminTokenFromRequest(request);
+  } catch (error) {
+    if (error instanceof AdminAuthError) {
+      return NextResponse.json({ error: error.message }, { status: 401 });
+    }
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const db = getDb();
   if (!db) {
     return NextResponse.json(

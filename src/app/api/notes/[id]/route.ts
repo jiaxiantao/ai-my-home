@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 
 import {
   AdminAuthError,
-  assertAdminSecret,
-  getAdminSecretFromRequest,
+  assertAdminTokenFromRequest,
 } from "@/lib/admin-auth";
 import { deleteNote } from "@/lib/notes-service";
 
@@ -16,7 +15,7 @@ type RouteProps = {
 export async function DELETE(request: Request, { params }: RouteProps) {
   try {
     const { id } = await params;
-    assertAdminSecret(getAdminSecretFromRequest(request));
+    assertAdminTokenFromRequest(request);
 
     await deleteNote(id);
 

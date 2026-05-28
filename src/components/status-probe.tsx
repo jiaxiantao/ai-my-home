@@ -108,6 +108,8 @@ export function StatusProbe() {
   const [agentHistory, setAgentHistory] = useState<AgentProbeHistory[]>([]);
   const [windowHours, setWindowHours] = useState<number>(24);
   const [environment, setEnvironment] = useState<string>(() => getRuntimeEnvironment());
+  const [adminAuthenticated, setAdminAuthenticated] = useState(false);
+  const [authHint, setAuthHint] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -121,6 +123,19 @@ export function StatusProbe() {
         }
       });
 
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/auth/session", { cache: "no-store", signal: controller.signal })
+      .then((res) => res.json())
+      .then((data: { authenticated?: boolean }) => {
+        setAdminAuthenticated(Boolean(data.authenticated));
+      })
+      .catch(() => {
+        setAdminAuthenticated(false);
+      });
     return () => controller.abort();
   }, []);
 
@@ -266,21 +281,23 @@ export function StatusProbe() {
       };
 
       setAgentHistory((current) => [...current, entry].slice(-AGENT_HISTORY_LIMIT));
-      void fetch("/api/status/probes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          probeKey: "agent-sse",
-          environment,
-          p50Ms: entry.p50Ms,
-          p95Ms: entry.p95Ms,
-          avgSteps: entry.avgSteps,
-          avgToolCalls: entry.avgToolCalls,
-          errorRate: entry.errorRate,
-          ok: errorCount === 0,
-          detail: "status-probe",
-        }),
-      });
+      if (adminAuthenticated) {
+        void fetch("/api/status/probes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            probeKey: "agent-sse",
+            environment,
+            p50Ms: entry.p50Ms,
+            p95Ms: entry.p95Ms,
+            avgSteps: entry.avgSteps,
+            avgToolCalls: entry.avgToolCalls,
+            errorRate: entry.errorRate,
+            ok: errorCount === 0,
+            detail: "status-probe",
+          }),
+        });
+      }
     }
 
     setRunning(false);
@@ -377,6 +394,11 @@ export function StatusProbe() {
               <button
                 type="button"
                 onClick={() => {
+                  if (!adminAuthenticated) {
+                    setAuthHint("清空历史需要管理员登录");
+                    return;
+                  }
+                  setAuthHint(null);
                   setAgentHistory([]);
                   const query = new URLSearchParams({ probeKey: "agent-sse" });
                   if (environment !== "all") {
@@ -392,6 +414,13 @@ export function StatusProbe() {
               </button>
             </div>
           </div>
+          {authHint ? (
+            <p className="mt-3 text-xs text-amber-200/80">{authHint}</p>
+          ) : !adminAuthenticated ? (
+            <p className="mt-3 text-xs text-slate-500">
+              当前为游客模式，仅本地显示探测结果；登录管理员后会写入/清理数据库历史。
+            </p>
+          ) : null}
 
           <div className="mt-4 space-y-2">
             {agentHistory.map((item, index) => {

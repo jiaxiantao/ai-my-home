@@ -68,7 +68,7 @@ export default async function NotesPage() {
       >
         <summary className="cursor-pointer list-none px-6 py-5 text-sm font-semibold text-slate-200 marker:content-none [&::-webkit-details-marker]:hidden">
           <span className="text-cyan-200/80">维护入口</span>
-          <span className="ml-2 text-slate-500">· 需要 ADMIN_SECRET</span>
+          <span className="ml-2 text-slate-500">· 需要管理员登录 Token</span>
         </summary>
         <div className="border-t border-white/10 px-6 py-6">
           <NoteManager />

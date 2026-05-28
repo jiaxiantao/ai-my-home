@@ -10,7 +10,6 @@ type CreateFormState = {
   summary: string;
   contentMarkdown: string;
   tags: string;
-  adminSecret: string;
 };
 
 const initialFormState: CreateFormState = {
@@ -18,12 +17,9 @@ const initialFormState: CreateFormState = {
   summary: "",
   contentMarkdown: "",
   tags: "",
-  adminSecret: "",
 };
 
-type NoteFormErrors = Partial<
-  Record<"title" | "contentMarkdown" | "adminSecret", string>
->;
+type NoteFormErrors = Partial<Record<"title" | "contentMarkdown", string>>;
 
 function parseTags(rawTags: string) {
   return rawTags
@@ -43,10 +39,6 @@ function validateCreateForm(formState: CreateFormState): NoteFormErrors {
     errors.contentMarkdown = "请先填写正文";
   }
 
-  if (!formState.adminSecret.trim()) {
-    errors.adminSecret = "请先填写 admin secret";
-  }
-
   return errors;
 }
 
@@ -58,19 +50,25 @@ export function NoteManager() {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<NoteFormErrors>({});
   const [formState, setFormState] = useState<CreateFormState>(initialFormState);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [authenticated, setAuthenticated] = useState(false);
+  const [loginState, setLoginState] = useState({ username: "", password: "" });
 
   useEffect(() => {
     let cancelled = false;
 
-    async function fetchNotesOnMount() {
+    async function bootstrap() {
       try {
-        const response = await fetch("/api/notes", {
-          cache: "no-store",
-        });
-        const payload = (await response.json()) as { notes: NoteRecord[] };
+        const [notesResponse, sessionResponse] = await Promise.all([
+          fetch("/api/notes", { cache: "no-store" }),
+          fetch("/api/auth/session", { cache: "no-store" }),
+        ]);
+        const notesPayload = (await notesResponse.json()) as { notes: NoteRecord[] };
+        const sessionPayload = (await sessionResponse.json()) as { authenticated?: boolean };
 
         if (!cancelled) {
-          setNotes(payload.notes ?? []);
+          setNotes(notesPayload.notes ?? []);
+          setAuthenticated(Boolean(sessionPayload.authenticated));
         }
       } catch {
         if (!cancelled) {
@@ -79,11 +77,12 @@ export function NoteManager() {
       } finally {
         if (!cancelled) {
           setIsLoading(false);
+          setAuthLoading(false);
         }
       }
     }
 
-    void fetchNotesOnMount();
+    void bootstrap();
 
     return () => {
       cancelled = true;
@@ -94,8 +93,44 @@ export function NoteManager() {
     return parseTags(formState.tags);
   }, [formState.tags]);
 
+  async function handleLogin() {
+    setError(null);
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: loginState.username,
+          password: loginState.password,
+        }),
+      });
+      const payload = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        throw new Error(payload.error ?? "登录失败");
+      }
+      setAuthenticated(true);
+      setLoginState((current) => ({ ...current, password: "" }));
+    } catch (loginError) {
+      setError(loginError instanceof Error ? loginError.message : "登录失败");
+    }
+  }
+
+  async function handleLogout() {
+    setError(null);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      setAuthenticated(false);
+    } catch {
+      setError("退出登录失败");
+    }
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!authenticated) {
+      setError("请先用管理员账号登录");
+      return;
+    }
     const nextFieldErrors = validateCreateForm(formState);
 
     if (Object.keys(nextFieldErrors).length) {
@@ -113,7 +148,6 @@ export function NoteManager() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-secret": formState.adminSecret,
         },
         body: JSON.stringify({
           title: formState.title,
@@ -143,10 +177,7 @@ export function NoteManager() {
 
       setNotes((current) => [payload.note!, ...current]);
       setFieldErrors({});
-      setFormState((current) => ({
-        ...initialFormState,
-        adminSecret: current.adminSecret,
-      }));
+      setFormState(initialFormState);
     } catch (submissionError) {
       setError(
         submissionError instanceof Error
@@ -159,8 +190,8 @@ export function NoteManager() {
   }
 
   async function handleDelete(id: string) {
-    if (!formState.adminSecret) {
-      setError("删除前请先填写 admin secret");
+    if (!authenticated) {
+      setError("删除前请先用管理员账号登录");
       return;
     }
 
@@ -170,9 +201,6 @@ export function NoteManager() {
     try {
       const response = await fetch(`/api/notes/${id}`, {
         method: "DELETE",
-        headers: {
-          "x-admin-secret": formState.adminSecret,
-        },
       });
 
       const payload = (await response.json()) as { error?: string };
@@ -203,8 +231,53 @@ export function NoteManager() {
           添加笔记
         </h2>
         <p className="mt-3 text-sm leading-7 text-slate-300">
-          标题和正文会直接写入 PostgreSQL。删除时会复用同一个 admin secret。
+          标题和正文会直接写入 PostgreSQL。仅管理员登录后可新增 / 删除。
         </p>
+
+        <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4">
+          <p className="text-xs uppercase tracking-[0.16em] text-slate-400">管理员鉴权</p>
+          {authLoading ? (
+            <p className="mt-2 text-sm text-slate-400">正在检查登录状态...</p>
+          ) : authenticated ? (
+            <div className="mt-2 flex items-center justify-between gap-3">
+              <p className="text-sm text-emerald-200">已登录，允许写入数据库</p>
+              <button
+                type="button"
+                onClick={() => void handleLogout()}
+                className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300 hover:border-white/20"
+              >
+                退出登录
+              </button>
+            </div>
+          ) : (
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              <input
+                value={loginState.username}
+                onChange={(event) =>
+                  setLoginState((current) => ({ ...current, username: event.target.value }))
+                }
+                placeholder="管理员账号"
+                className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none"
+              />
+              <input
+                type="password"
+                value={loginState.password}
+                onChange={(event) =>
+                  setLoginState((current) => ({ ...current, password: event.target.value }))
+                }
+                placeholder="管理员密码"
+                className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => void handleLogin()}
+                className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-cyan-100"
+              >
+                登录
+              </button>
+            </div>
+          )}
+        </div>
 
         <div className="mt-6 grid gap-4">
           <Field
@@ -246,17 +319,6 @@ export function NoteManager() {
             }
             placeholder="多个标签用逗号分隔"
           />
-          <Field
-            label="Admin Secret"
-            type="password"
-            value={formState.adminSecret}
-            onChange={(value) =>
-              setFormState((current) => ({ ...current, adminSecret: value }))
-            }
-            placeholder="用于新增 / 删除"
-            error={fieldErrors.adminSecret}
-            required
-          />
         </div>
 
         {error ? (
@@ -267,10 +329,10 @@ export function NoteManager() {
 
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || !authenticated}
           className="mt-6 rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {isSubmitting ? "提交中..." : "新增笔记"}
+          {authenticated ? (isSubmitting ? "提交中..." : "新增笔记") : "请先登录管理员"}
         </button>
       </form>
 
