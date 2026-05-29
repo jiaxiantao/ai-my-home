@@ -965,7 +965,7 @@ function CarModel({
           <group ref={seatRightRef} position={[CABIN_CENTER_X - 0.55, INTERIOR_SEAT_Y, -0.35]}>
             <GeometricSeat position={[0, 0, 0]} />
           </group>
-          <mesh ref={steeringRef} position={[CABIN_CENTER_X - 0.78, INTERIOR_SEAT_Y + 0.38, 0.34]} rotation={[0, 0, Math.PI / 2]}>
+          <mesh ref={steeringRef} position={[CABIN_CENTER_X - 0.78, INTERIOR_SEAT_Y + 0.38, 0.34]} rotation={[0, Math.PI / 2, 0]}>
             <torusGeometry args={[0.12, 0.026, 16, 36]} />
             <meshStandardMaterial color="#111827" metalness={0.4} roughness={0.55} />
           </mesh>
