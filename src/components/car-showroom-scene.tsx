@@ -13,24 +13,31 @@ type OrbitControlsLike = {
 
 const DOOR_MAX_OPEN_RADIANS = (70 * Math.PI) / 180;
 const TRUNK_MAX_OPEN_RADIANS = (75 * Math.PI) / 180;
-const BODY_HALF_LENGTH = 3.2 / 2;
+const BODY_LENGTH = 3.2;
+const BODY_WIDTH = 1.55;
+const BODY_HALF_LENGTH = BODY_LENGTH / 2;
+const CABIN_CENTER_X = 0.15;
+const CABIN_CENTER_Y = 0.45;
+const CABIN_DEPTH = 1.9;
+const CABIN_HEIGHT = 0.5;
+const CABIN_WIDTH = 1.4;
 const TRUNK_PANEL_THICKNESS = 0.06;
 const TRUNK_LID_DEPTH = TRUNK_PANEL_THICKNESS;
 const TRUNK_HINGE_X = BODY_HALF_LENGTH;
 const TRUNK_HINGE_Y = 0.57;
-const TRUNK_HINGE_Z = 0.1;
+const TRUNK_HINGE_Z = 0;
 const TRUNK_LID_OUTWARD_OFFSET = TRUNK_PANEL_THICKNESS / 2;
 const TRUNK_LID_HALF_HEIGHT = 0.17;
-const TRUNK_OPENING_WIDTH = 1.46;
-const CABIN_REAR_X = 0.15 + 1.9 / 2;
-const CABIN_TOP_Y = 0.45 + 0.5 / 2;
+const TRUNK_PANEL_WIDTH = CABIN_WIDTH;
+const CABIN_REAR_X = CABIN_CENTER_X + CABIN_DEPTH / 2;
+const CABIN_TOP_Y = CABIN_CENTER_Y + CABIN_HEIGHT / 2;
 const TRUNK_SLOPE_END_X = TRUNK_HINGE_X - 0.04;
 const TRUNK_SLOPE_END_Y = TRUNK_HINGE_Y + 0.01;
 const TRUNK_SLOPE_DX = TRUNK_SLOPE_END_X - CABIN_REAR_X;
 const TRUNK_SLOPE_DY = TRUNK_SLOPE_END_Y - CABIN_TOP_Y;
 const TRUNK_SLOPE_LENGTH = Math.hypot(TRUNK_SLOPE_DX, TRUNK_SLOPE_DY);
 const TRUNK_SLOPE_ANGLE = Math.atan2(TRUNK_SLOPE_DY, TRUNK_SLOPE_DX);
-const TRUNK_SLOPE_CENTER_X = (CABIN_REAR_X + TRUNK_SLOPE_END_X) / 2 + 0.03;
+const TRUNK_SLOPE_CENTER_X = (CABIN_REAR_X + TRUNK_SLOPE_END_X) / 2;
 const TRUNK_SLOPE_CENTER_Y = (CABIN_TOP_Y + TRUNK_SLOPE_END_Y) / 2;
 const TRUNK_SLOPE_THICKNESS = TRUNK_PANEL_THICKNESS;
 
@@ -718,11 +725,11 @@ function CarModel({
       {!overlayOnly ? (
         <>
           <mesh ref={bodyRef} castShadow receiveShadow>
-            <boxGeometry args={[3.2, 0.55, 1.55]} />
+            <boxGeometry args={[BODY_LENGTH, 0.55, BODY_WIDTH]} />
             <meshStandardMaterial color="#0ea5e9" metalness={0.35} roughness={0.3} />
           </mesh>
-          <mesh ref={cabinRef} position={[0.15, 0.45, 0]} castShadow receiveShadow>
-            <boxGeometry args={[1.9, 0.5, 1.4]} />
+          <mesh ref={cabinRef} position={[CABIN_CENTER_X, CABIN_CENTER_Y, 0]} castShadow receiveShadow>
+            <boxGeometry args={[CABIN_DEPTH, CABIN_HEIGHT, CABIN_WIDTH]} />
             <meshStandardMaterial color="#38bdf8" metalness={0.38} roughness={0.28} />
           </mesh>
           <mesh position={[-0.04, 0.72, 0]} receiveShadow>
@@ -785,7 +792,7 @@ function CarModel({
           castShadow
           receiveShadow
         >
-          <boxGeometry args={[TRUNK_SLOPE_LENGTH, TRUNK_SLOPE_THICKNESS, TRUNK_OPENING_WIDTH]} />
+          <boxGeometry args={[TRUNK_SLOPE_LENGTH, TRUNK_SLOPE_THICKNESS, TRUNK_PANEL_WIDTH]} />
           <meshStandardMaterial color="#0369a1" metalness={0.38} roughness={0.36} />
         </mesh>
       ) : null}
@@ -800,7 +807,7 @@ function CarModel({
             onToggleTrunk();
           }}
         >
-          <boxGeometry args={[TRUNK_LID_DEPTH, 0.34, TRUNK_OPENING_WIDTH]} />
+          <boxGeometry args={[TRUNK_LID_DEPTH, 0.34, TRUNK_PANEL_WIDTH]} />
           {overlayOnly ? (
             <primitive object={hiddenHitboxMaterial} attach="material" />
           ) : (
