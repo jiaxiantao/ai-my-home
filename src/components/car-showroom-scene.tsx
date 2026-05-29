@@ -21,6 +21,18 @@ const CABIN_CENTER_Y = 0.45;
 const CABIN_DEPTH = 1.9;
 const CABIN_HEIGHT = 0.5;
 const CABIN_WIDTH = 1.4;
+const BODY_HEIGHT = 0.55;
+const BODY_HALF_HEIGHT = BODY_HEIGHT / 2;
+const BODY_SHELL_THICKNESS = 0.09;
+const BODY_FLOOR_HEIGHT = 0.11;
+const CABIN_WALL_THICKNESS = 0.06;
+const GLASS_THICKNESS = 0.018;
+const WINDSHIELD_HEIGHT = 0.34;
+const WINDSHIELD_WIDTH = CABIN_WIDTH * 0.82;
+const SIDE_WINDOW_LENGTH = 0.78;
+const SIDE_WINDOW_HEIGHT = 0.24;
+const CABIN_FLOOR_Y = CABIN_CENTER_Y - CABIN_HEIGHT / 2;
+const INTERIOR_SEAT_Y = CABIN_FLOOR_Y + 0.1;
 const TRUNK_PANEL_THICKNESS = 0.06;
 const TRUNK_LID_DEPTH = TRUNK_PANEL_THICKNESS;
 const TRUNK_HINGE_X = BODY_HALF_LENGTH;
@@ -51,6 +63,134 @@ const WHEEL_TOUCH_CLEARANCE = 0.01;
 const WHEEL_MOUNT_Y = -0.06 - BODY_GROUND_CLEARANCE;
 const CAR_BASE_Y =
   SHOWROOM_GROUND_Y + WHEEL_RADIUS - WHEEL_MOUNT_Y + WHEEL_TOUCH_CLEARANCE;
+
+function GeometricCarBodyShell({ paintMaterial }: { paintMaterial: THREE.MeshStandardMaterial }) {
+  const floorY = -BODY_HALF_HEIGHT + BODY_FLOOR_HEIGHT / 2;
+  const railY = -BODY_HALF_HEIGHT + (BODY_HEIGHT + BODY_FLOOR_HEIGHT) / 2 - 0.02;
+  const railZ = BODY_WIDTH / 2 - BODY_SHELL_THICKNESS / 2;
+
+  return (
+    <group>
+      <mesh castShadow receiveShadow position={[0, floorY, 0]} material={paintMaterial}>
+        <boxGeometry args={[BODY_LENGTH, BODY_FLOOR_HEIGHT, BODY_WIDTH]} />
+      </mesh>
+      <mesh castShadow receiveShadow position={[0, railY, railZ]} material={paintMaterial}>
+        <boxGeometry args={[BODY_LENGTH, BODY_HEIGHT - BODY_FLOOR_HEIGHT + 0.04, BODY_SHELL_THICKNESS]} />
+      </mesh>
+      <mesh castShadow receiveShadow position={[0, railY, -railZ]} material={paintMaterial}>
+        <boxGeometry args={[BODY_LENGTH, BODY_HEIGHT - BODY_FLOOR_HEIGHT + 0.04, BODY_SHELL_THICKNESS]} />
+      </mesh>
+      <mesh
+        castShadow
+        receiveShadow
+        position={[-BODY_HALF_LENGTH + BODY_SHELL_THICKNESS / 2, railY, 0]}
+        material={paintMaterial}
+      >
+        <boxGeometry args={[BODY_SHELL_THICKNESS, BODY_HEIGHT - 0.06, BODY_WIDTH - BODY_SHELL_THICKNESS * 2]} />
+      </mesh>
+    </group>
+  );
+}
+
+function GeometricCabinShell({
+  paintMaterial,
+  interiorMaterial,
+  glassMaterial,
+}: {
+  paintMaterial: THREE.MeshStandardMaterial;
+  interiorMaterial: THREE.MeshStandardMaterial;
+  glassMaterial: THREE.MeshPhysicalMaterial;
+}) {
+  const sideZ = CABIN_WIDTH / 2 - CABIN_WALL_THICKNESS / 2;
+  const glassZ = CABIN_WIDTH / 2 - CABIN_WALL_THICKNESS / 2 + GLASS_THICKNESS * 0.5;
+
+  return (
+    <group position={[CABIN_CENTER_X, CABIN_CENTER_Y, 0]}>
+      <mesh
+        receiveShadow
+        position={[0, -CABIN_HEIGHT / 2 + CABIN_WALL_THICKNESS / 2, 0]}
+        material={interiorMaterial}
+      >
+        <boxGeometry args={[CABIN_DEPTH * 0.9, CABIN_WALL_THICKNESS, CABIN_WIDTH * 0.88]} />
+      </mesh>
+      <mesh castShadow receiveShadow position={[0, -0.08, sideZ]} material={paintMaterial}>
+        <boxGeometry args={[CABIN_DEPTH * 0.94, 0.14, CABIN_WALL_THICKNESS]} />
+      </mesh>
+      <mesh castShadow receiveShadow position={[0, -0.08, -sideZ]} material={paintMaterial}>
+        <boxGeometry args={[CABIN_DEPTH * 0.94, 0.14, CABIN_WALL_THICKNESS]} />
+      </mesh>
+      <mesh castShadow receiveShadow position={[0, 0.16, sideZ]} material={paintMaterial}>
+        <boxGeometry args={[CABIN_DEPTH * 0.94, 0.12, CABIN_WALL_THICKNESS]} />
+      </mesh>
+      <mesh castShadow receiveShadow position={[0, 0.16, -sideZ]} material={paintMaterial}>
+        <boxGeometry args={[CABIN_DEPTH * 0.94, 0.12, CABIN_WALL_THICKNESS]} />
+      </mesh>
+      <mesh castShadow receiveShadow position={[-CABIN_DEPTH / 2 + 0.05, 0, sideZ]} material={paintMaterial}>
+        <boxGeometry args={[CABIN_WALL_THICKNESS, CABIN_HEIGHT * 0.88, CABIN_WALL_THICKNESS]} />
+      </mesh>
+      <mesh castShadow receiveShadow position={[-CABIN_DEPTH / 2 + 0.05, 0, -sideZ]} material={paintMaterial}>
+        <boxGeometry args={[CABIN_WALL_THICKNESS, CABIN_HEIGHT * 0.88, CABIN_WALL_THICKNESS]} />
+      </mesh>
+      <mesh castShadow receiveShadow position={[CABIN_DEPTH / 2 - 0.05, 0.02, sideZ]} material={paintMaterial}>
+        <boxGeometry args={[CABIN_WALL_THICKNESS, CABIN_HEIGHT * 0.75, CABIN_WALL_THICKNESS]} />
+      </mesh>
+      <mesh castShadow receiveShadow position={[CABIN_DEPTH / 2 - 0.05, 0.02, -sideZ]} material={paintMaterial}>
+        <boxGeometry args={[CABIN_WALL_THICKNESS, CABIN_HEIGHT * 0.75, CABIN_WALL_THICKNESS]} />
+      </mesh>
+      <mesh castShadow receiveShadow position={[0, CABIN_HEIGHT / 2 - CABIN_WALL_THICKNESS / 2, 0]} material={paintMaterial}>
+        <boxGeometry args={[CABIN_DEPTH * 0.62, CABIN_WALL_THICKNESS, CABIN_WIDTH - 0.52]} />
+      </mesh>
+      <mesh castShadow receiveShadow position={[-0.72, -0.02, 0]} material={interiorMaterial}>
+        <boxGeometry args={[0.1, 0.28, CABIN_WIDTH * 0.82]} />
+      </mesh>
+
+      <mesh position={[-CABIN_DEPTH / 2 + 0.03, 0.04, 0]} rotation={[0, 0, -0.28]} material={glassMaterial}>
+        <boxGeometry args={[GLASS_THICKNESS, WINDSHIELD_HEIGHT, WINDSHIELD_WIDTH]} />
+      </mesh>
+      <mesh position={[CABIN_DEPTH / 2 - 0.03, 0.05, 0]} material={glassMaterial}>
+        <boxGeometry args={[GLASS_THICKNESS, 0.3, CABIN_WIDTH * 0.72]} />
+      </mesh>
+      <mesh position={[-0.08, 0.03, glassZ]} material={glassMaterial}>
+        <boxGeometry args={[SIDE_WINDOW_LENGTH, SIDE_WINDOW_HEIGHT, GLASS_THICKNESS]} />
+      </mesh>
+      <mesh position={[-0.08, 0.03, -glassZ]} material={glassMaterial}>
+        <boxGeometry args={[SIDE_WINDOW_LENGTH, SIDE_WINDOW_HEIGHT, GLASS_THICKNESS]} />
+      </mesh>
+    </group>
+  );
+}
+
+function GeometricSeat({
+  position,
+}: {
+  position: [number, number, number];
+}) {
+  const cushionMaterial = useMemo(
+    () => new THREE.MeshStandardMaterial({ color: "#cbd5e1", roughness: 0.78, metalness: 0.06 }),
+    [],
+  );
+  const backMaterial = useMemo(
+    () => new THREE.MeshStandardMaterial({ color: "#94a3b8", roughness: 0.82, metalness: 0.05 }),
+    [],
+  );
+
+  return (
+    <group position={position}>
+      <mesh castShadow receiveShadow position={[0, 0.08, 0]} material={cushionMaterial}>
+        <boxGeometry args={[0.42, 0.1, 0.3]} />
+      </mesh>
+      <mesh
+        castShadow
+        receiveShadow
+        position={[0.06, 0.24, -0.04]}
+        rotation={[-0.32, 0, 0]}
+        material={backMaterial}
+      >
+        <boxGeometry args={[0.38, 0.32, 0.08]} />
+      </mesh>
+    </group>
+  );
+}
 
 function GeometricWheel({
   spinGroupRef,
@@ -487,12 +627,37 @@ function CarModel({
   const leftDoorRef = useRef<THREE.Group>(null);
   const rightDoorRef = useRef<THREE.Group>(null);
   const trunkRef = useRef<THREE.Group>(null);
-  const seatLeftRef = useRef<THREE.Mesh>(null);
-  const seatRightRef = useRef<THREE.Mesh>(null);
+  const seatLeftRef = useRef<THREE.Group>(null);
+  const seatRightRef = useRef<THREE.Group>(null);
   const steeringRef = useRef<THREE.Mesh>(null);
-  const bodyRef = useRef<THREE.Mesh>(null);
-  const cabinRef = useRef<THREE.Mesh>(null);
   const sunroofRef = useRef<THREE.Mesh>(null);
+  const bodyPaintMaterial = useMemo(
+    () => new THREE.MeshStandardMaterial({ color: "#0ea5e9", metalness: 0.35, roughness: 0.3 }),
+    [],
+  );
+  const cabinPaintMaterial = useMemo(
+    () => new THREE.MeshStandardMaterial({ color: "#38bdf8", metalness: 0.38, roughness: 0.28 }),
+    [],
+  );
+  const interiorMaterial = useMemo(
+    () => new THREE.MeshStandardMaterial({ color: "#334155", roughness: 0.88, metalness: 0.05 }),
+    [],
+  );
+  const glassMaterial = useMemo(
+    () =>
+      new THREE.MeshPhysicalMaterial({
+        color: "#dbeafe",
+        metalness: 0,
+        roughness: 0.06,
+        transparent: true,
+        opacity: 0.45,
+        transmission: 0.86,
+        thickness: 0.35,
+        ior: 1.45,
+        side: THREE.DoubleSide,
+      }),
+    [],
+  );
   const leftHeadLightRef = useRef<THREE.Mesh>(null);
   const rightHeadLightRef = useRef<THREE.Mesh>(null);
   const leftTailLightRef = useRef<THREE.Mesh>(null);
@@ -549,7 +714,7 @@ function CarModel({
     if (seatLeftRef.current) {
       seatLeftRef.current.position.z = THREE.MathUtils.damp(
         seatLeftRef.current.position.z,
-        0.2 + seatDriverTarget,
+        0.35 + seatDriverTarget,
         9,
         delta,
       );
@@ -557,7 +722,7 @@ function CarModel({
     if (seatRightRef.current) {
       seatRightRef.current.position.z = THREE.MathUtils.damp(
         seatRightRef.current.position.z,
-        0.2 + seatPassengerTarget,
+        -0.35 + seatPassengerTarget,
         9,
         delta,
       );
@@ -679,18 +844,13 @@ function CarModel({
     const bodyColor = bodyColorSecondary
       ? bodyColorPrimary.clone().lerp(bodyColorSecondary, 0.32)
       : bodyColorPrimary;
-    if (bodyRef.current) {
-      const mat = bodyRef.current.material as THREE.MeshStandardMaterial;
-      mat.color.lerp(bodyColor, THREE.MathUtils.clamp(delta * 4, 0, 1));
-    }
-    if (cabinRef.current) {
-      const mat = cabinRef.current.material as THREE.MeshStandardMaterial;
-      const cabinBase = bodyColorSecondary
-        ? bodyColorPrimary.clone().lerp(bodyColorSecondary, 0.72)
-        : bodyColor.clone();
-      const cabinTarget = cabinBase.offsetHSL(0, 0.02, 0.08);
-      mat.color.lerp(cabinTarget, THREE.MathUtils.clamp(delta * 4, 0, 1));
-    }
+    const colorLerp = THREE.MathUtils.clamp(delta * 4, 0, 1);
+    bodyPaintMaterial.color.lerp(bodyColor, colorLerp);
+    const cabinBase = bodyColorSecondary
+      ? bodyColorPrimary.clone().lerp(bodyColorSecondary, 0.72)
+      : bodyColor.clone();
+    const cabinTarget = cabinBase.offsetHSL(0, 0.02, 0.08);
+    cabinPaintMaterial.color.lerp(cabinTarget, colorLerp);
 
     const frontIntensity = state.lightsOn ? (state.engineOn ? 2.6 : 2.1) : 0.2;
     const rearIntensity = state.lightsOn ? 0.5 + hazardBlink * 1.7 : hazardBlink * 1.7;
@@ -724,18 +884,12 @@ function CarModel({
     <group ref={rootRef} position={[0, CAR_BASE_Y, 0]}>
       {!overlayOnly ? (
         <>
-          <mesh ref={bodyRef} castShadow receiveShadow>
-            <boxGeometry args={[BODY_LENGTH, 0.55, BODY_WIDTH]} />
-            <meshStandardMaterial color="#0ea5e9" metalness={0.35} roughness={0.3} />
-          </mesh>
-          <mesh ref={cabinRef} position={[CABIN_CENTER_X, CABIN_CENTER_Y, 0]} castShadow receiveShadow>
-            <boxGeometry args={[CABIN_DEPTH, CABIN_HEIGHT, CABIN_WIDTH]} />
-            <meshStandardMaterial color="#38bdf8" metalness={0.38} roughness={0.28} />
-          </mesh>
-          <mesh position={[-0.04, 0.72, 0]} receiveShadow>
-            <boxGeometry args={[0.8, 0.05, 0.52]} />
-            <meshStandardMaterial color="#1e293b" roughness={0.78} metalness={0.15} />
-          </mesh>
+          <GeometricCarBodyShell paintMaterial={bodyPaintMaterial} />
+          <GeometricCabinShell
+            paintMaterial={cabinPaintMaterial}
+            interiorMaterial={interiorMaterial}
+            glassMaterial={glassMaterial}
+          />
         </>
       ) : null}
       <mesh ref={sunroofRef} position={[-0.02, 0.74, 0]} receiveShadow>
@@ -818,15 +972,13 @@ function CarModel({
 
       {!overlayOnly ? (
         <>
-          <mesh ref={seatLeftRef} position={[-0.2, 0.28, 0.35]} castShadow receiveShadow>
-            <boxGeometry args={[0.42, 0.35, 0.28]} />
-            <meshStandardMaterial color="#e2e8f0" roughness={0.75} metalness={0.08} />
-          </mesh>
-          <mesh ref={seatRightRef} position={[-0.2, 0.28, -0.35]} castShadow receiveShadow>
-            <boxGeometry args={[0.42, 0.35, 0.28]} />
-            <meshStandardMaterial color="#e2e8f0" roughness={0.75} metalness={0.08} />
-          </mesh>
-          <mesh ref={steeringRef} position={[-0.92, 0.5, 0.34]} rotation={[0, 0, Math.PI / 2]}>
+          <group ref={seatLeftRef} position={[CABIN_CENTER_X - 0.55, INTERIOR_SEAT_Y, 0.35]}>
+            <GeometricSeat position={[0, 0, 0]} />
+          </group>
+          <group ref={seatRightRef} position={[CABIN_CENTER_X - 0.55, INTERIOR_SEAT_Y, -0.35]}>
+            <GeometricSeat position={[0, 0, 0]} />
+          </group>
+          <mesh ref={steeringRef} position={[CABIN_CENTER_X - 0.78, INTERIOR_SEAT_Y + 0.38, 0.34]} rotation={[0, 0, Math.PI / 2]}>
             <torusGeometry args={[0.12, 0.026, 16, 36]} />
             <meshStandardMaterial color="#111827" metalness={0.4} roughness={0.55} />
           </mesh>
