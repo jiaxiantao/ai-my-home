@@ -120,6 +120,39 @@ export default function CarShowroomPage() {
     [selectedPaintId],
   );
 
+  const supportsInteraction = (key: keyof AssetRigCapabilities) => {
+    if (!useAssetModel) {
+      return true;
+    }
+    if (!assetRigCaps) {
+      return true;
+    }
+    return assetRigCaps[key];
+  };
+
+  const interactionHint = (key: keyof AssetRigCapabilities) =>
+    supportsInteraction(key)
+      ? undefined
+      : "当前 GLB 车身为合并整体，未包含可独立活动的该部件，无法开合。";
+
+  const unsupportedInteractionLabels = useMemo(() => {
+    if (!useAssetModel || !assetRigCaps) {
+      return [] as string[];
+    }
+    const labels: string[] = [];
+    if (!assetRigCaps.leftDoor) labels.push("左前门");
+    if (!assetRigCaps.rightDoor) labels.push("右前门");
+    if (!assetRigCaps.trunk) labels.push("后备箱");
+    if (!assetRigCaps.sunroof) labels.push("天窗");
+    if (!assetRigCaps.wheels) labels.push("车轮转动");
+    return labels;
+  }, [assetRigCaps, useAssetModel]);
+
+  const unsupportedInteractionNote =
+    unsupportedInteractionLabels.length > 0
+      ? `当前 GLB 模型的「${unsupportedInteractionLabels.join("、")}」是与车身合并的整块网格，无法单独开合（已禁用对应按钮）。车灯/双闪/启动等整车效果仍可使用。如需开门动画，请改用部件已拆分的模型（如 SUV），或参考 docs/market-glb-rig.md 手动配置。`
+      : null;
+
   const sceneState = useMemo(
     () => ({
       leftDoorOpen,
@@ -329,18 +362,24 @@ export default function CarShowroomPage() {
         <div className="flex flex-wrap gap-3">
           <Button
             variant={leftDoorOpen ? "default" : "outline"}
+            disabled={!supportsInteraction("leftDoor")}
+            title={interactionHint("leftDoor")}
             onClick={() => setLeftDoorOpen((value) => !value)}
           >
             {leftDoorOpen ? "关闭左前门" : "打开左前门"}
           </Button>
           <Button
             variant={rightDoorOpen ? "default" : "outline"}
+            disabled={!supportsInteraction("rightDoor")}
+            title={interactionHint("rightDoor")}
             onClick={() => setRightDoorOpen((value) => !value)}
           >
             {rightDoorOpen ? "关闭右前门" : "打开右前门"}
           </Button>
           <Button
             variant={trunkOpen ? "default" : "outline"}
+            disabled={!supportsInteraction("trunk")}
+            title={interactionHint("trunk")}
             onClick={() => setTrunkOpen((value) => !value)}
           >
             {trunkOpen ? "关闭后备箱" : "打开后备箱"}
@@ -365,49 +404,60 @@ export default function CarShowroomPage() {
           </Button>
           <Button
             variant={sunroofOpen ? "default" : "outline"}
+            disabled={!supportsInteraction("sunroof")}
+            title={interactionHint("sunroof")}
             onClick={() => setSunroofOpen((value) => !value)}
           >
             {sunroofOpen ? "关闭天窗" : "打开天窗"}
           </Button>
         </div>
+        {unsupportedInteractionNote ? (
+          <p className="text-xs leading-6 text-amber-300/80">{unsupportedInteractionNote}</p>
+        ) : null}
 
         <div className="grid gap-3">
           <label htmlFor="driver-seat-offset" className="text-sm font-medium text-slate-100">
             主驾座椅：{seatDriverOffset > 0 ? "向后" : seatDriverOffset < 0 ? "向前" : "中间"}
+            {useAssetModel ? "（GLB 模型暂不支持座椅调节）" : ""}
           </label>
           <input
             id="driver-seat-offset"
             type="range"
             min={-45}
             max={45}
+            disabled={useAssetModel}
             value={Math.round(seatDriverOffset * 100)}
             onChange={(event) => setSeatDriverOffset(Number(event.target.value) / 100)}
-            className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-700"
+            className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
           />
           <label htmlFor="passenger-seat-offset" className="text-sm font-medium text-slate-100">
             副驾座椅：
             {seatPassengerOffset > 0 ? "向后" : seatPassengerOffset < 0 ? "向前" : "中间"}
+            {useAssetModel ? "（GLB 模型暂不支持座椅调节）" : ""}
           </label>
           <input
             id="passenger-seat-offset"
             type="range"
             min={-45}
             max={45}
+            disabled={useAssetModel}
             value={Math.round(seatPassengerOffset * 100)}
             onChange={(event) => setSeatPassengerOffset(Number(event.target.value) / 100)}
-            className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-700"
+            className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
           />
           <label htmlFor="steering-angle" className="text-sm font-medium text-slate-100">
             方向盘角度：{steeringAngle > 0 ? `右转 ${steeringAngle}°` : steeringAngle < 0 ? `左转 ${Math.abs(steeringAngle)}°` : "居中"}
+            {useAssetModel && !supportsInteraction("wheels") ? "（当前 GLB 未识别到可转向车轮）" : ""}
           </label>
           <input
             id="steering-angle"
             type="range"
             min={-42}
             max={42}
+            disabled={useAssetModel && !supportsInteraction("wheels")}
             value={Math.round(steeringAngle)}
             onChange={(event) => setSteeringAngle(Number(event.target.value))}
-            className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-700"
+            className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
           />
           <label htmlFor="speed-kph" className="text-sm font-medium text-slate-100">
             目标车速：{speedKph} km/h

@@ -35,6 +35,7 @@ type MeshEntry = {
   mesh: THREE.Mesh;
   name: string;
   center: THREE.Vector3;
+  size: THREE.Vector3;
   volume: number;
 };
 
@@ -62,10 +63,6 @@ function matchesAny(name: string, patterns?: RegExp[]) {
     return false;
   }
   return patterns.some((pattern) => pattern.test(name));
-}
-
-function getWorldCenter(mesh: THREE.Mesh, target = new THREE.Vector3()) {
-  return new THREE.Box3().setFromObject(mesh).getCenter(target);
 }
 
 function getMeshVolume(mesh: THREE.Mesh) {
@@ -168,11 +165,17 @@ function collectMeshes(root: THREE.Object3D) {
     if (isExcludedPart(name)) {
       return;
     }
+    const box = new THREE.Box3().setFromObject(mesh);
+    const size = new THREE.Vector3();
+    const center = new THREE.Vector3();
+    box.getSize(size);
+    box.getCenter(center);
     entries.push({
       mesh,
       name,
-      center: getWorldCenter(mesh),
-      volume: getMeshVolume(mesh),
+      center,
+      size,
+      volume: Math.max(size.x * size.y * size.z, 1e-6),
     });
   });
   return entries;
@@ -319,8 +322,13 @@ export function discoverAssetCarRig(root: THREE.Object3D, modelUrl?: string): As
   const leftZ = bounds.min.z + width * 0.32;
   const rightZ = bounds.max.z - width * 0.32;
 
+  // A genuine door / trunk lid is a localized panel, never a body-spanning mesh.
+  // Reject meshes whose footprint covers most of the car (merged/material-grouped bodies).
+  const isLocalizedPanel = (meshSize: THREE.Vector3) =>
+    meshSize.x <= depth * 0.55 && meshSize.z <= width * 0.62;
+
   for (const entry of entries) {
-    const { mesh, name, center: meshCenter } = entry;
+    const { mesh, name, center: meshCenter, size: meshSize } = entry;
     const nameLower = name.toLowerCase();
 
     if (matchesAny(name, profile?.sunroof) || isSunroofPart(nameLower)) {
@@ -357,12 +365,20 @@ export function discoverAssetCarRig(root: THREE.Object3D, modelUrl?: string): As
       continue;
     }
 
-    if (matchesAny(name, profile?.trunk) || isTrunkPart(nameLower)) {
+    const profileTrunk = matchesAny(name, profile?.trunk);
+    if (profileTrunk || (isTrunkPart(nameLower) && isLocalizedPanel(meshSize))) {
       trunkMeshes.push(mesh);
       continue;
     }
 
-    if (!isDoorCandidate(nameLower, profile)) {
+    const profileDoor =
+      matchesAny(name, profile?.leftDoor) || matchesAny(name, profile?.rightDoor);
+    if (!profileDoor && !isDoorCandidate(nameLower, profile)) {
+      continue;
+    }
+
+    // Geometry gate: skip whole-body panels that merely contain "door" in their name.
+    if (!profileDoor && !isLocalizedPanel(meshSize)) {
       continue;
     }
 
