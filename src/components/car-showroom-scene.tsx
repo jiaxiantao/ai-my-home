@@ -12,6 +12,9 @@ type OrbitControlsLike = {
 };
 
 const DOOR_MAX_OPEN_RADIANS = (70 * Math.PI) / 180;
+const TRUNK_MAX_OPEN_RADIANS = (75 * Math.PI) / 180;
+const TRUNK_HINGE_Y = 0.53;
+const TRUNK_LID_HALF_HEIGHT = 0.17;
 
 const WHEEL_RADIUS = 0.27;
 const WHEEL_WIDTH = 0.22;
@@ -511,13 +514,9 @@ function CarModel({
       );
     }
     if (trunkRef.current) {
-      const target = state.trunkOpen ? -Math.PI * 0.6 : 0;
-      trunkRef.current.rotation.x = THREE.MathUtils.damp(
-        trunkRef.current.rotation.x,
-        target,
-        7,
-        delta,
-      );
+      const target = state.trunkOpen ? TRUNK_MAX_OPEN_RADIANS : 0;
+      const nextZ = THREE.MathUtils.damp(trunkRef.current.rotation.z, target, 7, delta);
+      trunkRef.current.rotation.set(0, 0, nextZ);
     }
 
     const seatDriverTarget = THREE.MathUtils.clamp(state.seatDriverOffset, -0.45, 0.45);
@@ -761,11 +760,11 @@ function CarModel({
         </mesh>
       </group>
 
-      <group ref={trunkRef} position={[1.54, 0.36, 0]}>
+      <group ref={trunkRef} position={[1.54, TRUNK_HINGE_Y, 0]}>
         <mesh
           castShadow
           receiveShadow
-          position={[0, 0.16, 0]}
+          position={[0, -TRUNK_LID_HALF_HEIGHT, 0]}
           onClick={(event) => {
             event.stopPropagation();
             onToggleTrunk();
