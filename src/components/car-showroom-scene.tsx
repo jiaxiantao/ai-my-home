@@ -90,29 +90,6 @@ function GeometricCabinShell({
   const lowerSillHeight = 0.14 * CABIN_HEIGHT_SCALE;
   const upperRailHeight = 0.12 * CABIN_HEIGHT_SCALE;
   const rearGlassHeight = 0.3 * CABIN_HEIGHT_SCALE;
-  const windshieldX = -CABIN_DEPTH / 2 - WINDSHIELD_FORWARD_OFFSET;
-  const windshieldY = 0.06 * CABIN_HEIGHT_SCALE;
-  const windshieldHalfHeight = WINDSHIELD_HEIGHT / 2;
-  const sinT = Math.sin(WINDSHIELD_TILT_RADIANS);
-  const cosT = Math.cos(WINDSHIELD_TILT_RADIANS);
-  const glassBottomX = windshieldX - windshieldHalfHeight * sinT;
-  const glassBottomY = windshieldY - windshieldHalfHeight * cosT;
-  const glassTopX = windshieldX + windshieldHalfHeight * sinT;
-  const glassTopY = windshieldY + windshieldHalfHeight * cosT;
-  const chassisTopLocalY = CHASSIS_HALF_HEIGHT - CABIN_CENTER_Y;
-  const frontPillarX = -CABIN_DEPTH / 2 + 0.05;
-  const cowlSpanY = glassBottomY - chassisTopLocalY;
-  const cowlCenterY = (glassBottomY + chassisTopLocalY) / 2;
-  const cowlCenterX = (glassBottomX + windshieldX) / 2 - 0.03;
-  const pillarZ = WINDSHIELD_WIDTH / 2 - CABIN_WALL_THICKNESS * 0.35;
-  const pillarBottomY = chassisTopLocalY;
-  const pillarHeight = glassBottomY - pillarBottomY + 0.02;
-  const pillarCenterY = pillarBottomY + pillarHeight / 2;
-  const pillarCenterX = (frontPillarX + glassBottomX) / 2 + 0.02;
-  const pillarDepth = Math.abs(glassBottomX - frontPillarX) + 0.1;
-  const headerHeight = glassTopY - upperRailY + 0.02;
-  const headerCenterY = (glassTopY + upperRailY) / 2;
-  const headerCenterX = (glassTopX + frontPillarX) / 2;
 
   return (
     <group position={[CABIN_CENTER_X, CABIN_CENTER_Y, 0]}>
@@ -152,53 +129,15 @@ function GeometricCabinShell({
       </mesh>
 
       <mesh
-        position={[windshieldX, windshieldY, 0]}
+        position={[
+          -CABIN_DEPTH / 2 - WINDSHIELD_FORWARD_OFFSET,
+          0.06 * CABIN_HEIGHT_SCALE,
+          0,
+        ]}
         rotation={[0, 0, WINDSHIELD_TILT_RADIANS]}
         material={glassMaterial}
       >
         <boxGeometry args={[GLASS_THICKNESS, WINDSHIELD_HEIGHT, WINDSHIELD_WIDTH]} />
-      </mesh>
-      <mesh
-        castShadow
-        receiveShadow
-        position={[(glassBottomX + frontPillarX) / 2 - 0.04, chassisTopLocalY + 0.028, 0]}
-        material={paintMaterial}
-      >
-        <boxGeometry args={[0.22, 0.056, WINDSHIELD_WIDTH + 0.12]} />
-      </mesh>
-      <mesh
-        castShadow
-        receiveShadow
-        position={[cowlCenterX, cowlCenterY, 0]}
-        rotation={[0, 0, WINDSHIELD_TILT_RADIANS]}
-        material={paintMaterial}
-      >
-        <boxGeometry args={[0.12, cowlSpanY / Math.max(0.65, Math.abs(cosT)), WINDSHIELD_WIDTH + 0.08]} />
-      </mesh>
-      <mesh
-        castShadow
-        receiveShadow
-        position={[pillarCenterX, pillarCenterY, pillarZ]}
-        material={paintMaterial}
-      >
-        <boxGeometry args={[pillarDepth, pillarHeight, CABIN_WALL_THICKNESS]} />
-      </mesh>
-      <mesh
-        castShadow
-        receiveShadow
-        position={[pillarCenterX, pillarCenterY, -pillarZ]}
-        material={paintMaterial}
-      >
-        <boxGeometry args={[pillarDepth, pillarHeight, CABIN_WALL_THICKNESS]} />
-      </mesh>
-      <mesh
-        castShadow
-        receiveShadow
-        position={[headerCenterX, headerCenterY, 0]}
-        rotation={[0, 0, WINDSHIELD_TILT_RADIANS * 0.55]}
-        material={paintMaterial}
-      >
-        <boxGeometry args={[0.1, headerHeight, WINDSHIELD_WIDTH + 0.04]} />
       </mesh>
       <mesh position={[CABIN_DEPTH / 2 - 0.03, 0.05 * CABIN_HEIGHT_SCALE, 0]} material={glassMaterial}>
         <boxGeometry args={[GLASS_THICKNESS, rearGlassHeight, CABIN_WIDTH * 0.72]} />
