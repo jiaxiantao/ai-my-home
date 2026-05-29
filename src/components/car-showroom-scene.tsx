@@ -349,6 +349,7 @@ function CarModel({
   const exhaustRightRef = useRef<THREE.Mesh>(null);
   const frontSteerRefs = useRef<THREE.Group[]>([]);
   const wheelSpinRefs = useRef<THREE.Mesh[]>([]);
+  const wheelSpinAnglesRef = useRef<number[]>([]);
   const velocityRef = useRef(0);
   const lastVelocityRef = useRef(0);
 
@@ -436,11 +437,19 @@ function CarModel({
     // Wheel meshes are cylinders pre-rotated by PI/2 on X, so their axle is local Z.
     // Rolling motion must rotate around local Z to stay physically consistent.
     const angularSpeed = -velocityRef.current / wheelRadius;
-    for (const wheel of wheelSpinRefs.current) {
+    for (let index = 0; index < wheelSpinRefs.current.length; index += 1) {
+      const wheel = wheelSpinRefs.current[index];
       if (!wheel) {
         continue;
       }
-      wheel.rotation.z += delta * angularSpeed;
+      const nextSpin = (wheelSpinAnglesRef.current[index] ?? 0) + delta * angularSpeed;
+      wheelSpinAnglesRef.current[index] = nextSpin;
+
+      // Keep wheel installation angle stable: parallel to body and
+      // perpendicular to axle, only spinning around the axle axis (Z).
+      wheel.rotation.x = Math.PI / 2;
+      wheel.rotation.y = 0;
+      wheel.rotation.z = nextSpin;
     }
 
     const steerInput = THREE.MathUtils.clamp(state.steeringAngle, -42, 42) * (Math.PI / 180);
