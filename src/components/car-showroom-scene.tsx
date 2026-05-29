@@ -36,7 +36,9 @@ const WINDSHIELD_TILT_RADIANS = -0.5;
 const SIDE_WINDOW_LENGTH = 0.78;
 const SIDE_WINDOW_HEIGHT = 0.24 * CABIN_HEIGHT_SCALE;
 const DOOR_PANEL_HEIGHT = 0.42;
+const DOOR_CENTER_X = -0.82;
 const DOOR_CENTER_Y = 0.35;
+const DOOR_SIDE_Z = 0.82;
 const CABIN_FLOOR_Y = CABIN_CENTER_Y - CABIN_HEIGHT / 2;
 const INTERIOR_SEAT_Y = CABIN_FLOOR_Y + 0.1;
 const TRUNK_PANEL_THICKNESS = 0.06;
@@ -895,7 +897,7 @@ function CarModel({
         )}
       </mesh>
 
-      <group ref={leftDoorRef} position={[-1.0, DOOR_CENTER_Y, 0.82]}>
+      <group ref={leftDoorRef} position={[DOOR_CENTER_X, DOOR_CENTER_Y, DOOR_SIDE_Z]}>
         <mesh
           castShadow
           receiveShadow
@@ -914,7 +916,7 @@ function CarModel({
         </mesh>
       </group>
 
-      <group ref={rightDoorRef} position={[-1.0, DOOR_CENTER_Y, -0.82]}>
+      <group ref={rightDoorRef} position={[DOOR_CENTER_X, DOOR_CENTER_Y, -DOOR_SIDE_Z]}>
         <mesh
           castShadow
           receiveShadow
