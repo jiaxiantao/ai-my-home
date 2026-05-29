@@ -15,9 +15,12 @@ const WHEEL_RADIUS = 0.27;
 const WHEEL_WIDTH = 0.22;
 const WHEEL_SPOKE_COUNT = 10;
 const SHOWROOM_GROUND_Y = -0.22;
-const WHEEL_MOUNT_Y = -0.06;
-// Lift the whole car so wheel bottoms touch the showroom floor.
-const CAR_BASE_Y = SHOWROOM_GROUND_Y + WHEEL_RADIUS - WHEEL_MOUNT_Y + 0.01;
+const BODY_GROUND_CLEARANCE = 0.05;
+const WHEEL_TOUCH_CLEARANCE = 0.01;
+// Lower mount on the body so raising ride height keeps wheel contact with the floor.
+const WHEEL_MOUNT_Y = -0.06 - BODY_GROUND_CLEARANCE;
+const CAR_BASE_Y =
+  SHOWROOM_GROUND_Y + WHEEL_RADIUS - WHEEL_MOUNT_Y + WHEEL_TOUCH_CLEARANCE;
 
 function GeometricWheel({
   spinGroupRef,
