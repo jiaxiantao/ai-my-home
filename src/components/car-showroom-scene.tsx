@@ -14,6 +14,8 @@ type OrbitControlsLike = {
 const WHEEL_RADIUS = 0.27;
 const WHEEL_WIDTH = 0.22;
 const WHEEL_SPOKE_COUNT = 10;
+const SHOWROOM_GROUND_Y = -0.22;
+const WHEEL_CENTER_Y = SHOWROOM_GROUND_Y + WHEEL_RADIUS + 0.01;
 
 function GeometricWheel({
   spinGroupRef,
@@ -540,7 +542,7 @@ function CarModel({
     );
 
     // Spin around horizontal axle (local Y on wheel mesh inside mount group).
-    const angularSpeed = -velocityRef.current / WHEEL_RADIUS;
+    const angularSpeed = velocityRef.current / WHEEL_RADIUS;
     for (let index = 0; index < wheelSpinRefs.current.length; index += 1) {
       const wheel = wheelSpinRefs.current[index];
       if (!wheel) {
@@ -786,10 +788,10 @@ function CarModel({
             <meshStandardMaterial color="#111827" metalness={0.4} roughness={0.55} />
           </mesh>
           {[
-            { x: -1.1, y: -0.06, z: 0.75, steer: true },
-            { x: 1.08, y: -0.06, z: 0.75, steer: false },
-            { x: -1.1, y: -0.06, z: -0.75, steer: true },
-            { x: 1.08, y: -0.06, z: -0.75, steer: false },
+            { x: -1.1, y: WHEEL_CENTER_Y, z: 0.75, steer: true },
+            { x: 1.08, y: WHEEL_CENTER_Y, z: 0.75, steer: false },
+            { x: -1.1, y: WHEEL_CENTER_Y, z: -0.75, steer: true },
+            { x: 1.08, y: WHEEL_CENTER_Y, z: -0.75, steer: false },
           ].map((position, index) => {
             const frontSteerIndex = index === 0 ? 0 : index === 2 ? 1 : -1;
             return (
