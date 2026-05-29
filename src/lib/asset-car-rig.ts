@@ -1,9 +1,6 @@
 import * as THREE from "three";
 import { resolveMarketRigProfile, type MarketRigProfile } from "@/lib/market-rig-profiles";
-import {
-  createSyntheticGroundWheels,
-  hideMisplacedTemplateWheels,
-} from "@/lib/asset-showroom-wheels";
+import { hideMisplacedTemplateWheels } from "@/lib/asset-showroom-wheels";
 
 export const ASSET_DOOR_MAX_OPEN_RADIANS = (70 * Math.PI) / 180;
 export const ASSET_TRUNK_MAX_OPEN_RADIANS = (75 * Math.PI) / 180;
@@ -42,11 +39,13 @@ export type AssetCarRig = {
   paintMaterials: ShowroomMaterial[];
   tailLightMaterials: ShowroomMaterial[];
   hazardMaterials: ShowroomMaterial[];
-  /** Spin pivots centered on each accepted wheel (rotated about the axle). */
+  /**
+   * Real GLB wheel nodes that spin in place about their own axle.
+   * No helper/pivot nodes are added — each node carries `userData.showroomWheel`
+   * spin metadata and is rotated via {@link applyWheelMotion}.
+   */
   frontWheels: THREE.Object3D[];
   rearWheels: THREE.Object3D[];
-  /** Steering pivots wrapping the front spin pivots (rotated about vertical Y). */
-  frontSteerPivots: THREE.Object3D[];
   /** Human-readable summary for UI / debugging. */
   capabilities: {
     leftDoor: boolean;
@@ -422,18 +421,6 @@ function createTrunkPivot(root: THREE.Object3D, meshes: THREE.Mesh[]) {
   return pivot;
 }
 
-function detectSpinAxis(mesh: THREE.Mesh): ShowroomSpinAxis {
-  const size = new THREE.Vector3();
-  new THREE.Box3().setFromObject(mesh).getSize(size);
-  if (size.x <= size.y && size.x <= size.z) {
-    return "x";
-  }
-  if (size.z <= size.x && size.z <= size.y) {
-    return "z";
-  }
-  return "y";
-}
-
 /** Names that contain "wheel" but are not road wheels (spare, steering, trim). */
 function isWheelMeshName(name: string) {
   if (
@@ -449,169 +436,188 @@ function isWheelMeshName(name: string) {
   return /(wheel|tire|tyre|rim)/i.test(name);
 }
 
-function resolveWheelNode(child: THREE.Object3D, root: THREE.Object3D) {
-  const mesh = child as THREE.Mesh;
-  if (!mesh.isMesh) {
-    return child;
-  }
+/** Per-wheel spin metadata stored on the real GLB node (no helper nodes added). */
+type WheelSpinData = {
+  /** Original local matrix of the node (relative to its glTF parent). */
+  base: THREE.Matrix4;
+  /** Axle center, expressed in the node's parent space. */
+  pivot: THREE.Vector3;
+  /** Unit axle direction (roll axis), in the node's parent space. */
+  spinAxis: THREE.Vector3;
+  /** Unit steering direction (vertical), in the node's parent space (front only). */
+  steerAxis: THREE.Vector3 | null;
+};
 
-  let node: THREE.Object3D = child;
-  const parent = child.parent;
-  if (
-    parent &&
-    parent !== root &&
-    /(DEF-Wheel|Q3_Tyre|left_wheel|right_wheel)/i.test(parent.name)
-  ) {
-    const parentBox = new THREE.Box3().setFromObject(parent);
-    const parentCenter = parentBox.getCenter(new THREE.Vector3());
-    const meshBox = new THREE.Box3().setFromObject(child);
-    const meshCenter = meshBox.getCenter(new THREE.Vector3());
-    if (parentCenter.distanceTo(meshCenter) > 0.02) {
-      node = parent;
+/** A candidate wheel made of one or more real GLB nodes sharing a single axle. */
+type WheelUnit = {
+  nodes: THREE.Object3D[];
+  center: THREE.Vector3;
+  size: THREE.Vector3;
+};
+
+/**
+ * Collect real wheel "units" from the GLB.
+ * - With a profile `wheel` pattern, each matching node is taken as a whole wheel
+ *   (e.g. BMW `3DWheel Front L`) — no climbing, so the 4 corners stay separate.
+ * - Otherwise individual wheel meshes are clustered per corner.
+ */
+function collectWheelUnits(
+  root: THREE.Object3D,
+  carSize: THREE.Vector3,
+  profile: MarketRigProfile | null,
+): WheelUnit[] {
+  const units: WheelUnit[] = [];
+
+  if (profile?.wheel?.length) {
+    const seen = new Set<string>();
+    root.traverse((child) => {
+      if (!matchesAny(child.name, profile.wheel) || seen.has(child.uuid)) {
+        return;
+      }
+      seen.add(child.uuid);
+      const box = new THREE.Box3().setFromObject(child);
+      if (box.isEmpty()) {
+        return;
+      }
+      units.push({
+        nodes: [child],
+        center: box.getCenter(new THREE.Vector3()),
+        size: box.getSize(new THREE.Vector3()),
+      });
+    });
+    if (units.length > 0) {
+      return units;
     }
   }
 
-  return node;
+  type Cluster = { nodes: THREE.Object3D[]; box: THREE.Box3 };
+  const clusters: Cluster[] = [];
+  const tolerance = Math.max(carSize.x, carSize.z) * 0.12;
+  root.traverse((child) => {
+    if (!(child as THREE.Mesh).isMesh || !isWheelMeshName(hierarchicalName(child))) {
+      return;
+    }
+    const box = new THREE.Box3().setFromObject(child);
+    if (box.isEmpty()) {
+      return;
+    }
+    const center = box.getCenter(new THREE.Vector3());
+    const existing = clusters.find(
+      (cluster) => cluster.box.getCenter(new THREE.Vector3()).distanceTo(center) <= tolerance,
+    );
+    if (existing) {
+      existing.nodes.push(child);
+      existing.box.union(box);
+    } else {
+      clusters.push({ nodes: [child], box });
+    }
+  });
+  for (const cluster of clusters) {
+    units.push({
+      nodes: cluster.nodes,
+      center: cluster.box.getCenter(new THREE.Vector3()),
+      size: cluster.box.getSize(new THREE.Vector3()),
+    });
+  }
+  return units;
 }
 
-function isNearGroundWheel(center: THREE.Vector3, bounds: THREE.Box3, carSize: THREE.Vector3) {
-  return center.y <= bounds.min.y + carSize.y * 0.26;
+/**
+ * Record how a real wheel node should rotate about its axle without reparenting.
+ * Pivot and axes are converted into the node's parent space so the rotation stays
+ * correct while the car body bobs / pitches above it.
+ */
+function setupWheelSpin(
+  node: THREE.Object3D,
+  worldCenter: THREE.Vector3,
+  worldAxis: THREE.Vector3,
+  isFront: boolean,
+): boolean {
+  const parent = node.parent;
+  if (!parent) {
+    return false;
+  }
+  node.updateWorldMatrix(true, false);
+  const parentInverse = parent.matrixWorld.clone().invert();
+  const pivot = worldCenter.clone().applyMatrix4(parentInverse);
+  const spinAxis = worldCenter
+    .clone()
+    .add(worldAxis)
+    .applyMatrix4(parentInverse)
+    .sub(pivot)
+    .normalize();
+  const steerAxis = isFront
+    ? worldCenter
+        .clone()
+        .add(new THREE.Vector3(0, 1, 0))
+        .applyMatrix4(parentInverse)
+        .sub(pivot)
+        .normalize()
+    : null;
+  node.userData.showroomWheel = {
+    base: node.matrix.clone(),
+    pivot,
+    spinAxis,
+    steerAxis,
+  } satisfies WheelSpinData;
+  return true;
 }
 
-/** Rear tailgate / roof-mounted spare rigs (e.g. Brabus G900 spare cluster). */
-function isTailgateMountedWheel(
-  center: THREE.Vector3,
-  bounds: THREE.Box3,
-  carSize: THREE.Vector3,
-  carCenter: THREE.Vector3,
-) {
-  const highMount = center.y > bounds.min.y + carSize.y * 0.32;
-  const rearMount = center.x > carCenter.x + carSize.x * 0.1;
-  return highMount && rearMount;
-}
-
-function clusterHasSparePart(nodes: THREE.Object3D[]) {
-  return nodes.some((node) => /spare/i.test(hierarchicalName(node)));
-}
-
-type WheelCandidate = {
-  node: THREE.Object3D;
-  center: THREE.Vector3;
-  size: THREE.Vector3;
-};
-
-type WheelCluster = {
-  center: THREE.Vector3;
-  size: THREE.Vector3;
-  nodes: THREE.Object3D[];
-};
-
+/** Find the real ground wheels and tag them for in-place rotation. */
 function findWheelNodes(root: THREE.Object3D, profile: MarketRigProfile | null) {
   const frontWheels: THREE.Object3D[] = [];
   const rearWheels: THREE.Object3D[] = [];
-  const frontSteerPivots: THREE.Object3D[] = [];
 
   const bounds = new THREE.Box3().setFromObject(root);
   const carCenter = bounds.getCenter(new THREE.Vector3());
   const carSize = bounds.getSize(new THREE.Vector3());
 
-  const seen = new Set<string>();
-  const candidates: WheelCandidate[] = [];
-  root.traverse((child) => {
-    const name = hierarchicalName(child);
-    const isWheel =
-      matchesAny(name, profile?.wheel) || isWheelMeshName(name);
-    if (!isWheel) {
-      return;
-    }
+  const units = collectWheelUnits(root, carSize, profile);
 
-    const node = resolveWheelNode(child, root);
-    if (seen.has(node.uuid)) {
-      return;
-    }
-    seen.add(node.uuid);
-
-    const box = new THREE.Box3().setFromObject(node);
-    const center = box.getCenter(new THREE.Vector3());
-    const size = box.getSize(new THREE.Vector3());
-    candidates.push({ node, center, size });
-  });
-
-  const clusters: WheelCluster[] = [];
-  const clusterTolerance = Math.max(carSize.x, carSize.z) * 0.12;
-  for (const cand of candidates) {
-    const existing = clusters.find((cluster) => cluster.center.distanceTo(cand.center) <= clusterTolerance);
-    if (existing) {
-      existing.nodes.push(cand.node);
-      existing.center.lerp(cand.center, 0.5);
-      existing.size.max(cand.size);
-    } else {
-      clusters.push({ center: cand.center.clone(), size: cand.size.clone(), nodes: [cand.node] });
-    }
-  }
-
-  const buildPivot = (cluster: WheelCluster) => {
-    const spinPivot = new THREE.Group();
-    spinPivot.position.copy(cluster.center);
-    root.add(spinPivot);
-    for (const node of cluster.nodes) {
-      spinPivot.attach(node);
-    }
-    spinPivot.userData.showroomSpinAxis = detectSpinAxis(spinPivot as unknown as THREE.Mesh);
-    return spinPivot;
-  };
-
-  const accepted: WheelCluster[] = [];
-  for (const cluster of clusters) {
-    if (clusterHasSparePart(cluster.nodes)) {
+  // Keep at most one wheel per corner (FL / FR / RL / RR).
+  const quadrantBest = new Map<string, WheelUnit>();
+  for (const unit of units) {
+    if (unit.nodes.some((node) => /spare/i.test(hierarchicalName(node)))) {
       continue;
     }
-    if (!isNearGroundWheel(cluster.center, bounds, carSize)) {
+    // Road wheels sit on the floor, never at the body center, and never span the car.
+    if (unit.center.y > bounds.min.y + carSize.y * 0.32) {
       continue;
     }
-    if (isTailgateMountedWheel(cluster.center, bounds, carSize, carCenter)) {
+    if (unit.size.x > carSize.x * 0.5 || unit.size.z > carSize.z * 0.6) {
+      continue;
+    }
+    if (
+      Math.abs(unit.center.x - carCenter.x) < carSize.x * 0.12 &&
+      Math.abs(unit.center.z - carCenter.z) < carSize.z * 0.12
+    ) {
       continue;
     }
 
-    const merged = cluster.size.x > carSize.x * 0.45 || cluster.size.z > carSize.z * 0.6;
-    const atCenter =
-      Math.abs(cluster.center.x - carCenter.x) < carSize.x * 0.12 &&
-      Math.abs(cluster.center.z - carCenter.z) < carSize.z * 0.12;
-    if (merged || atCenter) {
-      continue;
-    }
-
-    accepted.push(cluster);
-  }
-
-  // At most one spin pivot per corner (FL / FR / RL / RR).
-  const quadrantBest = new Map<string, WheelCluster>();
-  for (const cluster of accepted) {
-    const front = cluster.center.x < carCenter.x;
-    const left = cluster.center.z > carCenter.z;
+    const front = unit.center.x < carCenter.x;
+    const left = unit.center.z > carCenter.z;
     const key = `${front ? "F" : "R"}${left ? "L" : "R"}`;
     const prev = quadrantBest.get(key);
-    if (!prev || cluster.center.y < prev.center.y) {
-      quadrantBest.set(key, cluster);
+    if (!prev || unit.center.y < prev.center.y) {
+      quadrantBest.set(key, unit);
     }
   }
 
-  for (const cluster of quadrantBest.values()) {
-    const spinPivot = buildPivot(cluster);
-    const isFront = cluster.center.x < carCenter.x;
-    if (isFront) {
-      const steerPivot = new THREE.Group();
-      steerPivot.position.copy(cluster.center);
-      root.add(steerPivot);
-      steerPivot.attach(spinPivot);
-      frontSteerPivots.push(steerPivot);
-      frontWheels.push(spinPivot);
-    } else {
-      rearWheels.push(spinPivot);
+  for (const [key, unit] of quadrantBest) {
+    const isFront = key.startsWith("F");
+    // Axle is the thinner horizontal axis (lateral Z after normalize, fallback X).
+    const worldAxis =
+      unit.size.z <= unit.size.x
+        ? new THREE.Vector3(0, 0, 1)
+        : new THREE.Vector3(1, 0, 0);
+    for (const node of unit.nodes) {
+      if (setupWheelSpin(node, unit.center, worldAxis, isFront)) {
+        (isFront ? frontWheels : rearWheels).push(node);
+      }
     }
   }
 
-  return { frontWheels, rearWheels, frontSteerPivots };
+  return { frontWheels, rearWheels };
 }
 
 export function discoverAssetCarRig(root: THREE.Object3D, modelUrl?: string): AssetCarRig {
@@ -783,22 +789,13 @@ export function discoverAssetCarRig(root: THREE.Object3D, modelUrl?: string): As
 
   let frontWheels: THREE.Object3D[] = [];
   let rearWheels: THREE.Object3D[] = [];
-  let frontSteerPivots: THREE.Object3D[] = [];
-  let wheelsSynthetic = false;
 
+  // Only ever spin the GLB's own wheel meshes — never inject synthetic rollers.
   if (!profile?.bakedWheels) {
     hideMisplacedTemplateWheels(root, bounds);
     const realWheels = findWheelNodes(root, profile);
     frontWheels = realWheels.frontWheels;
     rearWheels = realWheels.rearWheels;
-    frontSteerPivots = realWheels.frontSteerPivots;
-    if (frontWheels.length + rearWheels.length < 2) {
-      const synthetic = createSyntheticGroundWheels(root, bounds);
-      frontWheels = synthetic.frontWheels;
-      rearWheels = synthetic.rearWheels;
-      frontSteerPivots = synthetic.frontSteerPivots;
-      wheelsSynthetic = synthetic.synthetic;
-    }
   }
 
   if (hazardMaterials.length === 0 && tailLightMaterials.length > 0) {
@@ -818,7 +815,6 @@ export function discoverAssetCarRig(root: THREE.Object3D, modelUrl?: string): As
     hazardMaterials,
     frontWheels,
     rearWheels,
-    frontSteerPivots,
     capabilities: {
       leftDoor: Boolean(leftDoorPivot),
       rightDoor: Boolean(rightDoorPivot),
@@ -827,19 +823,45 @@ export function discoverAssetCarRig(root: THREE.Object3D, modelUrl?: string): As
       headLights: headLightMaterials.length > 0,
       tailLights: tailLightMaterials.length > 0,
       wheels: frontWheels.length + rearWheels.length > 0,
-      wheelsSynthetic,
+      wheelsSynthetic: false,
     },
   };
 }
 
-export function applyWheelSpin(
-  spinner: THREE.Object3D,
-  axis: ShowroomSpinAxis,
-  angle: number,
+const WHEEL_MATRIX = new THREE.Matrix4();
+const WHEEL_ROTATION = new THREE.Matrix4();
+const WHEEL_TRANSLATION = new THREE.Matrix4();
+
+/**
+ * Roll (and optionally steer) a real GLB wheel node about its own axle, in place.
+ * Rotation is rebuilt from the node's recorded base matrix each frame, so no extra
+ * pivot/helper nodes are introduced into the scene graph.
+ */
+export function applyWheelMotion(
+  node: THREE.Object3D,
+  spinAngle: number,
+  steerAngle: number,
 ) {
-  spinner.rotation.x = axis === "x" ? angle : 0;
-  spinner.rotation.y = axis === "y" ? angle : 0;
-  spinner.rotation.z = axis === "z" ? angle : 0;
+  const data = node.userData.showroomWheel as
+    | {
+        base: THREE.Matrix4;
+        pivot: THREE.Vector3;
+        spinAxis: THREE.Vector3;
+        steerAxis: THREE.Vector3 | null;
+      }
+    | undefined;
+  if (!data) {
+    return;
+  }
+  const { base, pivot, spinAxis, steerAxis } = data;
+  WHEEL_MATRIX.makeTranslation(pivot.x, pivot.y, pivot.z);
+  if (steerAxis && steerAngle !== 0) {
+    WHEEL_MATRIX.multiply(WHEEL_ROTATION.makeRotationAxis(steerAxis, steerAngle));
+  }
+  WHEEL_MATRIX.multiply(WHEEL_ROTATION.makeRotationAxis(spinAxis, spinAngle));
+  WHEEL_MATRIX.multiply(WHEEL_TRANSLATION.makeTranslation(-pivot.x, -pivot.y, -pivot.z));
+  WHEEL_MATRIX.multiply(base);
+  WHEEL_MATRIX.decompose(node.position, node.quaternion, node.scale);
 }
 
 /** Boost each lamp material using its own GLB emissive / diffuse — no external tint. */

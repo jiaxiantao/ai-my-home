@@ -31,7 +31,9 @@ const bmwM2Profile: MarketRigProfile = {
   tailLightMaterial: [/red_glass/i, /LightEmissiveA/i],
   hazardLightMaterial: [/red_glass/i, /LightEmissiveA/i],
   paintMaterial: [/Paint_Material/i],
-  bakedWheels: true,
+  // Four separable wheel group nodes ("3DWheel Front L/R", "3DWheel Rear L/R")
+  // — each is spun in place about its own axle when the engine starts.
+  wheel: [/3DWheel (Front|Rear) [LR]/i],
 };
 
 /** Audi Q3–style Sketchfab SUV (`suv-mainstream.glb`). */

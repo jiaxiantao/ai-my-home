@@ -8,7 +8,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import {
   ASSET_DOOR_MAX_OPEN_RADIANS,
   ASSET_TRUNK_MAX_OPEN_RADIANS,
-  applyWheelSpin,
+  applyWheelMotion,
   boostShowroomMaterialEmissive,
   discoverAssetCarRig,
   SHOWROOM_HEADLAMP_INTENSITY,
@@ -523,13 +523,15 @@ function AssetModel({
   const rootRef = useRef<THREE.Group>(null);
   const paintMaterialRefs = useRef<THREE.Material[]>([]);
   const allColorMaterialRefs = useRef<THREE.Material[]>([]);
-  const wheelSpinAnglesRef = useRef<number[]>([]);
+  const wheelSpinAngleRef = useRef(0);
+  const wheelSteerAngleRef = useRef(0);
   const velocityRef = useRef(0);
   const lastVelocityRef = useRef(0);
   const sunroofBaseYRef = useRef<Map<string, number>>(new Map());
 
   useEffect(() => {
-    wheelSpinAnglesRef.current = [];
+    wheelSpinAngleRef.current = 0;
+    wheelSteerAngleRef.current = 0;
     sunroofBaseYRef.current.clear();
     for (const node of rig.sunroofNodes) {
       sunroofBaseYRef.current.set(node.uuid, node.position.y);
@@ -691,20 +693,25 @@ function AssetModel({
       brakeFactor,
       delta,
     );
+    // Roll all four real wheels forward together while the engine is running.
     const angularSpeed = velocityRef.current / WHEEL_RADIUS;
-    const spinPivots = [...rig.frontWheels, ...rig.rearWheels];
-    for (let index = 0; index < spinPivots.length; index += 1) {
-      const spinPivot = spinPivots[index];
-      const spinAxis =
-        (spinPivot.userData.showroomSpinAxis as "x" | "y" | "z" | undefined) ?? "z";
-      const nextSpin = (wheelSpinAnglesRef.current[index] ?? 0) + delta * angularSpeed;
-      wheelSpinAnglesRef.current[index] = nextSpin;
-      applyWheelSpin(spinPivot, spinAxis, nextSpin);
-    }
+    wheelSpinAngleRef.current += delta * angularSpeed;
+    const spinAngle = wheelSpinAngleRef.current;
 
     const steerInput = THREE.MathUtils.clamp(state.steeringAngle, -42, 42) * (Math.PI / 180);
-    for (const steerPivot of rig.frontSteerPivots) {
-      steerPivot.rotation.y = THREE.MathUtils.damp(steerPivot.rotation.y, steerInput, 6, delta);
+    wheelSteerAngleRef.current = THREE.MathUtils.damp(
+      wheelSteerAngleRef.current,
+      steerInput,
+      6,
+      delta,
+    );
+    const steerAngle = wheelSteerAngleRef.current;
+
+    for (const wheel of rig.rearWheels) {
+      applyWheelMotion(wheel, spinAngle, 0);
+    }
+    for (const wheel of rig.frontWheels) {
+      applyWheelMotion(wheel, spinAngle, steerAngle);
     }
 
     if (rootRef.current) {
