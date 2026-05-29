@@ -13,62 +13,117 @@ type OrbitControlsLike = {
 
 const WHEEL_RADIUS = 0.27;
 const WHEEL_WIDTH = 0.22;
+const WHEEL_SPOKE_COUNT = 10;
 
-function createWheelRimTexture() {
-  const size = 256;
-  const canvas = document.createElement("canvas");
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    return new THREE.Texture();
-  }
+function GeometricWheel({
+  spinGroupRef,
+}: {
+  spinGroupRef: (node: THREE.Group | null) => void;
+}) {
+  const tireMaterial = useMemo(
+    () => new THREE.MeshStandardMaterial({ color: "#1a1f2e", roughness: 0.92, metalness: 0.05 }),
+    [],
+  );
+  const spokeSilverMaterial = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: "#e8edf5",
+        metalness: 0.62,
+        roughness: 0.28,
+      }),
+    [],
+  );
+  const spokeDarkMaterial = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: "#111827",
+        metalness: 0.35,
+        roughness: 0.45,
+      }),
+    [],
+  );
+  const hubMaterial = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: "#94a3b8",
+        metalness: 0.75,
+        roughness: 0.22,
+      }),
+    [],
+  );
+  const rimRingMaterial = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: "#cbd5e1",
+        metalness: 0.65,
+        roughness: 0.25,
+      }),
+    [],
+  );
+  const spokeIndices = useMemo(
+    () => Array.from({ length: WHEEL_SPOKE_COUNT }, (_, index) => index),
+    [],
+  );
 
-  const center = size / 2;
-  const segments = 20;
-  for (let index = 0; index < segments; index += 1) {
-    const start = (index / segments) * Math.PI * 2;
-    const end = ((index + 1) / segments) * Math.PI * 2;
-    ctx.fillStyle = index % 2 === 0 ? "#0f172a" : "#e2e8f0";
-    ctx.beginPath();
-    ctx.moveTo(center, center);
-    ctx.arc(center, center, center, start, end);
-    ctx.closePath();
-    ctx.fill();
-  }
+  return (
+    <group ref={spinGroupRef}>
+      <mesh castShadow receiveShadow material={tireMaterial}>
+        <cylinderGeometry args={[WHEEL_RADIUS, WHEEL_RADIUS, WHEEL_WIDTH, 32]} />
+      </mesh>
 
-  ctx.fillStyle = "#94a3b8";
-  ctx.beginPath();
-  ctx.arc(center, center, size * 0.11, 0, Math.PI * 2);
-  ctx.fill();
+      {spokeIndices.map((spokeIndex) => {
+        const angle = (spokeIndex / WHEEL_SPOKE_COUNT) * Math.PI * 2;
+        return (
+          <mesh
+            key={`sidewall-${spokeIndex}`}
+            position={[
+              Math.cos(angle) * (WHEEL_RADIUS + 0.014),
+              0,
+              Math.sin(angle) * (WHEEL_RADIUS + 0.014),
+            ]}
+            rotation={[0, -angle, 0]}
+            castShadow
+          >
+            <boxGeometry args={[0.045, WHEEL_WIDTH * 0.88, 0.09]} />
+            <meshStandardMaterial
+              color={spokeIndex % 2 === 0 ? "#e2e8f0" : "#334155"}
+              metalness={0.45}
+              roughness={0.38}
+            />
+          </mesh>
+        );
+      })}
 
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = 8;
-  return texture;
-}
-
-function createTireTreadTexture() {
-  const canvas = document.createElement("canvas");
-  canvas.width = 64;
-  canvas.height = 256;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    return new THREE.Texture();
-  }
-
-  for (let y = 0; y < canvas.height; y += 1) {
-    const stripe = Math.floor(y / 10) % 2 === 0;
-    ctx.fillStyle = stripe ? "#111827" : "#1f2937";
-    ctx.fillRect(0, y, canvas.width, 1);
-  }
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(1, 6);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  return texture;
+      {([1, -1] as const).map((side) => (
+        <group key={side} position={[0, side * (WHEEL_WIDTH / 2 + 0.02), 0]}>
+          <mesh rotation={[side > 0 ? -Math.PI / 2 : Math.PI / 2, 0, 0]} castShadow>
+            <circleGeometry args={[WHEEL_RADIUS * 0.9, 32]} />
+            <meshStandardMaterial color="#0f172a" metalness={0.4} roughness={0.5} side={THREE.DoubleSide} />
+          </mesh>
+          <mesh material={hubMaterial} castShadow>
+            <cylinderGeometry args={[0.05, 0.05, 0.03, 16]} />
+          </mesh>
+          {spokeIndices.map((spokeIndex) => {
+            const angle = (spokeIndex / WHEEL_SPOKE_COUNT) * Math.PI * 2;
+            return (
+              <group key={`${side}-spoke-${spokeIndex}`} rotation={[0, angle, 0]}>
+                <mesh
+                  position={[0.13, 0, 0]}
+                  castShadow
+                  material={spokeIndex % 2 === 0 ? spokeSilverMaterial : spokeDarkMaterial}
+                >
+                  <boxGeometry args={[0.24, 0.032, 0.06]} />
+                </mesh>
+              </group>
+            );
+          })}
+          <mesh rotation={[Math.PI / 2, 0, 0]} material={rimRingMaterial} castShadow>
+            <torusGeometry args={[WHEEL_RADIUS * 0.88, 0.014, 8, 40]} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
 }
 
 export type CarCameraPreset =
@@ -413,36 +468,6 @@ function CarModel({
   const velocityRef = useRef(0);
   const lastVelocityRef = useRef(0);
 
-  const rimTexture = useMemo(() => createWheelRimTexture(), []);
-  const tireTreadTexture = useMemo(() => createTireTreadTexture(), []);
-  const tireMaterial = useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        map: tireTreadTexture,
-        color: "#111827",
-        metalness: 0.08,
-        roughness: 0.9,
-      }),
-    [tireTreadTexture],
-  );
-  const rimMaterial = useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        map: rimTexture,
-        metalness: 0.55,
-        roughness: 0.32,
-      }),
-    [rimTexture],
-  );
-
-  useEffect(() => {
-    return () => {
-      rimTexture.dispose();
-      tireTreadTexture.dispose();
-      tireMaterial.dispose();
-      rimMaterial.dispose();
-    };
-  }, [rimMaterial, rimTexture, tireMaterial, tireTreadTexture]);
   const hiddenHitboxMaterial = useMemo(
     () =>
       new THREE.MeshBasicMaterial({
@@ -779,36 +804,13 @@ function CarModel({
                 position={[position.x, position.y, position.z]}
               >
                 <group rotation={[Math.PI / 2, 0, 0]}>
-                  <group
-                    ref={(node) => {
-                      if (!node) {
-                        return;
+                  <GeometricWheel
+                    spinGroupRef={(node) => {
+                      if (node) {
+                        wheelSpinRefs.current[index] = node;
                       }
-                      wheelSpinRefs.current[index] = node;
                     }}
-                  >
-                    <mesh castShadow receiveShadow material={tireMaterial}>
-                      <cylinderGeometry args={[WHEEL_RADIUS, WHEEL_RADIUS, WHEEL_WIDTH, 32]} />
-                    </mesh>
-                    <mesh
-                      position={[0, WHEEL_WIDTH / 2 + 0.001, 0]}
-                      rotation={[Math.PI / 2, 0, 0]}
-                      castShadow
-                      receiveShadow
-                      material={rimMaterial}
-                    >
-                      <circleGeometry args={[WHEEL_RADIUS * 0.92, 32]} />
-                    </mesh>
-                    <mesh
-                      position={[0, -(WHEEL_WIDTH / 2 + 0.001), 0]}
-                      rotation={[-Math.PI / 2, 0, 0]}
-                      castShadow
-                      receiveShadow
-                      material={rimMaterial}
-                    >
-                      <circleGeometry args={[WHEEL_RADIUS * 0.92, 32]} />
-                    </mesh>
-                  </group>
+                  />
                 </group>
               </group>
             );
