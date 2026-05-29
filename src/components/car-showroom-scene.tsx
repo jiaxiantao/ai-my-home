@@ -15,9 +15,10 @@ const DOOR_MAX_OPEN_RADIANS = (70 * Math.PI) / 180;
 const TRUNK_MAX_OPEN_RADIANS = (75 * Math.PI) / 180;
 const BODY_HALF_LENGTH = 3.2 / 2;
 const TRUNK_LID_DEPTH = 0.16;
-const TRUNK_LID_HALF_DEPTH = TRUNK_LID_DEPTH / 2;
 const TRUNK_HINGE_X = BODY_HALF_LENGTH;
-const TRUNK_HINGE_Y = 0.53;
+const TRUNK_HINGE_Y = 0.57;
+const TRUNK_HINGE_Z = 0.1;
+const TRUNK_LID_OUTWARD_OFFSET = 0.04;
 const TRUNK_LID_HALF_HEIGHT = 0.17;
 
 const WHEEL_RADIUS = 0.27;
@@ -764,17 +765,17 @@ function CarModel({
         </mesh>
       </group>
 
-      <group ref={trunkRef} position={[TRUNK_HINGE_X, TRUNK_HINGE_Y, 0]}>
+      <group ref={trunkRef} position={[TRUNK_HINGE_X, TRUNK_HINGE_Y, TRUNK_HINGE_Z]}>
         <mesh
           castShadow
           receiveShadow
-          position={[TRUNK_LID_HALF_DEPTH, -TRUNK_LID_HALF_HEIGHT, 0]}
+          position={[TRUNK_LID_OUTWARD_OFFSET, -TRUNK_LID_HALF_HEIGHT, 0]}
           onClick={(event) => {
             event.stopPropagation();
             onToggleTrunk();
           }}
         >
-          <boxGeometry args={[0.16, 0.34, 1.46]} />
+          <boxGeometry args={[TRUNK_LID_DEPTH, 0.34, 1.46]} />
           {overlayOnly ? (
             <primitive object={hiddenHitboxMaterial} attach="material" />
           ) : (
