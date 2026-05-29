@@ -69,6 +69,7 @@ const HOOD_LENGTH = BODY_HALF_LENGTH - CABIN_FRONT_X - 0.08;
 const HOOD_CENTER_X = -BODY_HALF_LENGTH + HOOD_LENGTH / 2 + 0.02;
 const HOOD_HEIGHT = 0.1;
 const HOOD_Y = CHASSIS_HALF_HEIGHT - HOOD_HEIGHT / 2 + 0.02;
+const SEAT_BACK_TILT = -0.28;
 const STEERING_COLUMN_X = CABIN_CENTER_X - 0.78;
 const STEERING_COLUMN_Y = INTERIOR_SEAT_Y + 0.24;
 const STEERING_COLUMN_Z = 0.34;
@@ -221,7 +222,7 @@ function GeometricSeat({
         castShadow
         receiveShadow
         position={[0.19, 0.24, 0]}
-        rotation={[0, 0, -0.28]}
+        rotation={[0, 0, SEAT_BACK_TILT]}
         material={backMaterial}
       >
         <boxGeometry args={[0.08, 0.32, 0.38]} />
@@ -838,8 +839,8 @@ function CarModel({
     }
 
     if (steeringRef.current) {
-      steeringRef.current.rotation.x = THREE.MathUtils.damp(
-        steeringRef.current.rotation.x,
+      steeringRef.current.rotation.y = THREE.MathUtils.damp(
+        steeringRef.current.rotation.y,
         steerInput,
         8,
         delta,
@@ -1058,7 +1059,7 @@ function CarModel({
           <mesh
             ref={steeringRef}
             position={[STEERING_COLUMN_X, STEERING_COLUMN_Y, STEERING_COLUMN_Z]}
-            rotation={[0, Math.PI / 2, 0]}
+            rotation={[Math.PI / 2, 0, SEAT_BACK_TILT]}
             castShadow
           >
             <torusGeometry args={[0.12, 0.026, 16, 36]} />
