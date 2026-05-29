@@ -11,6 +11,66 @@ type OrbitControlsLike = {
   update: () => void;
 };
 
+const WHEEL_RADIUS = 0.27;
+const WHEEL_WIDTH = 0.22;
+
+function createWheelRimTexture() {
+  const size = 256;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    return new THREE.Texture();
+  }
+
+  const center = size / 2;
+  const segments = 20;
+  for (let index = 0; index < segments; index += 1) {
+    const start = (index / segments) * Math.PI * 2;
+    const end = ((index + 1) / segments) * Math.PI * 2;
+    ctx.fillStyle = index % 2 === 0 ? "#0f172a" : "#e2e8f0";
+    ctx.beginPath();
+    ctx.moveTo(center, center);
+    ctx.arc(center, center, center, start, end);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  ctx.fillStyle = "#94a3b8";
+  ctx.beginPath();
+  ctx.arc(center, center, size * 0.11, 0, Math.PI * 2);
+  ctx.fill();
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 8;
+  return texture;
+}
+
+function createTireTreadTexture() {
+  const canvas = document.createElement("canvas");
+  canvas.width = 64;
+  canvas.height = 256;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    return new THREE.Texture();
+  }
+
+  for (let y = 0; y < canvas.height; y += 1) {
+    const stripe = Math.floor(y / 10) % 2 === 0;
+    ctx.fillStyle = stripe ? "#111827" : "#1f2937";
+    ctx.fillRect(0, y, canvas.width, 1);
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(1, 6);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
 export type CarCameraPreset =
   | "overview"
   | "front"
@@ -348,20 +408,41 @@ function CarModel({
   const exhaustLeftRef = useRef<THREE.Mesh>(null);
   const exhaustRightRef = useRef<THREE.Mesh>(null);
   const frontSteerRefs = useRef<THREE.Group[]>([]);
-  const wheelSpinRefs = useRef<THREE.Mesh[]>([]);
+  const wheelSpinRefs = useRef<THREE.Group[]>([]);
   const wheelSpinAnglesRef = useRef<number[]>([]);
   const velocityRef = useRef(0);
   const lastVelocityRef = useRef(0);
 
-  const wheelMaterial = useMemo(
+  const rimTexture = useMemo(() => createWheelRimTexture(), []);
+  const tireTreadTexture = useMemo(() => createTireTreadTexture(), []);
+  const tireMaterial = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
-        color: "#0f172a",
-        metalness: 0.25,
-        roughness: 0.65,
+        map: tireTreadTexture,
+        color: "#111827",
+        metalness: 0.08,
+        roughness: 0.9,
       }),
-    [],
+    [tireTreadTexture],
   );
+  const rimMaterial = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        map: rimTexture,
+        metalness: 0.55,
+        roughness: 0.32,
+      }),
+    [rimTexture],
+  );
+
+  useEffect(() => {
+    return () => {
+      rimTexture.dispose();
+      tireTreadTexture.dispose();
+      tireMaterial.dispose();
+      rimMaterial.dispose();
+    };
+  }, [rimMaterial, rimTexture, tireMaterial, tireTreadTexture]);
   const hiddenHitboxMaterial = useMemo(
     () =>
       new THREE.MeshBasicMaterial({
@@ -433,9 +514,8 @@ function CarModel({
       delta,
     );
 
-    const wheelRadius = 0.27;
     // Spin around horizontal axle (local Y on wheel mesh inside mount group).
-    const angularSpeed = -velocityRef.current / wheelRadius;
+    const angularSpeed = -velocityRef.current / WHEEL_RADIUS;
     for (let index = 0; index < wheelSpinRefs.current.length; index += 1) {
       const wheel = wheelSpinRefs.current[index];
       if (!wheel) {
@@ -699,19 +779,36 @@ function CarModel({
                 position={[position.x, position.y, position.z]}
               >
                 <group rotation={[Math.PI / 2, 0, 0]}>
-                  <mesh
+                  <group
                     ref={(node) => {
                       if (!node) {
                         return;
                       }
                       wheelSpinRefs.current[index] = node;
                     }}
-                    castShadow
-                    receiveShadow
-                    material={wheelMaterial}
                   >
-                    <cylinderGeometry args={[0.27, 0.27, 0.22, 24]} />
-                  </mesh>
+                    <mesh castShadow receiveShadow material={tireMaterial}>
+                      <cylinderGeometry args={[WHEEL_RADIUS, WHEEL_RADIUS, WHEEL_WIDTH, 32]} />
+                    </mesh>
+                    <mesh
+                      position={[0, WHEEL_WIDTH / 2 + 0.001, 0]}
+                      rotation={[Math.PI / 2, 0, 0]}
+                      castShadow
+                      receiveShadow
+                      material={rimMaterial}
+                    >
+                      <circleGeometry args={[WHEEL_RADIUS * 0.92, 32]} />
+                    </mesh>
+                    <mesh
+                      position={[0, -(WHEEL_WIDTH / 2 + 0.001), 0]}
+                      rotation={[-Math.PI / 2, 0, 0]}
+                      castShadow
+                      receiveShadow
+                      material={rimMaterial}
+                    >
+                      <circleGeometry args={[WHEEL_RADIUS * 0.92, 32]} />
+                    </mesh>
+                  </group>
                 </group>
               </group>
             );
