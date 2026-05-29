@@ -10,7 +10,6 @@ import {
   ASSET_TRUNK_MAX_OPEN_RADIANS,
   applyWheelSpin,
   discoverAssetCarRig,
-  getWheelSpinTarget,
   setMaterialEmissive,
   type AssetCarRig,
 } from "@/lib/asset-car-rig";
@@ -614,20 +613,19 @@ function AssetModel({
       delta,
     );
     const angularSpeed = velocityRef.current / WHEEL_RADIUS;
-    const spinRoots = [...rig.frontWheels, ...rig.rearWheels];
-    for (let index = 0; index < spinRoots.length; index += 1) {
-      const wheelRoot = spinRoots[index];
-      const spinner = getWheelSpinTarget(wheelRoot);
+    const spinPivots = [...rig.frontWheels, ...rig.rearWheels];
+    for (let index = 0; index < spinPivots.length; index += 1) {
+      const spinPivot = spinPivots[index];
       const spinAxis =
-        (wheelRoot.userData.showroomSpinAxis as "x" | "y" | "z" | undefined) ?? "x";
+        (spinPivot.userData.showroomSpinAxis as "x" | "y" | "z" | undefined) ?? "z";
       const nextSpin = (wheelSpinAnglesRef.current[index] ?? 0) + delta * angularSpeed;
       wheelSpinAnglesRef.current[index] = nextSpin;
-      applyWheelSpin(spinner, spinAxis, nextSpin);
+      applyWheelSpin(spinPivot, spinAxis, nextSpin);
     }
 
     const steerInput = THREE.MathUtils.clamp(state.steeringAngle, -42, 42) * (Math.PI / 180);
-    for (const wheelRoot of rig.frontWheels) {
-      wheelRoot.rotation.z = THREE.MathUtils.damp(wheelRoot.rotation.z, steerInput, 6, delta);
+    for (const steerPivot of rig.frontSteerPivots) {
+      steerPivot.rotation.y = THREE.MathUtils.damp(steerPivot.rotation.y, steerInput, 6, delta);
     }
 
     if (rootRef.current) {

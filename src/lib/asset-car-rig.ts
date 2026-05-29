@@ -15,8 +15,11 @@ export type AssetCarRig = {
   headLightMaterials: ShowroomMaterial[];
   tailLightMaterials: ShowroomMaterial[];
   hazardMaterials: ShowroomMaterial[];
+  /** Spin pivots centered on each accepted wheel (rotated about the axle). */
   frontWheels: THREE.Object3D[];
   rearWheels: THREE.Object3D[];
+  /** Steering pivots wrapping the front spin pivots (rotated about vertical Y). */
+  frontSteerPivots: THREE.Object3D[];
   headLightAnchors: THREE.Vector3[];
   tailLightAnchors: THREE.Vector3[];
   /** Human-readable summary for UI / debugging. */
@@ -247,32 +250,35 @@ function detectSpinAxis(mesh: THREE.Mesh): ShowroomSpinAxis {
   return "y";
 }
 
+type WheelCandidate = {
+  node: THREE.Object3D;
+  center: THREE.Vector3;
+  size: THREE.Vector3;
+  axle: ShowroomSpinAxis;
+};
+
 function findWheelNodes(root: THREE.Object3D, profile: MarketRigProfile | null) {
   const frontWheels: THREE.Object3D[] = [];
   const rearWheels: THREE.Object3D[] = [];
-  const seen = new Set<string>();
+  const frontSteerPivots: THREE.Object3D[] = [];
+
   const bounds = new THREE.Box3().setFromObject(root);
-  const center = bounds.getCenter(new THREE.Vector3());
+  const carCenter = bounds.getCenter(new THREE.Vector3());
+  const carSize = bounds.getSize(new THREE.Vector3());
 
-  const register = (node: THREE.Object3D, bucket: THREE.Object3D[]) => {
-    if (seen.has(node.uuid)) {
-      return;
-    }
-    seen.add(node.uuid);
-    node.userData.showroomSpinAxis = detectSpinAxis(node as THREE.Mesh);
-    bucket.push(node);
-  };
-
+  // Collect candidates first; never mutate the graph during traversal.
+  const seen = new Set<string>();
+  const candidates: WheelCandidate[] = [];
   root.traverse((child) => {
     const name = hierarchicalName(child);
     const isWheel =
       matchesAny(name, profile?.wheel) ||
-      (/(wheel|tire|tyre|rim)/i.test(name) && !/(steering|interior|leather|icon)/i.test(name));
+      (/(wheel|tire|tyre|rim)/i.test(name) && !/(steering|interior|leather|icon|arch|fender)/i.test(name));
     if (!isWheel) {
       return;
     }
 
-    const pivot =
+    const node =
       child.name.match(/^DEF-Wheel/i) || /^Q3_Tyre/i.test(child.name)
         ? child
         : child.parent &&
@@ -280,19 +286,68 @@ function findWheelNodes(root: THREE.Object3D, profile: MarketRigProfile | null) 
             child.parent !== root
           ? child.parent
           : child;
-
-    const wheelCenter = new THREE.Vector3();
-    new THREE.Box3().setFromObject(pivot).getCenter(wheelCenter);
-    const isFront = wheelCenter.x < center.x;
-
-    if (isFront) {
-      register(pivot, frontWheels);
-    } else {
-      register(pivot, rearWheels);
+    if (seen.has(node.uuid)) {
+      return;
     }
+    seen.add(node.uuid);
+
+    const box = new THREE.Box3().setFromObject(node);
+    const center = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3());
+    candidates.push({ node, center, size, axle: detectSpinAxis(node as THREE.Mesh) });
   });
 
-  return { frontWheels, rearWheels };
+  // Group co-located component meshes (rim, disc, tyre, ...) into one physical wheel.
+  const clusters: { center: THREE.Vector3; size: THREE.Vector3; nodes: THREE.Object3D[] }[] = [];
+  const clusterTolerance = Math.max(carSize.x, carSize.z) * 0.12;
+  for (const cand of candidates) {
+    const existing = clusters.find((cluster) => cluster.center.distanceTo(cand.center) <= clusterTolerance);
+    if (existing) {
+      existing.nodes.push(cand.node);
+      existing.center.lerp(cand.center, 0.5);
+      existing.size.max(cand.size);
+    } else {
+      clusters.push({ center: cand.center.clone(), size: cand.size.clone(), nodes: [cand.node] });
+    }
+  }
+
+  const buildPivot = (cluster: { center: THREE.Vector3; size: THREE.Vector3; nodes: THREE.Object3D[] }) => {
+    const spinPivot = new THREE.Group();
+    spinPivot.position.copy(cluster.center);
+    root.add(spinPivot);
+    for (const node of cluster.nodes) {
+      spinPivot.attach(node);
+    }
+    spinPivot.userData.showroomSpinAxis = detectSpinAxis(spinPivot as unknown as THREE.Mesh);
+    return spinPivot;
+  };
+
+  for (const cluster of clusters) {
+    // Reject merged multi-wheel meshes that span most of the car footprint.
+    const merged = cluster.size.x > carSize.x * 0.45 || cluster.size.z > carSize.z * 0.6;
+    // Reject template wheels sitting at the body center (not positioned at a corner).
+    const atCenter =
+      Math.abs(cluster.center.x - carCenter.x) < carSize.x * 0.12 &&
+      Math.abs(cluster.center.z - carCenter.z) < carSize.z * 0.12;
+    if (merged || atCenter) {
+      continue;
+    }
+
+    const spinPivot = buildPivot(cluster);
+    const isFront = cluster.center.x < carCenter.x;
+    if (isFront) {
+      const steerPivot = new THREE.Group();
+      steerPivot.position.copy(cluster.center);
+      root.add(steerPivot);
+      steerPivot.attach(spinPivot);
+      frontSteerPivots.push(steerPivot);
+      frontWheels.push(spinPivot);
+    } else {
+      rearWheels.push(spinPivot);
+    }
+  }
+
+  return { frontWheels, rearWheels, frontSteerPivots };
 }
 
 export function discoverAssetCarRig(root: THREE.Object3D, modelUrl?: string): AssetCarRig {
@@ -400,7 +455,7 @@ export function discoverAssetCarRig(root: THREE.Object3D, modelUrl?: string): As
   const rightDoorPivot = createSideDoorPivot(root, rightDoorMeshes, "right");
   const trunkSorted = trunkMeshes.sort((a, b) => getMeshVolume(b) - getMeshVolume(a)).slice(0, 6);
   const trunkPivot = createTrunkPivot(root, trunkSorted);
-  const { frontWheels, rearWheels } = findWheelNodes(root, profile);
+  const { frontWheels, rearWheels, frontSteerPivots } = findWheelNodes(root, profile);
 
   if (hazardMaterials.length === 0 && tailLightMaterials.length > 0) {
     hazardMaterials.push(...tailLightMaterials.slice(0, 6));
@@ -430,6 +485,7 @@ export function discoverAssetCarRig(root: THREE.Object3D, modelUrl?: string): As
     hazardMaterials,
     frontWheels,
     rearWheels,
+    frontSteerPivots,
     headLightAnchors,
     tailLightAnchors,
     capabilities: {
@@ -442,20 +498,6 @@ export function discoverAssetCarRig(root: THREE.Object3D, modelUrl?: string): As
       wheels: frontWheels.length + rearWheels.length > 0,
     },
   };
-}
-
-export function getWheelSpinTarget(wheelRoot: THREE.Object3D) {
-  const tireChild = wheelRoot.children.find((child) => /tire|tyre|wheel/i.test(child.name));
-  if (tireChild) {
-    return tireChild;
-  }
-  let meshChild: THREE.Object3D | null = null;
-  wheelRoot.traverse((child) => {
-    if ((child as THREE.Mesh).isMesh && !meshChild) {
-      meshChild = child;
-    }
-  });
-  return meshChild ?? wheelRoot;
 }
 
 export function applyWheelSpin(
