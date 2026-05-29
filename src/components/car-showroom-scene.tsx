@@ -20,11 +20,18 @@ const TRUNK_HINGE_Y = 0.57;
 const TRUNK_HINGE_Z = 0.1;
 const TRUNK_LID_OUTWARD_OFFSET = 0.04;
 const TRUNK_LID_HALF_HEIGHT = 0.17;
-const TRUNK_REAR_PANEL_TOP_Y = 0.3;
-const TRUNK_REAR_PANEL_HEIGHT = TRUNK_HINGE_Y - TRUNK_REAR_PANEL_TOP_Y;
-const TRUNK_REAR_PANEL_Y = TRUNK_REAR_PANEL_TOP_Y + TRUNK_REAR_PANEL_HEIGHT / 2;
-const TRUNK_DECK_THICKNESS = 0.05;
 const TRUNK_OPENING_WIDTH = 1.46;
+const CABIN_REAR_X = 0.15 + 1.9 / 2;
+const CABIN_TOP_Y = 0.45 + 0.5 / 2;
+const TRUNK_SLOPE_END_X = TRUNK_HINGE_X - 0.04;
+const TRUNK_SLOPE_END_Y = TRUNK_HINGE_Y + 0.01;
+const TRUNK_SLOPE_DX = TRUNK_SLOPE_END_X - CABIN_REAR_X;
+const TRUNK_SLOPE_DY = TRUNK_SLOPE_END_Y - CABIN_TOP_Y;
+const TRUNK_SLOPE_LENGTH = Math.hypot(TRUNK_SLOPE_DX, TRUNK_SLOPE_DY);
+const TRUNK_SLOPE_ANGLE = Math.atan2(TRUNK_SLOPE_DY, TRUNK_SLOPE_DX);
+const TRUNK_SLOPE_CENTER_X = (CABIN_REAR_X + TRUNK_SLOPE_END_X) / 2 + 0.03;
+const TRUNK_SLOPE_CENTER_Y = (CABIN_TOP_Y + TRUNK_SLOPE_END_Y) / 2;
+const TRUNK_SLOPE_THICKNESS = 0.06;
 
 const WHEEL_RADIUS = 0.27;
 const WHEEL_WIDTH = 0.22;
@@ -771,27 +778,18 @@ function CarModel({
       </group>
 
       {!overlayOnly ? (
-        <>
-          <mesh position={[TRUNK_HINGE_X - 0.03, TRUNK_REAR_PANEL_Y, TRUNK_HINGE_Z]} castShadow receiveShadow>
-            <boxGeometry args={[0.08, TRUNK_REAR_PANEL_HEIGHT, TRUNK_OPENING_WIDTH]} />
-            <meshStandardMaterial color="#0369a1" metalness={0.38} roughness={0.36} />
-          </mesh>
-          <mesh
-            position={[
-              TRUNK_HINGE_X + TRUNK_DECK_THICKNESS / 2,
-              TRUNK_HINGE_Y,
-              TRUNK_HINGE_Z,
-            ]}
-            castShadow
-            receiveShadow
-          >
-            <boxGeometry args={[TRUNK_DECK_THICKNESS, 0.06, TRUNK_OPENING_WIDTH + 0.04]} />
-            <meshStandardMaterial color="#0284c7" metalness={0.35} roughness={0.38} />
-          </mesh>
-        </>
+        <mesh
+          position={[TRUNK_SLOPE_CENTER_X, TRUNK_SLOPE_CENTER_Y, TRUNK_HINGE_Z]}
+          rotation={[0, 0, TRUNK_SLOPE_ANGLE]}
+          castShadow
+          receiveShadow
+        >
+          <boxGeometry args={[TRUNK_SLOPE_LENGTH, TRUNK_SLOPE_THICKNESS, TRUNK_OPENING_WIDTH]} />
+          <meshStandardMaterial color="#0369a1" metalness={0.38} roughness={0.36} />
+        </mesh>
       ) : null}
 
-      <group ref={trunkRef} position={[TRUNK_HINGE_X, TRUNK_HINGE_Y, TRUNK_HINGE_Z]}>
+      <group ref={trunkRef} position={[TRUNK_SLOPE_END_X, TRUNK_SLOPE_END_Y, TRUNK_HINGE_Z]}>
         <mesh
           castShadow
           receiveShadow
