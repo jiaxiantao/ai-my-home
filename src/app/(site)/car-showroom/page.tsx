@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 
-import type { CarCameraPreset } from "@/components/car-showroom-scene";
+import type { AssetRigCapabilities, CarCameraPreset } from "@/components/car-showroom-scene";
 import { Button } from "@/components/ui/button";
 
 const marketCategoryOptions = [
@@ -88,6 +88,7 @@ export default function CarShowroomPage() {
   );
   const [speedKph, setSpeedKph] = useState(28);
   const [braking, setBraking] = useState(false);
+  const [assetRigCaps, setAssetRigCaps] = useState<AssetRigCapabilities | null>(null);
 
   useEffect(() => {
     const category = marketCategoryOptions.find((item) => item.key === selectedCategory);
@@ -220,6 +221,7 @@ export default function CarShowroomPage() {
         autoTour={autoTour}
         useAssetModel={useAssetModel}
         modelUrl={selectedModelUrl}
+        onAssetRigCapabilities={setAssetRigCaps}
         onToggleLeftDoor={() => setLeftDoorOpen((value) => !value)}
         onToggleRightDoor={() => setRightDoorOpen((value) => !value)}
         onToggleTrunk={() => setTrunkOpen((value) => !value)}
@@ -250,6 +252,15 @@ export default function CarShowroomPage() {
             `public/models/market/suv-mainstream.glb` / `sedan-mainstream.glb` /
             `offroad-mainstream.glb`，页面会自动优先加载。
           </p>
+          {useAssetModel && assetRigCaps ? (
+            <p className="w-full text-xs text-slate-500">
+              GLB 部件识别：左前门 {assetRigCaps.leftDoor ? "✓" : "—"} · 右前门{" "}
+              {assetRigCaps.rightDoor ? "✓" : "—"} · 后备箱 {assetRigCaps.trunk ? "✓" : "—"} · 车灯{" "}
+              {assetRigCaps.headLights ? "✓" : "—"} · 尾灯 {assetRigCaps.tailLights ? "✓" : "—"} ·
+              天窗 {assetRigCaps.sunroof ? "✓" : "—"} · 车轮 {assetRigCaps.wheels ? "✓" : "—"}
+              {assetRigCaps.leftDoor ? "" : "（未识别到的部件可在 docs/market-glb-rig.md 手动配置）"}
+            </p>
+          ) : null}
         </div>
 
         <div className="flex flex-wrap gap-3">

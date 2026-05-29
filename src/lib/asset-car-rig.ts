@@ -1,7 +1,10 @@
 import * as THREE from "three";
+import { resolveMarketRigProfile, type MarketRigProfile } from "@/lib/market-rig-profiles";
 
 export const ASSET_DOOR_MAX_OPEN_RADIANS = (70 * Math.PI) / 180;
 export const ASSET_TRUNK_MAX_OPEN_RADIANS = (75 * Math.PI) / 180;
+
+export type ShowroomSpinAxis = "x" | "y" | "z";
 
 export type AssetCarRig = {
   bounds: THREE.Box3;
@@ -9,13 +12,23 @@ export type AssetCarRig = {
   rightDoorPivot: THREE.Group | null;
   trunkPivot: THREE.Group | null;
   sunroofNodes: THREE.Object3D[];
-  headLightMaterials: THREE.MeshStandardMaterial[];
-  tailLightMaterials: THREE.MeshStandardMaterial[];
-  hazardMaterials: THREE.MeshStandardMaterial[];
+  headLightMaterials: ShowroomMaterial[];
+  tailLightMaterials: ShowroomMaterial[];
+  hazardMaterials: ShowroomMaterial[];
   frontWheels: THREE.Object3D[];
   rearWheels: THREE.Object3D[];
   headLightAnchors: THREE.Vector3[];
   tailLightAnchors: THREE.Vector3[];
+  /** Human-readable summary for UI / debugging. */
+  capabilities: {
+    leftDoor: boolean;
+    rightDoor: boolean;
+    trunk: boolean;
+    sunroof: boolean;
+    headLights: boolean;
+    tailLights: boolean;
+    wheels: boolean;
+  };
 };
 
 type MeshEntry = {
@@ -24,6 +37,13 @@ type MeshEntry = {
   center: THREE.Vector3;
   volume: number;
 };
+
+type ShowroomMaterial = THREE.MeshStandardMaterial | THREE.MeshPhysicalMaterial;
+
+const DOOR_EXCLUDE =
+  /(tail[_\s-]?lamp|door[_\s-]?int|door_int|interior|boot|lock|carpet|icon|speaker|seat|rubber|clamp|wind|windsh|glass_red|hl_cover|technology|primeam)/i;
+const DOOR_INCLUDE =
+  /(door[_\s-]?black|door[_\s-]?soft|door[_\s-]?rubber|door[_\s-]?plastic|door[_\s-]?noise)/i;
 
 function hierarchicalName(object: THREE.Object3D): string {
   const parts: string[] = [];
@@ -34,112 +54,106 @@ function hierarchicalName(object: THREE.Object3D): string {
     }
     current = current.parent;
   }
-  return parts.join("/").toLowerCase();
+  return parts.join("/");
+}
+
+function matchesAny(name: string, patterns?: RegExp[]) {
+  if (!patterns?.length) {
+    return false;
+  }
+  return patterns.some((pattern) => pattern.test(name));
 }
 
 function getWorldCenter(mesh: THREE.Mesh, target = new THREE.Vector3()) {
-  const box = new THREE.Box3().setFromObject(mesh);
-  return box.getCenter(target);
+  return new THREE.Box3().setFromObject(mesh).getCenter(target);
 }
 
 function getMeshVolume(mesh: THREE.Mesh) {
-  const box = new THREE.Box3().setFromObject(mesh);
   const size = new THREE.Vector3();
-  box.getSize(size);
+  new THREE.Box3().setFromObject(mesh).getSize(size);
   return Math.max(size.x * size.y * size.z, 1e-6);
 }
 
-function ensureStandardMaterial(mesh: THREE.Mesh): THREE.MeshStandardMaterial | null {
+export function ensureShowroomMaterial(mesh: THREE.Mesh): ShowroomMaterial | null {
   const source = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
-  if (!(source instanceof THREE.MeshStandardMaterial)) {
+  if (
+    !(source instanceof THREE.MeshStandardMaterial) &&
+    !(source instanceof THREE.MeshPhysicalMaterial)
+  ) {
     return null;
   }
-  const cached = mesh.userData.showroomMaterial as THREE.MeshStandardMaterial | undefined;
+  const cached = mesh.userData.showroomMaterial as ShowroomMaterial | undefined;
   if (cached) {
     return cached;
   }
   const cloned = source.clone();
-  cloned.userData.showroomBaseEmissive = cloned.emissive.clone();
-  cloned.userData.showroomBaseEmissiveIntensity = cloned.emissiveIntensity;
+  const emissiveBase =
+    source.emissive?.clone() ??
+    (source.color ? source.color.clone().multiplyScalar(0.35) : new THREE.Color(0, 0, 0));
+  cloned.userData.showroomBaseEmissive = emissiveBase;
+  cloned.userData.showroomBaseEmissiveIntensity = source.emissiveIntensity ?? 0;
   mesh.userData.showroomMaterial = cloned;
   mesh.material = cloned;
   return cloned;
 }
 
 function isExcludedPart(name: string) {
-  return /(wheel|tire|rim|brake|caliper|interior|seat|steer|column|camera|helper|gizmo|locator)/i.test(
-    name,
+  return /(camera|helper|gizmo|locator|steer|column)/i.test(name);
+}
+
+function isInteriorLight(name: string) {
+  return /(interior|int_|roof.*lamp|roof.*light|icon|speaker|control_light)/i.test(name);
+}
+
+function isHeadLightPart(name: string, center: THREE.Vector3, frontX: number) {
+  if (isInteriorLight(name)) {
+    return false;
+  }
+  return (
+    /(?:^|[^a-z])hl\d|[^a-z]hl_|head\s*light|headlight|projection[_\s-]?lamp|hl_chrome|hl_cover|hl_inner/i.test(
+      name,
+    ) || (center.x < frontX && /lamp|chrome[_\s-]?light/i.test(name) && !/tail|rear/i.test(name))
   );
 }
 
-function isLightPart(name: string) {
-  return /(head\s*light|headlight|tail\s*light|taillight|rear\s*light|stop\s*light|brake\s*light|indicator|turn|hazard|illum|_led|glass_red|red_illum|plate)/i.test(
-    name,
+function isTailLightPart(name: string, center: THREE.Vector3, rearX: number) {
+  if (isInteriorLight(name)) {
+    return false;
+  }
+  return (
+    /tail[_\s-]?lamp|taillight|tail\s*light|rear\s*light|stop\s*light|brake\s*light|tail_upper|tail_inner|tail_cover/i.test(
+      name,
+    ) ||
+    (/(emiss|red_cover)/i.test(name) && center.x > rearX)
   );
 }
 
-function isGlassPart(name: string) {
-  return /(glass|window|windshield|windscreen)/i.test(name);
+function isHazardPart(name: string) {
+  return /(hazard|indicator|turn|emiss|amber)/i.test(name) && /(tail|lamp|light|rear)/i.test(name);
+}
+
+function isTrunkPart(name: string) {
+  return (
+    /boot[_\s-]?ext/i.test(name) &&
+    !/wind|windsh|int|interior|net|nameboard|clamp/i.test(name)
+  );
+}
+
+function isDoorCandidate(name: string, profile: MarketRigProfile | null) {
+  if (DOOR_EXCLUDE.test(name)) {
+    return false;
+  }
+  if (profile && (matchesAny(name, profile.leftDoor) || matchesAny(name, profile.rightDoor))) {
+    return true;
+  }
+  if (!/door/i.test(name)) {
+    return false;
+  }
+  return DOOR_INCLUDE.test(name) || /door[_\s-]?black|door[_\s-]?soft/i.test(name);
 }
 
 function isSunroofPart(name: string) {
-  return /(sunroof|moon\s*roof|roof\s*glass)/i.test(name);
-}
-
-function findWheelNodes(root: THREE.Object3D) {
-  const frontWheels: THREE.Object3D[] = [];
-  const rearWheels: THREE.Object3D[] = [];
-  const seen = new Set<string>();
-
-  const register = (node: THREE.Object3D, bucket: THREE.Object3D[]) => {
-    if (seen.has(node.uuid)) {
-      return;
-    }
-    seen.add(node.uuid);
-    bucket.push(node);
-  };
-
-  root.traverse((child) => {
-    const name = hierarchicalName(child);
-    if (!/(wheel|tire|rim)/i.test(name) || /(steering|interior|leather)/i.test(name)) {
-      return;
-    }
-
-    const pivot =
-      child.name.match(/^DEF-Wheel/i) || child.name.match(/^wheel\.(Ft|Bk)\.(L|R)/i)
-        ? child
-        : child.parent &&
-            /(wheel|tire)/i.test(child.parent.name) &&
-            child.parent !== root
-          ? child.parent
-          : child;
-
-    if (/(ft\.l|ft\.r|front.*left|front.*right|fl|fr|_fl|_fr)/i.test(name)) {
-      register(pivot, frontWheels);
-      return;
-    }
-    if (/(bk\.l|bk\.r|rear.*left|rear.*right|rl|rr|_rl|_rr|back)/i.test(name)) {
-      register(pivot, rearWheels);
-      return;
-    }
-    if (/left/i.test(name) && /wheel|tire/i.test(name)) {
-      register(pivot, /front|ft|_fl/i.test(name) ? frontWheels : rearWheels);
-      return;
-    }
-    if (/right/i.test(name) && /wheel|tire/i.test(name)) {
-      register(pivot, /front|ft|_fr/i.test(name) ? frontWheels : rearWheels);
-      return;
-    }
-    if (/left_wheel|wheel_left/i.test(name)) {
-      register(pivot, /front|ft|spare/i.test(name) ? rearWheels : frontWheels);
-      return;
-    }
-    if (/right_wheel|wheel_right/i.test(name)) {
-      register(pivot, /front|ft|spare/i.test(name) ? rearWheels : frontWheels);
-    }
-  });
-
-  return { frontWheels, rearWheels };
+  return /(sunroof|moon\s*roof)/i.test(name) || (/roof/i.test(name) && /glass/i.test(name));
 }
 
 function collectMeshes(root: THREE.Object3D) {
@@ -179,8 +193,8 @@ function createSideDoorPivot(
     doorBox.expandByObject(mesh);
   }
 
-  const hingeX = doorBox.min.x;
-  const hingeY = doorBox.min.y + (doorBox.max.y - doorBox.min.y) * 0.32;
+  const hingeX = doorBox.min.x + (doorBox.max.x - doorBox.min.x) * 0.08;
+  const hingeY = doorBox.min.y + (doorBox.max.y - doorBox.min.y) * 0.35;
   const hingeZ = side === "left" ? doorBox.max.z : doorBox.min.z;
   pivot.position.set(hingeX, hingeY, hingeZ);
   root.add(pivot);
@@ -204,7 +218,11 @@ function createTrunkPivot(root: THREE.Object3D, meshes: THREE.Mesh[]) {
     trunkBox.expandByObject(mesh);
   }
 
-  pivot.position.set(trunkBox.max.x, trunkBox.max.y, (trunkBox.min.z + trunkBox.max.z) / 2);
+  pivot.position.set(
+    trunkBox.max.x,
+    trunkBox.min.y + (trunkBox.max.y - trunkBox.min.y) * 0.72,
+    (trunkBox.min.z + trunkBox.max.z) / 2,
+  );
   root.add(pivot);
 
   for (const mesh of meshes) {
@@ -214,7 +232,68 @@ function createTrunkPivot(root: THREE.Object3D, meshes: THREE.Mesh[]) {
   return pivot;
 }
 
-export function discoverAssetCarRig(root: THREE.Object3D): AssetCarRig {
+function detectSpinAxis(mesh: THREE.Mesh): ShowroomSpinAxis {
+  const size = new THREE.Vector3();
+  new THREE.Box3().setFromObject(mesh).getSize(size);
+  if (size.x <= size.y && size.x <= size.z) {
+    return "x";
+  }
+  if (size.z <= size.x && size.z <= size.y) {
+    return "z";
+  }
+  return "y";
+}
+
+function findWheelNodes(root: THREE.Object3D, profile: MarketRigProfile | null) {
+  const frontWheels: THREE.Object3D[] = [];
+  const rearWheels: THREE.Object3D[] = [];
+  const seen = new Set<string>();
+  const bounds = new THREE.Box3().setFromObject(root);
+  const center = bounds.getCenter(new THREE.Vector3());
+
+  const register = (node: THREE.Object3D, bucket: THREE.Object3D[]) => {
+    if (seen.has(node.uuid)) {
+      return;
+    }
+    seen.add(node.uuid);
+    node.userData.showroomSpinAxis = detectSpinAxis(node as THREE.Mesh);
+    bucket.push(node);
+  };
+
+  root.traverse((child) => {
+    const name = hierarchicalName(child);
+    const isWheel =
+      matchesAny(name, profile?.wheel) ||
+      (/(wheel|tire|tyre|rim)/i.test(name) && !/(steering|interior|leather|icon)/i.test(name));
+    if (!isWheel) {
+      return;
+    }
+
+    const pivot =
+      child.name.match(/^DEF-Wheel/i) || /^Q3_Tyre/i.test(child.name)
+        ? child
+        : child.parent &&
+            /(wheel|tire|tyre)/i.test(child.parent.name) &&
+            child.parent !== root
+          ? child.parent
+          : child;
+
+    const wheelCenter = new THREE.Vector3();
+    new THREE.Box3().setFromObject(pivot).getCenter(wheelCenter);
+    const isFront = wheelCenter.x < center.x;
+
+    if (isFront) {
+      register(pivot, frontWheels);
+    } else {
+      register(pivot, rearWheels);
+    }
+  });
+
+  return { frontWheels, rearWheels };
+}
+
+export function discoverAssetCarRig(root: THREE.Object3D, modelUrl?: string): AssetCarRig {
+  const profile = resolveMarketRigProfile(modelUrl);
   const bounds = new THREE.Box3().setFromObject(root);
   const size = new THREE.Vector3();
   const center = new THREE.Vector3();
@@ -222,9 +301,9 @@ export function discoverAssetCarRig(root: THREE.Object3D): AssetCarRig {
   bounds.getCenter(center);
 
   const entries = collectMeshes(root);
-  const headLightMaterials: THREE.MeshStandardMaterial[] = [];
-  const tailLightMaterials: THREE.MeshStandardMaterial[] = [];
-  const hazardMaterials: THREE.MeshStandardMaterial[] = [];
+  const headLightMaterials: ShowroomMaterial[] = [];
+  const tailLightMaterials: ShowroomMaterial[] = [];
+  const hazardMaterials: ShowroomMaterial[] = [];
   const headLightAnchors: THREE.Vector3[] = [];
   const tailLightAnchors: THREE.Vector3[] = [];
   const sunroofNodes: THREE.Object3D[] = [];
@@ -236,89 +315,80 @@ export function discoverAssetCarRig(root: THREE.Object3D): AssetCarRig {
   const width = Math.max(size.z, 0.001);
   const frontX = bounds.min.x + depth * 0.2;
   const rearX = bounds.max.x - depth * 0.2;
+  const frontDoorX = bounds.min.x + depth * 0.58;
+  const leftZ = bounds.min.z + width * 0.32;
+  const rightZ = bounds.max.z - width * 0.32;
 
   for (const entry of entries) {
-    const { mesh, name, center } = entry;
+    const { mesh, name, center: meshCenter } = entry;
+    const nameLower = name.toLowerCase();
 
-    if (isSunroofPart(name)) {
-      sunroofNodes.push(mesh);
+    if (matchesAny(name, profile?.sunroof) || isSunroofPart(nameLower)) {
+      if (!isInteriorLight(nameLower)) {
+        sunroofNodes.push(mesh);
+      }
       continue;
     }
 
-    if (isLightPart(name) || isGlassPart(name)) {
-      const material = ensureStandardMaterial(mesh);
+    if (matchesAny(name, profile?.headLight) || isHeadLightPart(nameLower, meshCenter, frontX)) {
+      const material = ensureShowroomMaterial(mesh);
+      if (material) {
+        headLightMaterials.push(material);
+        headLightAnchors.push(meshCenter.clone());
+      }
+      continue;
+    }
+
+    if (
+      matchesAny(name, profile?.hazardLight) ||
+      isHazardPart(nameLower) ||
+      matchesAny(name, profile?.tailLight) ||
+      isTailLightPart(nameLower, meshCenter, rearX)
+    ) {
+      const material = ensureShowroomMaterial(mesh);
       if (!material) {
         continue;
       }
-
-      const isFront = center.x < frontX || /front|head/i.test(name);
-      const isRear = center.x > rearX || /tail|rear|brake|stop/i.test(name);
-      const anchor = center.clone();
-
-      if (/(hazard|indicator|turn|illum)/i.test(name)) {
+      tailLightMaterials.push(material);
+      tailLightAnchors.push(meshCenter.clone());
+      if (isHazardPart(nameLower) || /emiss|red_cover/i.test(nameLower)) {
         hazardMaterials.push(material);
       }
-
-      if (isFront && !isRear) {
-        headLightMaterials.push(material);
-        headLightAnchors.push(anchor);
-      } else if (isRear) {
-        tailLightMaterials.push(material);
-        tailLightAnchors.push(anchor);
-      } else if (/(red|illum|led)/i.test(name)) {
-        if (center.x > rearX - depth * 0.08) {
-          tailLightMaterials.push(material);
-          tailLightAnchors.push(anchor);
-        }
-      }
       continue;
     }
 
-    const isLeftSide = center.z > bounds.min.z + width * 0.18;
-    const isRightSide = center.z < bounds.max.z - width * 0.18;
-    const isMidBody =
-      center.x > bounds.min.x + depth * 0.12 && center.x < bounds.max.x - depth * 0.12;
-    const isRearBody = center.x > bounds.max.x - depth * 0.2;
-    const isBodyHeight =
-      center.y > bounds.min.y + size.y * 0.2 && center.y < bounds.max.y - size.y * 0.05;
-
-    if (isRearBody && isBodyHeight && /(trunk|tailgate|hatch|boot|gate|rear)/i.test(name)) {
+    if (matchesAny(name, profile?.trunk) || isTrunkPart(nameLower)) {
       trunkMeshes.push(mesh);
       continue;
     }
 
-    if (isMidBody && isBodyHeight && isLeftSide && /door/i.test(name)) {
+    if (!isDoorCandidate(nameLower, profile)) {
+      continue;
+    }
+
+    if (meshCenter.x > frontDoorX) {
+      continue;
+    }
+
+    if (matchesAny(name, profile?.leftDoor) || meshCenter.z > leftZ) {
       leftDoorMeshes.push(mesh);
       continue;
     }
 
-    if (isMidBody && isBodyHeight && isRightSide && /door/i.test(name)) {
+    if (matchesAny(name, profile?.rightDoor) || meshCenter.z < rightZ) {
       rightDoorMeshes.push(mesh);
-      continue;
-    }
-
-    if (isMidBody && isBodyHeight && isLeftSide && !isGlassPart(name)) {
-      leftDoorMeshes.push(mesh);
-      continue;
-    }
-
-    if (isMidBody && isBodyHeight && isRightSide && !isGlassPart(name)) {
-      rightDoorMeshes.push(mesh);
-      continue;
-    }
-
-    if (isRearBody && isBodyHeight && !/(glass|window)/i.test(name)) {
-      trunkMeshes.push(mesh);
     }
   }
 
   const leftDoorPivot = createSideDoorPivot(root, leftDoorMeshes, "left");
   const rightDoorPivot = createSideDoorPivot(root, rightDoorMeshes, "right");
-  const trunkCandidates = trunkMeshes
-    .sort((a, b) => getMeshVolume(b) - getMeshVolume(a))
-    .slice(0, 8);
-  const trunkPivot = createTrunkPivot(root, trunkCandidates);
-  const { frontWheels, rearWheels } = findWheelNodes(root);
+  const trunkSorted = trunkMeshes.sort((a, b) => getMeshVolume(b) - getMeshVolume(a)).slice(0, 6);
+  const trunkPivot = createTrunkPivot(root, trunkSorted);
+  const { frontWheels, rearWheels } = findWheelNodes(root, profile);
+
+  if (hazardMaterials.length === 0 && tailLightMaterials.length > 0) {
+    hazardMaterials.push(...tailLightMaterials.slice(0, 6));
+  }
 
   if (headLightAnchors.length === 0) {
     headLightAnchors.push(
@@ -346,11 +416,20 @@ export function discoverAssetCarRig(root: THREE.Object3D): AssetCarRig {
     rearWheels,
     headLightAnchors,
     tailLightAnchors,
+    capabilities: {
+      leftDoor: Boolean(leftDoorPivot),
+      rightDoor: Boolean(rightDoorPivot),
+      trunk: Boolean(trunkPivot),
+      sunroof: sunroofNodes.length > 0,
+      headLights: headLightMaterials.length > 0,
+      tailLights: tailLightMaterials.length > 0,
+      wheels: frontWheels.length + rearWheels.length > 0,
+    },
   };
 }
 
 export function getWheelSpinTarget(wheelRoot: THREE.Object3D) {
-  const tireChild = wheelRoot.children.find((child) => /tire|wheel/i.test(child.name));
+  const tireChild = wheelRoot.children.find((child) => /tire|tyre|wheel/i.test(child.name));
   if (tireChild) {
     return tireChild;
   }
@@ -363,15 +442,26 @@ export function getWheelSpinTarget(wheelRoot: THREE.Object3D) {
   return meshChild ?? wheelRoot;
 }
 
+export function applyWheelSpin(
+  spinner: THREE.Object3D,
+  axis: ShowroomSpinAxis,
+  angle: number,
+) {
+  spinner.rotation.x = axis === "x" ? angle : 0;
+  spinner.rotation.y = axis === "y" ? angle : 0;
+  spinner.rotation.z = axis === "z" ? angle : 0;
+}
+
 export function setMaterialEmissive(
-  materials: THREE.MeshStandardMaterial[],
+  materials: ShowroomMaterial[],
   color: THREE.Color,
   intensity: number,
   delta: number,
 ) {
   for (const material of materials) {
     const baseColor =
-      (material.userData.showroomBaseEmissive as THREE.Color | undefined) ?? new THREE.Color(0, 0, 0);
+      (material.userData.showroomBaseEmissive as THREE.Color | undefined) ??
+      new THREE.Color(0, 0, 0);
     const baseIntensity =
       (material.userData.showroomBaseEmissiveIntensity as number | undefined) ?? 0;
     const targetColor = intensity > 0.05 ? color : baseColor;
