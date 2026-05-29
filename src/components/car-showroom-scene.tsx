@@ -15,7 +15,7 @@ const WHEEL_RADIUS = 0.27;
 const WHEEL_WIDTH = 0.22;
 const WHEEL_SPOKE_COUNT = 10;
 const SHOWROOM_GROUND_Y = -0.22;
-const BODY_GROUND_CLEARANCE = 0.08;
+const BODY_GROUND_CLEARANCE = 0.09;
 const WHEEL_TOUCH_CLEARANCE = 0.01;
 // Lower mount on the body so raising ride height keeps wheel contact with the floor.
 const WHEEL_MOUNT_Y = -0.06 - BODY_GROUND_CLEARANCE;
