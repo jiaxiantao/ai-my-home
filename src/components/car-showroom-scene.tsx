@@ -125,9 +125,6 @@ function GeometricCabinShell({
       <mesh castShadow receiveShadow position={[0, CABIN_HEIGHT / 2 - CABIN_WALL_THICKNESS / 2, 0]} material={paintMaterial}>
         <boxGeometry args={[CABIN_DEPTH * 0.62, CABIN_WALL_THICKNESS, CABIN_WIDTH - 0.52]} />
       </mesh>
-      <mesh castShadow receiveShadow position={[-0.72, -0.02, 0]} material={interiorMaterial}>
-        <boxGeometry args={[0.1, 0.28 * CABIN_HEIGHT_SCALE, CABIN_WIDTH * 0.82]} />
-      </mesh>
 
       <mesh position={[-CABIN_DEPTH / 2 + 0.03, 0.04 * CABIN_HEIGHT_SCALE, 0]} rotation={[0, 0, -0.28]} material={glassMaterial}>
         <boxGeometry args={[GLASS_THICKNESS, WINDSHIELD_HEIGHT, WINDSHIELD_WIDTH]} />
