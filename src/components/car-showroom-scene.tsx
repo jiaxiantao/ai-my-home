@@ -15,7 +15,9 @@ const WHEEL_RADIUS = 0.27;
 const WHEEL_WIDTH = 0.22;
 const WHEEL_SPOKE_COUNT = 10;
 const SHOWROOM_GROUND_Y = -0.22;
-const WHEEL_CENTER_Y = SHOWROOM_GROUND_Y + WHEEL_RADIUS + 0.01;
+const WHEEL_MOUNT_Y = -0.06;
+// Lift the whole car so wheel bottoms touch the showroom floor.
+const CAR_BASE_Y = SHOWROOM_GROUND_Y + WHEEL_RADIUS - WHEEL_MOUNT_Y + 0.01;
 
 function GeometricWheel({
   spinGroupRef,
@@ -600,12 +602,12 @@ function CarModel({
     }
 
     if (rootRef.current) {
-      const y = state.engineOn ? Math.sin(t * 8) * 0.02 : 0;
+      const engineYOffset = state.engineOn ? Math.sin(t * 8) * 0.02 : 0;
       const acceleration = (velocityRef.current - lastVelocityRef.current) / Math.max(delta, 0.001);
       const pitchTarget = THREE.MathUtils.clamp(-acceleration * 0.015, -0.06, 0.05);
       rootRef.current.position.y = THREE.MathUtils.damp(
         rootRef.current.position.y,
-        y,
+        CAR_BASE_Y + engineYOffset,
         5,
         delta,
       );
@@ -690,7 +692,7 @@ function CarModel({
   });
 
   return (
-    <group ref={rootRef} position={[0, 0.6, 0]}>
+    <group ref={rootRef} position={[0, CAR_BASE_Y, 0]}>
       {!overlayOnly ? (
         <>
           <mesh ref={bodyRef} castShadow receiveShadow>
@@ -788,10 +790,10 @@ function CarModel({
             <meshStandardMaterial color="#111827" metalness={0.4} roughness={0.55} />
           </mesh>
           {[
-            { x: -1.1, y: WHEEL_CENTER_Y, z: 0.75, steer: true },
-            { x: 1.08, y: WHEEL_CENTER_Y, z: 0.75, steer: false },
-            { x: -1.1, y: WHEEL_CENTER_Y, z: -0.75, steer: true },
-            { x: 1.08, y: WHEEL_CENTER_Y, z: -0.75, steer: false },
+            { x: -1.1, y: WHEEL_MOUNT_Y, z: 0.75, steer: true },
+            { x: 1.08, y: WHEEL_MOUNT_Y, z: 0.75, steer: false },
+            { x: -1.1, y: WHEEL_MOUNT_Y, z: -0.75, steer: true },
+            { x: 1.08, y: WHEEL_MOUNT_Y, z: -0.75, steer: false },
           ].map((position, index) => {
             const frontSteerIndex = index === 0 ? 0 : index === 2 ? 1 : -1;
             return (
