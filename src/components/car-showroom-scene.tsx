@@ -151,11 +151,11 @@ function GeometricSeat({
       <mesh
         castShadow
         receiveShadow
-        position={[0.06, 0.24, -0.04]}
-        rotation={[-0.32, 0, 0]}
+        position={[0.19, 0.24, 0]}
+        rotation={[0, 0, -0.28]}
         material={backMaterial}
       >
-        <boxGeometry args={[0.38, 0.32, 0.08]} />
+        <boxGeometry args={[0.08, 0.32, 0.38]} />
       </mesh>
     </group>
   );
