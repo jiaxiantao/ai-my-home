@@ -448,14 +448,92 @@ type CarModelProps = {
   overlayOnly?: boolean;
 };
 
+function pivotHitbox(pivot: THREE.Group | null, padding = 0.12) {
+  if (!pivot) {
+    return null;
+  }
+  const box = new THREE.Box3().setFromObject(pivot);
+  const size = new THREE.Vector3();
+  const center = new THREE.Vector3();
+  box.getSize(size);
+  box.getCenter(center);
+  return {
+    center,
+    size: new THREE.Vector3(
+      Math.max(size.x, 0.35) + padding,
+      Math.max(size.y, 0.28) + padding,
+      Math.max(size.z, 0.12) + padding,
+    ),
+  };
+}
+
+function AssetInteractionZones({
+  rig,
+  onToggleLeftDoor,
+  onToggleRightDoor,
+  onToggleTrunk,
+}: {
+  rig: AssetCarRig;
+  onToggleLeftDoor: () => void;
+  onToggleRightDoor: () => void;
+  onToggleTrunk: () => void;
+}) {
+  const hiddenMaterial = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        transparent: true,
+        opacity: 0.001,
+        depthWrite: false,
+      }),
+    [],
+  );
+
+  const zones = [
+    { pivot: rig.leftDoorPivot, onClick: onToggleLeftDoor },
+    { pivot: rig.rightDoorPivot, onClick: onToggleRightDoor },
+    { pivot: rig.trunkPivot, onClick: onToggleTrunk },
+  ];
+
+  return (
+    <>
+      {zones.map((zone, index) => {
+        const hit = pivotHitbox(zone.pivot);
+        if (!hit) {
+          return null;
+        }
+        return (
+          <mesh
+            key={`asset-hit-${index}`}
+            position={hit.center}
+            onClick={(event) => {
+              event.stopPropagation();
+              zone.onClick();
+            }}
+            {...interactivePointerHandlers}
+          >
+            <boxGeometry args={[hit.size.x, hit.size.y, hit.size.z]} />
+            <primitive object={hiddenMaterial} attach="material" />
+          </mesh>
+        );
+      })}
+    </>
+  );
+}
+
 function AssetModel({
   object,
   rig,
   state,
+  onToggleLeftDoor,
+  onToggleRightDoor,
+  onToggleTrunk,
 }: {
   object: THREE.Object3D;
   rig: AssetCarRig;
   state: CarShowroomState;
+  onToggleLeftDoor: () => void;
+  onToggleRightDoor: () => void;
+  onToggleTrunk: () => void;
 }) {
   const rootRef = useRef<THREE.Group>(null);
   const paintMaterialRefs = useRef<THREE.Material[]>([]);
@@ -657,6 +735,12 @@ function AssetModel({
   return (
     <group ref={rootRef}>
       <primitive object={object} />
+      <AssetInteractionZones
+        rig={rig}
+        onToggleLeftDoor={onToggleLeftDoor}
+        onToggleRightDoor={onToggleRightDoor}
+        onToggleTrunk={onToggleTrunk}
+      />
       {rig.headLightAnchors.map((anchor, index) => (
         <pointLight
           key={`asset-headlight-${index}`}
@@ -1351,6 +1435,7 @@ export function CarShowroomScene({
     }
 
     let active = true;
+    let loadedRoot: THREE.Object3D | null = null;
     const loader = new GLTFLoader();
     loader.load(
       modelUrl,
@@ -1359,6 +1444,7 @@ export function CarShowroomScene({
           return;
         }
         const loadedScene = gltf.scene.clone(true);
+        loadedRoot = loadedScene;
         loadedScene.traverse((child) => {
           const mesh = child as THREE.Mesh;
           if (mesh.isMesh) {
@@ -1387,6 +1473,20 @@ export function CarShowroomScene({
 
     return () => {
       active = false;
+      if (loadedRoot) {
+        loadedRoot.traverse((child) => {
+          const mesh = child as THREE.Mesh;
+          if (mesh.isMesh) {
+            mesh.geometry?.dispose();
+            const material = mesh.material;
+            if (Array.isArray(material)) {
+              material.forEach((entry) => entry.dispose());
+            } else {
+              material?.dispose();
+            }
+          }
+        });
+      }
       setAssetScene(null);
       setAssetRig(null);
       onAssetRigCapabilities?.(null);
@@ -1416,7 +1516,14 @@ export function CarShowroomScene({
         <pointLight position={[-4, 2, -3]} intensity={0.25} color="#67e8f9" />
 
         {useAssetModel && assetScene && assetRig ? (
-          <AssetModel object={assetScene} rig={assetRig} state={state} />
+          <AssetModel
+            object={assetScene}
+            rig={assetRig}
+            state={state}
+            onToggleLeftDoor={onToggleLeftDoor}
+            onToggleRightDoor={onToggleRightDoor}
+            onToggleTrunk={onToggleTrunk}
+          />
         ) : !useAssetModel ? (
           <CarModel
             state={state}

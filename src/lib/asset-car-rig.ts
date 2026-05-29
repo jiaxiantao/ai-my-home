@@ -1,5 +1,9 @@
 import * as THREE from "three";
 import { resolveMarketRigProfile, type MarketRigProfile } from "@/lib/market-rig-profiles";
+import {
+  createSyntheticGroundWheels,
+  hideMisplacedTemplateWheels,
+} from "@/lib/asset-showroom-wheels";
 
 export const ASSET_DOOR_MAX_OPEN_RADIANS = (70 * Math.PI) / 180;
 export const ASSET_TRUNK_MAX_OPEN_RADIANS = (75 * Math.PI) / 180;
@@ -31,6 +35,8 @@ export type AssetCarRig = {
     headLights: boolean;
     tailLights: boolean;
     wheels: boolean;
+    /** True when corner rollers are procedural (body has no separable wheel meshes). */
+    wheelsSynthetic: boolean;
   };
 };
 
@@ -199,10 +205,11 @@ function createSideDoorPivot(
     doorBox.expandByObject(mesh);
   }
 
-  const hingeX = doorBox.min.x + (doorBox.max.x - doorBox.min.x) * 0.08;
-  const hingeY = doorBox.min.y + (doorBox.max.y - doorBox.min.y) * 0.35;
+  const hingeX = doorBox.min.x + (doorBox.max.x - doorBox.min.x) * 0.06;
+  const hingeY = doorBox.min.y + (doorBox.max.y - doorBox.min.y) * 0.32;
   const hingeZ = side === "left" ? doorBox.max.z : doorBox.min.z;
   pivot.position.set(hingeX, hingeY, hingeZ);
+  pivot.userData.showroomHingeAxis = "y";
   root.add(pivot);
 
   for (const mesh of meshes) {
@@ -226,9 +233,10 @@ function createTrunkPivot(root: THREE.Object3D, meshes: THREE.Mesh[]) {
 
   pivot.position.set(
     trunkBox.max.x,
-    trunkBox.min.y + (trunkBox.max.y - trunkBox.min.y) * 0.72,
+    trunkBox.min.y + (trunkBox.max.y - trunkBox.min.y) * 0.68,
     (trunkBox.min.z + trunkBox.max.z) / 2,
   );
+  pivot.userData.showroomHingeAxis = "z";
   root.add(pivot);
 
   for (const mesh of meshes) {
@@ -535,7 +543,20 @@ export function discoverAssetCarRig(root: THREE.Object3D, modelUrl?: string): As
   const rightDoorPivot = createSideDoorPivot(root, rightDoorMeshes, "right");
   const trunkSorted = trunkMeshes.sort((a, b) => getMeshVolume(b) - getMeshVolume(a)).slice(0, 6);
   const trunkPivot = createTrunkPivot(root, trunkSorted);
-  const { frontWheels, rearWheels, frontSteerPivots } = findWheelNodes(root, profile);
+
+  hideMisplacedTemplateWheels(root, bounds);
+  const realWheels = findWheelNodes(root, profile);
+  let wheelsSynthetic = false;
+  let frontWheels = realWheels.frontWheels;
+  let rearWheels = realWheels.rearWheels;
+  let frontSteerPivots = realWheels.frontSteerPivots;
+  if (frontWheels.length + rearWheels.length < 2) {
+    const synthetic = createSyntheticGroundWheels(root, bounds);
+    frontWheels = synthetic.frontWheels;
+    rearWheels = synthetic.rearWheels;
+    frontSteerPivots = synthetic.frontSteerPivots;
+    wheelsSynthetic = synthetic.synthetic;
+  }
 
   if (hazardMaterials.length === 0 && tailLightMaterials.length > 0) {
     hazardMaterials.push(...tailLightMaterials.slice(0, 6));
@@ -576,6 +597,7 @@ export function discoverAssetCarRig(root: THREE.Object3D, modelUrl?: string): As
       headLights: headLightMaterials.length > 0,
       tailLights: tailLightMaterials.length > 0,
       wheels: frontWheels.length + rearWheels.length > 0,
+      wheelsSynthetic,
     },
   };
 }

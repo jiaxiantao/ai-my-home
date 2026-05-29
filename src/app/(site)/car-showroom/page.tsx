@@ -150,7 +150,7 @@ export default function CarShowroomPage() {
 
   const unsupportedInteractionNote =
     unsupportedInteractionLabels.length > 0
-      ? `当前 GLB 模型的「${unsupportedInteractionLabels.join("、")}」是与车身合并的整块网格，无法单独开合（已禁用对应按钮）。车灯/双闪/启动等整车效果仍可使用。如需开门动画，请改用部件已拆分的模型（如 SUV），或参考 docs/market-glb-rig.md 手动配置。`
+      ? `当前 GLB 的「${unsupportedInteractionLabels.join("、")}」与车身合并，无法单独开合（对应按钮已禁用）。车灯、双闪、启动、${assetRigCaps?.wheelsSynthetic ? "轮拱辅助轮旋转" : "整车振动"} 仍可用。SUV 等带独立门饰板的模型支持点击 3D 车门/后备箱。`
       : null;
 
   const sceneState = useMemo(
@@ -291,6 +291,7 @@ export default function CarShowroomPage() {
               {assetRigCaps.rightDoor ? "✓" : "—"} · 后备箱 {assetRigCaps.trunk ? "✓" : "—"} · 车灯{" "}
               {assetRigCaps.headLights ? "✓" : "—"} · 尾灯 {assetRigCaps.tailLights ? "✓" : "—"} ·
               天窗 {assetRigCaps.sunroof ? "✓" : "—"} · 车轮 {assetRigCaps.wheels ? "✓" : "—"}
+              {assetRigCaps.wheelsSynthetic ? "（轮拱辅助模型）" : ""}
               {assetRigCaps.leftDoor ? "" : "（未识别到的部件可在 docs/market-glb-rig.md 手动配置）"}
             </p>
           ) : null}
