@@ -11,6 +11,8 @@ type OrbitControlsLike = {
   update: () => void;
 };
 
+const DOOR_MAX_OPEN_RADIANS = (70 * Math.PI) / 180;
+
 const WHEEL_RADIUS = 0.27;
 const WHEEL_WIDTH = 0.22;
 const WHEEL_SPOKE_COUNT = 10;
@@ -491,7 +493,7 @@ function CarModel({
     const hazardBlink = state.hazardOn ? (Math.sin(t * 8) > 0 ? 1 : 0.08) : 0.08;
 
     if (leftDoorRef.current) {
-      const target = state.leftDoorOpen ? Math.PI * 0.62 : 0;
+      const target = state.leftDoorOpen ? -DOOR_MAX_OPEN_RADIANS : 0;
       leftDoorRef.current.rotation.y = THREE.MathUtils.damp(
         leftDoorRef.current.rotation.y,
         target,
@@ -500,7 +502,7 @@ function CarModel({
       );
     }
     if (rightDoorRef.current) {
-      const target = state.rightDoorOpen ? -Math.PI * 0.62 : 0;
+      const target = state.rightDoorOpen ? DOOR_MAX_OPEN_RADIANS : 0;
       rightDoorRef.current.rotation.y = THREE.MathUtils.damp(
         rightDoorRef.current.rotation.y,
         target,
