@@ -5,6 +5,13 @@ import { ContactShadows, Environment, OrbitControls, PerspectiveCamera } from "@
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import {
+  ASSET_DOOR_MAX_OPEN_RADIANS,
+  ASSET_TRUNK_MAX_OPEN_RADIANS,
+  discoverAssetCarRig,
+  getWheelSpinTarget,
+  setMaterialEmissive,
+} from "@/lib/asset-car-rig";
 
 type OrbitControlsLike = {
   target: THREE.Vector3;
@@ -98,11 +105,49 @@ const interactivePointerHandlers = {
 function ShowroomAccentLights({
   lightsOn,
   cameraPreset,
+  useAssetModel,
+  assetScene,
 }: {
   lightsOn: boolean;
   cameraPreset: CarCameraPreset;
+  useAssetModel: boolean;
+  assetScene: THREE.Object3D | null;
 }) {
   const interiorOn = lightsOn || cameraPreset === "cockpit";
+  const assetBounds = useMemo(() => {
+    if (!assetScene) {
+      return null;
+    }
+    return new THREE.Box3().setFromObject(assetScene);
+  }, [assetScene]);
+
+  if (useAssetModel && assetBounds) {
+    const center = assetBounds.getCenter(new THREE.Vector3());
+    const size = assetBounds.getSize(new THREE.Vector3());
+    return (
+      <>
+        <pointLight
+          position={[center.x - 0.4, center.y + size.y * 0.35, center.z]}
+          intensity={interiorOn ? 0.55 : 0.06}
+          distance={4}
+          color="#bae6fd"
+        />
+        <pointLight
+          position={[assetBounds.min.x, center.y + size.y * 0.35, assetBounds.max.z - size.z * 0.2]}
+          intensity={lightsOn ? 2.4 : 0}
+          distance={4}
+          color="#fef3c7"
+        />
+        <pointLight
+          position={[assetBounds.min.x, center.y + size.y * 0.35, assetBounds.min.z + size.z * 0.2]}
+          intensity={lightsOn ? 2.4 : 0}
+          distance={4}
+          color="#fef3c7"
+        />
+      </>
+    );
+  }
+
   return (
     <>
       <pointLight
@@ -394,13 +439,45 @@ function AssetModel({
   state: CarShowroomState;
 }) {
   const rootRef = useRef<THREE.Group>(null);
+  const leftDoorPivotRef = useRef<THREE.Group | null>(null);
+  const rightDoorPivotRef = useRef<THREE.Group | null>(null);
+  const trunkPivotRef = useRef<THREE.Group | null>(null);
+  const sunroofNodesRef = useRef<THREE.Object3D[]>([]);
+  const headLightMaterialsRef = useRef<THREE.MeshStandardMaterial[]>([]);
+  const tailLightMaterialsRef = useRef<THREE.MeshStandardMaterial[]>([]);
+  const hazardMaterialsRef = useRef<THREE.MeshStandardMaterial[]>([]);
+  const frontWheelsRef = useRef<THREE.Object3D[]>([]);
+  const rearWheelsRef = useRef<THREE.Object3D[]>([]);
   const paintMaterialRefs = useRef<THREE.Material[]>([]);
   const allColorMaterialRefs = useRef<THREE.Material[]>([]);
+  const wheelSpinAnglesRef = useRef<number[]>([]);
+  const velocityRef = useRef(0);
+  const lastVelocityRef = useRef(0);
+  const sunroofBaseXRef = useRef<Map<string, number>>(new Map());
+
+  useEffect(() => {
+    const discovered = discoverAssetCarRig(object);
+    leftDoorPivotRef.current = discovered.leftDoorPivot;
+    rightDoorPivotRef.current = discovered.rightDoorPivot;
+    trunkPivotRef.current = discovered.trunkPivot;
+    sunroofNodesRef.current = discovered.sunroofNodes;
+    headLightMaterialsRef.current = discovered.headLightMaterials;
+    tailLightMaterialsRef.current = discovered.tailLightMaterials;
+    hazardMaterialsRef.current = discovered.hazardMaterials;
+    frontWheelsRef.current = discovered.frontWheels;
+    rearWheelsRef.current = discovered.rearWheels;
+    wheelSpinAnglesRef.current = [];
+    sunroofBaseXRef.current.clear();
+    for (const node of sunroofNodesRef.current) {
+      sunroofBaseXRef.current.set(node.uuid, node.position.x);
+    }
+  }, [object]);
 
   useEffect(() => {
     paintMaterialRefs.current = [];
     allColorMaterialRefs.current = [];
-    const excludeName = /(wheel|tire|rim|glass|window|light|head|tail|lamp|indicator|interior|seat|mirror|grill|exhaust|brake|caliper|steer|handle)/;
+    const excludeName =
+      /(wheel|tire|rim|glass|window|light|head|tail|lamp|indicator|interior|seat|mirror|grill|exhaust|brake|caliper|steer|handle|illum|led|plate)/;
     const includeName = /(body|paint|door|hood|bonnet|fender|bumper|trunk|tailgate|hatch|shell|car)/;
     const candidates = new Map<string, { material: THREE.Material; score: number }>();
     const broadCandidates = new Map<string, { material: THREE.Material; score: number }>();
@@ -489,12 +566,106 @@ function AssetModel({
     }
   }, [state.bodyColor, state.bodyColorSecondary]);
 
+  /* eslint-disable react-hooks/immutability -- three.js scene graph is mutated each frame */
   useFrame((renderState, delta) => {
-    if (rootRef.current) {
-      const t = renderState.clock.elapsedTime;
-      const y = state.engineOn ? Math.sin(t * 8) * 0.02 : 0;
-      rootRef.current.position.y = THREE.MathUtils.damp(rootRef.current.position.y, y, 5, delta);
+    const t = renderState.clock.elapsedTime;
+    const hazardBlink = state.hazardOn ? (Math.sin(t * 8) > 0 ? 1 : 0.08) : 0.08;
+
+    if (leftDoorPivotRef.current) {
+      const target = state.leftDoorOpen ? -ASSET_DOOR_MAX_OPEN_RADIANS : 0;
+      leftDoorPivotRef.current.rotation.y = THREE.MathUtils.damp(
+        leftDoorPivotRef.current.rotation.y,
+        target,
+        8,
+        delta,
+      );
     }
+    if (rightDoorPivotRef.current) {
+      const target = state.rightDoorOpen ? ASSET_DOOR_MAX_OPEN_RADIANS : 0;
+      rightDoorPivotRef.current.rotation.y = THREE.MathUtils.damp(
+        rightDoorPivotRef.current.rotation.y,
+        target,
+        8,
+        delta,
+      );
+    }
+    if (trunkPivotRef.current) {
+      const target = state.trunkOpen ? ASSET_TRUNK_MAX_OPEN_RADIANS : 0;
+      trunkPivotRef.current.rotation.z = THREE.MathUtils.damp(
+        trunkPivotRef.current.rotation.z,
+        target,
+        7,
+        delta,
+      );
+    }
+
+    for (const node of sunroofNodesRef.current) {
+      const baseX = sunroofBaseXRef.current.get(node.uuid) ?? node.position.x;
+      node.position.x = THREE.MathUtils.damp(
+        node.position.x,
+        state.sunroofOpen ? baseX + 0.35 : baseX,
+        7,
+        delta,
+      );
+    }
+
+    const targetVelocity = state.engineOn ? state.speedKph / 3.6 : 0;
+    const brakeFactor = state.braking ? 14 : 4;
+    velocityRef.current = THREE.MathUtils.damp(
+      velocityRef.current,
+      targetVelocity,
+      brakeFactor,
+      delta,
+    );
+    const angularSpeed = velocityRef.current / WHEEL_RADIUS;
+    const spinRoots = [...frontWheelsRef.current, ...rearWheelsRef.current];
+    for (let index = 0; index < spinRoots.length; index += 1) {
+      const wheelRoot = spinRoots[index];
+      const spinner = getWheelSpinTarget(wheelRoot);
+      const nextSpin = (wheelSpinAnglesRef.current[index] ?? 0) + delta * angularSpeed;
+      wheelSpinAnglesRef.current[index] = nextSpin;
+      spinner.rotation.y = nextSpin;
+    }
+
+    const steerInput = THREE.MathUtils.clamp(state.steeringAngle, -42, 42) * (Math.PI / 180);
+    for (const wheelRoot of frontWheelsRef.current) {
+      wheelRoot.rotation.z = THREE.MathUtils.damp(wheelRoot.rotation.z, steerInput, 6, delta);
+    }
+
+    if (rootRef.current) {
+      const engineYOffset = state.engineOn ? Math.sin(t * 8) * 0.02 : 0;
+      const acceleration = (velocityRef.current - lastVelocityRef.current) / Math.max(delta, 0.001);
+      const pitchTarget = THREE.MathUtils.clamp(-acceleration * 0.015, -0.06, 0.05);
+      rootRef.current.position.y = THREE.MathUtils.damp(rootRef.current.position.y, engineYOffset, 5, delta);
+      rootRef.current.rotation.z = THREE.MathUtils.damp(
+        rootRef.current.rotation.z,
+        pitchTarget,
+        5,
+        delta,
+      );
+    }
+    lastVelocityRef.current = velocityRef.current;
+
+    const frontIntensity = state.lightsOn ? (state.engineOn ? 2.6 : 2.1) : 0.15;
+    const rearIntensity = state.lightsOn ? 0.55 + hazardBlink * 1.6 : hazardBlink * 1.6;
+    setMaterialEmissive(
+      headLightMaterialsRef.current,
+      new THREE.Color("#fde68a"),
+      frontIntensity,
+      delta,
+    );
+    setMaterialEmissive(
+      tailLightMaterialsRef.current,
+      new THREE.Color("#ef4444"),
+      rearIntensity,
+      delta,
+    );
+    setMaterialEmissive(
+      hazardMaterialsRef.current,
+      new THREE.Color("#fbbf24"),
+      hazardBlink * 2.2,
+      delta,
+    );
   });
 
   return (
@@ -1280,6 +1451,7 @@ export function CarShowroomScene({
 
     return () => {
       active = false;
+      setAssetScene(null);
     };
   }, [modelUrl, useAssetModel]);
 
@@ -1290,7 +1462,12 @@ export function CarShowroomScene({
         <color attach="background" args={["#020617"]} />
         <Environment preset="night" />
         <ambientLight intensity={0.42} />
-        <ShowroomAccentLights lightsOn={state.lightsOn} cameraPreset={cameraPreset} />
+        <ShowroomAccentLights
+          lightsOn={state.lightsOn}
+          cameraPreset={cameraPreset}
+          useAssetModel={useAssetModel && Boolean(assetScene)}
+          assetScene={assetScene}
+        />
         <directionalLight
           position={[5, 8, 3]}
           intensity={1.2}
@@ -1301,24 +1478,15 @@ export function CarShowroomScene({
         <pointLight position={[-4, 2, -3]} intensity={0.25} color="#67e8f9" />
 
         {useAssetModel && assetScene ? (
-          <>
-            <AssetModel object={assetScene} state={state} />
-            <CarModel
-              state={state}
-              overlayOnly
-              onToggleLeftDoor={onToggleLeftDoor}
-              onToggleRightDoor={onToggleRightDoor}
-              onToggleTrunk={onToggleTrunk}
-            />
-          </>
-        ) : (
+          <AssetModel object={assetScene} state={state} />
+        ) : !useAssetModel ? (
           <CarModel
             state={state}
             onToggleLeftDoor={onToggleLeftDoor}
             onToggleRightDoor={onToggleRightDoor}
             onToggleTrunk={onToggleTrunk}
           />
-        )}
+        ) : null}
 
         <mesh
           receiveShadow
