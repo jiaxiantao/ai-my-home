@@ -18,19 +18,22 @@ const BODY_WIDTH = 1.55;
 const BODY_HALF_LENGTH = BODY_LENGTH / 2;
 const CABIN_CENTER_X = 0.15;
 const CABIN_DEPTH = 1.9;
-const CABIN_HEIGHT = 0.5;
 const CABIN_WIDTH = 1.4;
-const BODY_HEIGHT_SCALE = 1.5;
-const BODY_HEIGHT = 0.55 * BODY_HEIGHT_SCALE;
-const BODY_HALF_HEIGHT = BODY_HEIGHT / 2;
-const CABIN_ON_BODY_OVERLAP = 0.075;
-const CABIN_CENTER_Y = BODY_HALF_HEIGHT + CABIN_HEIGHT / 2 - CABIN_ON_BODY_OVERLAP;
+const CHASSIS_HEIGHT = 0.55;
+const CHASSIS_HALF_HEIGHT = CHASSIS_HEIGHT / 2;
+const CABIN_TO_CHASSIS_HEIGHT_RATIO = 1.5;
+const CABIN_HEIGHT = CHASSIS_HEIGHT * CABIN_TO_CHASSIS_HEIGHT_RATIO;
+const CABIN_HEIGHT_BASE = 0.5;
+const CABIN_HEIGHT_SCALE = CABIN_HEIGHT / CABIN_HEIGHT_BASE;
+const CABIN_ON_CHASSIS_OVERLAP = 0.075;
+const CABIN_CENTER_Y = CHASSIS_HALF_HEIGHT + CABIN_HEIGHT / 2 - CABIN_ON_CHASSIS_OVERLAP;
 const CABIN_WALL_THICKNESS = 0.06;
 const GLASS_THICKNESS = 0.018;
-const WINDSHIELD_HEIGHT = 0.34;
+const WINDSHIELD_HEIGHT = 0.34 * CABIN_HEIGHT_SCALE;
 const WINDSHIELD_WIDTH = CABIN_WIDTH * 0.82;
 const SIDE_WINDOW_LENGTH = 0.78;
-const SIDE_WINDOW_HEIGHT = 0.24;
+const SIDE_WINDOW_HEIGHT = 0.24 * CABIN_HEIGHT_SCALE;
+const DOOR_PANEL_HEIGHT = 0.42 * CABIN_HEIGHT_SCALE;
 const CABIN_FLOOR_Y = CABIN_CENTER_Y - CABIN_HEIGHT / 2;
 const INTERIOR_SEAT_Y = CABIN_FLOOR_Y + 0.1;
 const TRUNK_PANEL_THICKNESS = 0.06;
@@ -38,8 +41,8 @@ const TRUNK_LID_DEPTH = TRUNK_PANEL_THICKNESS;
 const CABIN_TOP_Y = CABIN_CENTER_Y + CABIN_HEIGHT / 2;
 const DOOR_CENTER_Y = CABIN_CENTER_Y - 0.1;
 const SUNROOF_Y = CABIN_TOP_Y + 0.04;
-const HEADLIGHT_Y = BODY_HALF_HEIGHT * 0.8;
-const TAILLIGHT_Y = BODY_HALF_HEIGHT * 0.73;
+const HEADLIGHT_Y = CHASSIS_HALF_HEIGHT * 0.8;
+const TAILLIGHT_Y = CHASSIS_HALF_HEIGHT * 0.73;
 const TRUNK_HINGE_X = BODY_HALF_LENGTH;
 const TRUNK_HINGE_Y = CABIN_TOP_Y - 0.13;
 const TRUNK_HINGE_Z = 0;
@@ -79,6 +82,11 @@ function GeometricCabinShell({
 }) {
   const sideZ = CABIN_WIDTH / 2 - CABIN_WALL_THICKNESS / 2;
   const glassZ = CABIN_WIDTH / 2 - CABIN_WALL_THICKNESS / 2 + GLASS_THICKNESS * 0.5;
+  const lowerSillY = -CABIN_HEIGHT * 0.16;
+  const upperRailY = CABIN_HEIGHT * 0.32;
+  const lowerSillHeight = 0.14 * CABIN_HEIGHT_SCALE;
+  const upperRailHeight = 0.12 * CABIN_HEIGHT_SCALE;
+  const rearGlassHeight = 0.3 * CABIN_HEIGHT_SCALE;
 
   return (
     <group position={[CABIN_CENTER_X, CABIN_CENTER_Y, 0]}>
@@ -89,17 +97,17 @@ function GeometricCabinShell({
       >
         <boxGeometry args={[CABIN_DEPTH * 0.9, CABIN_WALL_THICKNESS, CABIN_WIDTH * 0.88]} />
       </mesh>
-      <mesh castShadow receiveShadow position={[0, -0.08, sideZ]} material={paintMaterial}>
-        <boxGeometry args={[CABIN_DEPTH * 0.94, 0.14, CABIN_WALL_THICKNESS]} />
+      <mesh castShadow receiveShadow position={[0, lowerSillY, sideZ]} material={paintMaterial}>
+        <boxGeometry args={[CABIN_DEPTH * 0.94, lowerSillHeight, CABIN_WALL_THICKNESS]} />
       </mesh>
-      <mesh castShadow receiveShadow position={[0, -0.08, -sideZ]} material={paintMaterial}>
-        <boxGeometry args={[CABIN_DEPTH * 0.94, 0.14, CABIN_WALL_THICKNESS]} />
+      <mesh castShadow receiveShadow position={[0, lowerSillY, -sideZ]} material={paintMaterial}>
+        <boxGeometry args={[CABIN_DEPTH * 0.94, lowerSillHeight, CABIN_WALL_THICKNESS]} />
       </mesh>
-      <mesh castShadow receiveShadow position={[0, 0.16, sideZ]} material={paintMaterial}>
-        <boxGeometry args={[CABIN_DEPTH * 0.94, 0.12, CABIN_WALL_THICKNESS]} />
+      <mesh castShadow receiveShadow position={[0, upperRailY, sideZ]} material={paintMaterial}>
+        <boxGeometry args={[CABIN_DEPTH * 0.94, upperRailHeight, CABIN_WALL_THICKNESS]} />
       </mesh>
-      <mesh castShadow receiveShadow position={[0, 0.16, -sideZ]} material={paintMaterial}>
-        <boxGeometry args={[CABIN_DEPTH * 0.94, 0.12, CABIN_WALL_THICKNESS]} />
+      <mesh castShadow receiveShadow position={[0, upperRailY, -sideZ]} material={paintMaterial}>
+        <boxGeometry args={[CABIN_DEPTH * 0.94, upperRailHeight, CABIN_WALL_THICKNESS]} />
       </mesh>
       <mesh castShadow receiveShadow position={[-CABIN_DEPTH / 2 + 0.05, 0, sideZ]} material={paintMaterial}>
         <boxGeometry args={[CABIN_WALL_THICKNESS, CABIN_HEIGHT * 0.88, CABIN_WALL_THICKNESS]} />
@@ -117,14 +125,14 @@ function GeometricCabinShell({
         <boxGeometry args={[CABIN_DEPTH * 0.62, CABIN_WALL_THICKNESS, CABIN_WIDTH - 0.52]} />
       </mesh>
       <mesh castShadow receiveShadow position={[-0.72, -0.02, 0]} material={interiorMaterial}>
-        <boxGeometry args={[0.1, 0.28, CABIN_WIDTH * 0.82]} />
+        <boxGeometry args={[0.1, 0.28 * CABIN_HEIGHT_SCALE, CABIN_WIDTH * 0.82]} />
       </mesh>
 
-      <mesh position={[-CABIN_DEPTH / 2 + 0.03, 0.04, 0]} rotation={[0, 0, -0.28]} material={glassMaterial}>
+      <mesh position={[-CABIN_DEPTH / 2 + 0.03, 0.04 * CABIN_HEIGHT_SCALE, 0]} rotation={[0, 0, -0.28]} material={glassMaterial}>
         <boxGeometry args={[GLASS_THICKNESS, WINDSHIELD_HEIGHT, WINDSHIELD_WIDTH]} />
       </mesh>
-      <mesh position={[CABIN_DEPTH / 2 - 0.03, 0.05, 0]} material={glassMaterial}>
-        <boxGeometry args={[GLASS_THICKNESS, 0.3, CABIN_WIDTH * 0.72]} />
+      <mesh position={[CABIN_DEPTH / 2 - 0.03, 0.05 * CABIN_HEIGHT_SCALE, 0]} material={glassMaterial}>
+        <boxGeometry args={[GLASS_THICKNESS, rearGlassHeight, CABIN_WIDTH * 0.72]} />
       </mesh>
       <mesh position={[-0.08, 0.03, glassZ]} material={glassMaterial}>
         <boxGeometry args={[SIDE_WINDOW_LENGTH, SIDE_WINDOW_HEIGHT, GLASS_THICKNESS]} />
@@ -861,7 +869,7 @@ function CarModel({
       {!overlayOnly ? (
         <>
           <mesh castShadow receiveShadow material={bodyPaintMaterial}>
-            <boxGeometry args={[BODY_LENGTH, BODY_HEIGHT, BODY_WIDTH]} />
+            <boxGeometry args={[BODY_LENGTH, CHASSIS_HEIGHT, BODY_WIDTH]} />
           </mesh>
           <GeometricCabinShell
             paintMaterial={cabinPaintMaterial}
@@ -889,7 +897,7 @@ function CarModel({
             onToggleLeftDoor();
           }}
         >
-          <boxGeometry args={[1.1, 0.42, 0.08]} />
+          <boxGeometry args={[1.1, DOOR_PANEL_HEIGHT, 0.08]} />
           {overlayOnly ? (
             <primitive object={hiddenHitboxMaterial} attach="material" />
           ) : (
@@ -908,7 +916,7 @@ function CarModel({
             onToggleRightDoor();
           }}
         >
-          <boxGeometry args={[1.1, 0.42, 0.08]} />
+          <boxGeometry args={[1.1, DOOR_PANEL_HEIGHT, 0.08]} />
           {overlayOnly ? (
             <primitive object={hiddenHitboxMaterial} attach="material" />
           ) : (
