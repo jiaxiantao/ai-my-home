@@ -433,15 +433,13 @@ function CarModel({
     );
 
     const wheelRadius = 0.27;
-    const angularSpeed = velocityRef.current / wheelRadius;
-    for (let index = 0; index < wheelSpinRefs.current.length; index += 1) {
-      const wheel = wheelSpinRefs.current[index];
+    // Car forward is -X; cylinders are rotated PI/2 on X so roll happens on local X.
+    const angularSpeed = -velocityRef.current / wheelRadius;
+    for (const wheel of wheelSpinRefs.current) {
       if (!wheel) {
         continue;
       }
-      // Left and right wheels should spin in opposite local directions.
-      const sideDirection = index % 2 === 0 ? -1 : 1;
-      wheel.rotation.z += delta * angularSpeed * sideDirection;
+      wheel.rotation.x += delta * angularSpeed;
     }
 
     const steerInput = THREE.MathUtils.clamp(state.steeringAngle, -42, 42) * (Math.PI / 180);
