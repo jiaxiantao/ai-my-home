@@ -13,6 +13,10 @@ type OrbitControlsLike = {
 
 const DOOR_MAX_OPEN_RADIANS = (70 * Math.PI) / 180;
 const TRUNK_MAX_OPEN_RADIANS = (75 * Math.PI) / 180;
+const BODY_HALF_LENGTH = 3.2 / 2;
+const TRUNK_LID_DEPTH = 0.16;
+const TRUNK_LID_HALF_DEPTH = TRUNK_LID_DEPTH / 2;
+const TRUNK_HINGE_X = BODY_HALF_LENGTH;
 const TRUNK_HINGE_Y = 0.53;
 const TRUNK_LID_HALF_HEIGHT = 0.17;
 
@@ -760,11 +764,11 @@ function CarModel({
         </mesh>
       </group>
 
-      <group ref={trunkRef} position={[1.54, TRUNK_HINGE_Y, 0]}>
+      <group ref={trunkRef} position={[TRUNK_HINGE_X, TRUNK_HINGE_Y, 0]}>
         <mesh
           castShadow
           receiveShadow
-          position={[0, -TRUNK_LID_HALF_HEIGHT, 0]}
+          position={[TRUNK_LID_HALF_DEPTH, -TRUNK_LID_HALF_HEIGHT, 0]}
           onClick={(event) => {
             event.stopPropagation();
             onToggleTrunk();
