@@ -22,9 +22,6 @@ const CABIN_DEPTH = 1.9;
 const CABIN_HEIGHT = 0.5;
 const CABIN_WIDTH = 1.4;
 const BODY_HEIGHT = 0.55;
-const BODY_HALF_HEIGHT = BODY_HEIGHT / 2;
-const BODY_SHELL_THICKNESS = 0.09;
-const BODY_FLOOR_HEIGHT = 0.11;
 const CABIN_WALL_THICKNESS = 0.06;
 const GLASS_THICKNESS = 0.018;
 const WINDSHIELD_HEIGHT = 0.34;
@@ -63,34 +60,6 @@ const WHEEL_TOUCH_CLEARANCE = 0.01;
 const WHEEL_MOUNT_Y = -0.06 - BODY_GROUND_CLEARANCE;
 const CAR_BASE_Y =
   SHOWROOM_GROUND_Y + WHEEL_RADIUS - WHEEL_MOUNT_Y + WHEEL_TOUCH_CLEARANCE;
-
-function GeometricCarBodyShell({ paintMaterial }: { paintMaterial: THREE.MeshStandardMaterial }) {
-  const floorY = -BODY_HALF_HEIGHT + BODY_FLOOR_HEIGHT / 2;
-  const railY = -BODY_HALF_HEIGHT + (BODY_HEIGHT + BODY_FLOOR_HEIGHT) / 2 - 0.02;
-  const railZ = BODY_WIDTH / 2 - BODY_SHELL_THICKNESS / 2;
-
-  return (
-    <group>
-      <mesh castShadow receiveShadow position={[0, floorY, 0]} material={paintMaterial}>
-        <boxGeometry args={[BODY_LENGTH, BODY_FLOOR_HEIGHT, BODY_WIDTH]} />
-      </mesh>
-      <mesh castShadow receiveShadow position={[0, railY, railZ]} material={paintMaterial}>
-        <boxGeometry args={[BODY_LENGTH, BODY_HEIGHT - BODY_FLOOR_HEIGHT + 0.04, BODY_SHELL_THICKNESS]} />
-      </mesh>
-      <mesh castShadow receiveShadow position={[0, railY, -railZ]} material={paintMaterial}>
-        <boxGeometry args={[BODY_LENGTH, BODY_HEIGHT - BODY_FLOOR_HEIGHT + 0.04, BODY_SHELL_THICKNESS]} />
-      </mesh>
-      <mesh
-        castShadow
-        receiveShadow
-        position={[-BODY_HALF_LENGTH + BODY_SHELL_THICKNESS / 2, railY, 0]}
-        material={paintMaterial}
-      >
-        <boxGeometry args={[BODY_SHELL_THICKNESS, BODY_HEIGHT - 0.06, BODY_WIDTH - BODY_SHELL_THICKNESS * 2]} />
-      </mesh>
-    </group>
-  );
-}
 
 function GeometricCabinShell({
   paintMaterial,
@@ -884,7 +853,9 @@ function CarModel({
     <group ref={rootRef} position={[0, CAR_BASE_Y, 0]}>
       {!overlayOnly ? (
         <>
-          <GeometricCarBodyShell paintMaterial={bodyPaintMaterial} />
+          <mesh castShadow receiveShadow material={bodyPaintMaterial}>
+            <boxGeometry args={[BODY_LENGTH, BODY_HEIGHT, BODY_WIDTH]} />
+          </mesh>
           <GeometricCabinShell
             paintMaterial={cabinPaintMaterial}
             interiorMaterial={interiorMaterial}
