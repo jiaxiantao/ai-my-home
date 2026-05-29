@@ -2,7 +2,7 @@
 
 import { Canvas, type ThreeEvent, useFrame } from "@react-three/fiber";
 import { ContactShadows, Environment, OrbitControls, PerspectiveCamera } from "@react-three/drei";
-import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
@@ -93,34 +93,6 @@ const interactivePointerHandlers = {
     document.body.style.cursor = "";
   },
 };
-
-function GeometricSteeringWheel({
-  pivotRef,
-}: {
-  pivotRef: RefObject<THREE.Group | null>;
-}) {
-  const wheelMaterial = useMemo(
-    () => new THREE.MeshStandardMaterial({ color: "#111827", metalness: 0.4, roughness: 0.55 }),
-    [],
-  );
-  const columnMaterial = useMemo(
-    () => new THREE.MeshStandardMaterial({ color: "#1f2937", metalness: 0.35, roughness: 0.6 }),
-    [],
-  );
-
-  return (
-    <group position={[STEERING_COLUMN_X, STEERING_COLUMN_Y, STEERING_COLUMN_Z]}>
-      <mesh position={[0.04, 0.1, 0]} rotation={[0, 0, Math.PI / 2]} castShadow material={columnMaterial}>
-        <cylinderGeometry args={[0.018, 0.018, 0.12, 10]} />
-      </mesh>
-      <group ref={pivotRef} position={[0.07, 0.15, 0]} rotation={[0, Math.PI / 2, 0]}>
-        <mesh rotation={[Math.PI / 2, 0, 0]} castShadow material={wheelMaterial}>
-          <torusGeometry args={[0.12, 0.026, 16, 36]} />
-        </mesh>
-      </group>
-    </group>
-  );
-}
 
 function ShowroomAccentLights({
   lightsOn,
@@ -703,7 +675,7 @@ function CarModel({
   const trunkRef = useRef<THREE.Group>(null);
   const seatLeftRef = useRef<THREE.Group>(null);
   const seatRightRef = useRef<THREE.Group>(null);
-  const steeringPivotRef = useRef<THREE.Group>(null);
+  const steeringRef = useRef<THREE.Mesh>(null);
   const grilleMaterial = useMemo(
     () => new THREE.MeshStandardMaterial({ color: "#0f172a", metalness: 0.5, roughness: 0.45 }),
     [],
@@ -865,9 +837,9 @@ function CarModel({
       );
     }
 
-    if (steeringPivotRef.current) {
-      steeringPivotRef.current.rotation.x = THREE.MathUtils.damp(
-        steeringPivotRef.current.rotation.x,
+    if (steeringRef.current) {
+      steeringRef.current.rotation.x = THREE.MathUtils.damp(
+        steeringRef.current.rotation.x,
         steerInput,
         8,
         delta,
@@ -1083,7 +1055,15 @@ function CarModel({
           <group ref={seatRightRef} position={[CABIN_CENTER_X - 0.55, INTERIOR_SEAT_Y, -0.35]}>
             <GeometricSeat position={[0, 0, 0]} />
           </group>
-          <GeometricSteeringWheel pivotRef={steeringPivotRef} />
+          <mesh
+            ref={steeringRef}
+            position={[STEERING_COLUMN_X, STEERING_COLUMN_Y, STEERING_COLUMN_Z]}
+            rotation={[0, Math.PI / 2, 0]}
+            castShadow
+          >
+            <torusGeometry args={[0.12, 0.026, 16, 36]} />
+            <meshStandardMaterial color="#111827" metalness={0.4} roughness={0.55} />
+          </mesh>
           {[
             { x: -1.1, y: WHEEL_MOUNT_Y, z: 0.75, steer: true },
             { x: 1.08, y: WHEEL_MOUNT_Y, z: 0.75, steer: false },
