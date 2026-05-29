@@ -20,6 +20,11 @@ const TRUNK_HINGE_Y = 0.57;
 const TRUNK_HINGE_Z = 0.1;
 const TRUNK_LID_OUTWARD_OFFSET = 0.04;
 const TRUNK_LID_HALF_HEIGHT = 0.17;
+const TRUNK_REAR_PANEL_TOP_Y = 0.3;
+const TRUNK_REAR_PANEL_HEIGHT = TRUNK_HINGE_Y - TRUNK_REAR_PANEL_TOP_Y;
+const TRUNK_REAR_PANEL_Y = TRUNK_REAR_PANEL_TOP_Y + TRUNK_REAR_PANEL_HEIGHT / 2;
+const TRUNK_DECK_THICKNESS = 0.05;
+const TRUNK_OPENING_WIDTH = 1.46;
 
 const WHEEL_RADIUS = 0.27;
 const WHEEL_WIDTH = 0.22;
@@ -765,6 +770,27 @@ function CarModel({
         </mesh>
       </group>
 
+      {!overlayOnly ? (
+        <>
+          <mesh position={[TRUNK_HINGE_X - 0.03, TRUNK_REAR_PANEL_Y, TRUNK_HINGE_Z]} castShadow receiveShadow>
+            <boxGeometry args={[0.08, TRUNK_REAR_PANEL_HEIGHT, TRUNK_OPENING_WIDTH]} />
+            <meshStandardMaterial color="#0369a1" metalness={0.38} roughness={0.36} />
+          </mesh>
+          <mesh
+            position={[
+              TRUNK_HINGE_X + TRUNK_DECK_THICKNESS / 2,
+              TRUNK_HINGE_Y,
+              TRUNK_HINGE_Z,
+            ]}
+            castShadow
+            receiveShadow
+          >
+            <boxGeometry args={[TRUNK_DECK_THICKNESS, 0.06, TRUNK_OPENING_WIDTH + 0.04]} />
+            <meshStandardMaterial color="#0284c7" metalness={0.35} roughness={0.38} />
+          </mesh>
+        </>
+      ) : null}
+
       <group ref={trunkRef} position={[TRUNK_HINGE_X, TRUNK_HINGE_Y, TRUNK_HINGE_Z]}>
         <mesh
           castShadow
@@ -775,7 +801,7 @@ function CarModel({
             onToggleTrunk();
           }}
         >
-          <boxGeometry args={[TRUNK_LID_DEPTH, 0.34, 1.46]} />
+          <boxGeometry args={[TRUNK_LID_DEPTH, 0.34, TRUNK_OPENING_WIDTH]} />
           {overlayOnly ? (
             <primitive object={hiddenHitboxMaterial} attach="material" />
           ) : (
