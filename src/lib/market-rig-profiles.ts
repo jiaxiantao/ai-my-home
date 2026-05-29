@@ -39,7 +39,19 @@ const suvQ3Profile: MarketRigProfile = {
   wheel: [/Q3_Tyre/i],
 };
 
-export const MARKET_RIG_PROFILES: MarketRigProfile[] = [suvQ3Profile];
+/**
+ * Brabus G900: road wheels are baked into the body; only a rear spare is a separate rig.
+ * Do not list `wheel` patterns here — global discovery excludes spare / tailgate mounts.
+ */
+const offroadBrabusProfile: MarketRigProfile = {
+  id: "offroad-brabus",
+  urlPattern: /offroad-mainstream/i,
+  headLight: [/light1/i, /_light/i],
+  tailLight: [/red_b/i, /tail/i],
+  wheel: [],
+};
+
+export const MARKET_RIG_PROFILES: MarketRigProfile[] = [suvQ3Profile, offroadBrabusProfile];
 
 export function resolveMarketRigProfile(modelUrl?: string): MarketRigProfile | null {
   if (!modelUrl) {

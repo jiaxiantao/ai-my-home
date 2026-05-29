@@ -250,11 +250,76 @@ function detectSpinAxis(mesh: THREE.Mesh): ShowroomSpinAxis {
   return "y";
 }
 
+/** Names that contain "wheel" but are not road wheels (spare, steering, trim). */
+function isWheelMeshName(name: string) {
+  if (
+    /(spare|sparewheel|leather.?wheel|steering.?wheel|wheel_track|rimdetail|hubcap|diamondcutrim)/i.test(
+      name,
+    )
+  ) {
+    return false;
+  }
+  if (/(caliper|brake\s*disc|brake\s*pad|fender|arch)/i.test(name)) {
+    return false;
+  }
+  return /(wheel|tire|tyre|rim)/i.test(name);
+}
+
+function resolveWheelNode(child: THREE.Object3D, root: THREE.Object3D) {
+  const mesh = child as THREE.Mesh;
+  if (!mesh.isMesh) {
+    return child;
+  }
+
+  let node: THREE.Object3D = child;
+  const parent = child.parent;
+  if (
+    parent &&
+    parent !== root &&
+    /(DEF-Wheel|Q3_Tyre|left_wheel|right_wheel)/i.test(parent.name)
+  ) {
+    const parentBox = new THREE.Box3().setFromObject(parent);
+    const parentCenter = parentBox.getCenter(new THREE.Vector3());
+    const meshBox = new THREE.Box3().setFromObject(child);
+    const meshCenter = meshBox.getCenter(new THREE.Vector3());
+    if (parentCenter.distanceTo(meshCenter) > 0.02) {
+      node = parent;
+    }
+  }
+
+  return node;
+}
+
+function isNearGroundWheel(center: THREE.Vector3, bounds: THREE.Box3, carSize: THREE.Vector3) {
+  return center.y <= bounds.min.y + carSize.y * 0.26;
+}
+
+/** Rear tailgate / roof-mounted spare rigs (e.g. Brabus G900 spare cluster). */
+function isTailgateMountedWheel(
+  center: THREE.Vector3,
+  bounds: THREE.Box3,
+  carSize: THREE.Vector3,
+  carCenter: THREE.Vector3,
+) {
+  const highMount = center.y > bounds.min.y + carSize.y * 0.32;
+  const rearMount = center.x > carCenter.x + carSize.x * 0.1;
+  return highMount && rearMount;
+}
+
+function clusterHasSparePart(nodes: THREE.Object3D[]) {
+  return nodes.some((node) => /spare/i.test(hierarchicalName(node)));
+}
+
 type WheelCandidate = {
   node: THREE.Object3D;
   center: THREE.Vector3;
   size: THREE.Vector3;
-  axle: ShowroomSpinAxis;
+};
+
+type WheelCluster = {
+  center: THREE.Vector3;
+  size: THREE.Vector3;
+  nodes: THREE.Object3D[];
 };
 
 function findWheelNodes(root: THREE.Object3D, profile: MarketRigProfile | null) {
@@ -266,26 +331,17 @@ function findWheelNodes(root: THREE.Object3D, profile: MarketRigProfile | null) 
   const carCenter = bounds.getCenter(new THREE.Vector3());
   const carSize = bounds.getSize(new THREE.Vector3());
 
-  // Collect candidates first; never mutate the graph during traversal.
   const seen = new Set<string>();
   const candidates: WheelCandidate[] = [];
   root.traverse((child) => {
     const name = hierarchicalName(child);
     const isWheel =
-      matchesAny(name, profile?.wheel) ||
-      (/(wheel|tire|tyre|rim)/i.test(name) && !/(steering|interior|leather|icon|arch|fender)/i.test(name));
+      matchesAny(name, profile?.wheel) || isWheelMeshName(name);
     if (!isWheel) {
       return;
     }
 
-    const node =
-      child.name.match(/^DEF-Wheel/i) || /^Q3_Tyre/i.test(child.name)
-        ? child
-        : child.parent &&
-            /(wheel|tire|tyre)/i.test(child.parent.name) &&
-            child.parent !== root
-          ? child.parent
-          : child;
+    const node = resolveWheelNode(child, root);
     if (seen.has(node.uuid)) {
       return;
     }
@@ -294,11 +350,10 @@ function findWheelNodes(root: THREE.Object3D, profile: MarketRigProfile | null) 
     const box = new THREE.Box3().setFromObject(node);
     const center = box.getCenter(new THREE.Vector3());
     const size = box.getSize(new THREE.Vector3());
-    candidates.push({ node, center, size, axle: detectSpinAxis(node as THREE.Mesh) });
+    candidates.push({ node, center, size });
   });
 
-  // Group co-located component meshes (rim, disc, tyre, ...) into one physical wheel.
-  const clusters: { center: THREE.Vector3; size: THREE.Vector3; nodes: THREE.Object3D[] }[] = [];
+  const clusters: WheelCluster[] = [];
   const clusterTolerance = Math.max(carSize.x, carSize.z) * 0.12;
   for (const cand of candidates) {
     const existing = clusters.find((cluster) => cluster.center.distanceTo(cand.center) <= clusterTolerance);
@@ -311,7 +366,7 @@ function findWheelNodes(root: THREE.Object3D, profile: MarketRigProfile | null) 
     }
   }
 
-  const buildPivot = (cluster: { center: THREE.Vector3; size: THREE.Vector3; nodes: THREE.Object3D[] }) => {
+  const buildPivot = (cluster: WheelCluster) => {
     const spinPivot = new THREE.Group();
     spinPivot.position.copy(cluster.center);
     root.add(spinPivot);
@@ -322,10 +377,19 @@ function findWheelNodes(root: THREE.Object3D, profile: MarketRigProfile | null) 
     return spinPivot;
   };
 
+  const accepted: WheelCluster[] = [];
   for (const cluster of clusters) {
-    // Reject merged multi-wheel meshes that span most of the car footprint.
+    if (clusterHasSparePart(cluster.nodes)) {
+      continue;
+    }
+    if (!isNearGroundWheel(cluster.center, bounds, carSize)) {
+      continue;
+    }
+    if (isTailgateMountedWheel(cluster.center, bounds, carSize, carCenter)) {
+      continue;
+    }
+
     const merged = cluster.size.x > carSize.x * 0.45 || cluster.size.z > carSize.z * 0.6;
-    // Reject template wheels sitting at the body center (not positioned at a corner).
     const atCenter =
       Math.abs(cluster.center.x - carCenter.x) < carSize.x * 0.12 &&
       Math.abs(cluster.center.z - carCenter.z) < carSize.z * 0.12;
@@ -333,6 +397,22 @@ function findWheelNodes(root: THREE.Object3D, profile: MarketRigProfile | null) 
       continue;
     }
 
+    accepted.push(cluster);
+  }
+
+  // At most one spin pivot per corner (FL / FR / RL / RR).
+  const quadrantBest = new Map<string, WheelCluster>();
+  for (const cluster of accepted) {
+    const front = cluster.center.x < carCenter.x;
+    const left = cluster.center.z > carCenter.z;
+    const key = `${front ? "F" : "R"}${left ? "L" : "R"}`;
+    const prev = quadrantBest.get(key);
+    if (!prev || cluster.center.y < prev.center.y) {
+      quadrantBest.set(key, cluster);
+    }
+  }
+
+  for (const cluster of quadrantBest.values()) {
     const spinPivot = buildPivot(cluster);
     const isFront = cluster.center.x < carCenter.x;
     if (isFront) {
