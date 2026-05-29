@@ -433,13 +433,14 @@ function CarModel({
     );
 
     const wheelRadius = 0.27;
-    // Car forward is -X; cylinders are rotated PI/2 on X so roll happens on local X.
+    // Wheel meshes are cylinders pre-rotated by PI/2 on X, so their axle is local Z.
+    // Rolling motion must rotate around local Z to stay physically consistent.
     const angularSpeed = -velocityRef.current / wheelRadius;
     for (const wheel of wheelSpinRefs.current) {
       if (!wheel) {
         continue;
       }
-      wheel.rotation.x += delta * angularSpeed;
+      wheel.rotation.z += delta * angularSpeed;
     }
 
     const steerInput = THREE.MathUtils.clamp(state.steeringAngle, -42, 42) * (Math.PI / 180);
