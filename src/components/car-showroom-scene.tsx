@@ -31,6 +31,8 @@ const CABIN_WALL_THICKNESS = 0.06;
 const GLASS_THICKNESS = 0.018;
 const WINDSHIELD_HEIGHT = 0.34 * CABIN_HEIGHT_SCALE;
 const WINDSHIELD_WIDTH = CABIN_WIDTH * 0.82;
+const WINDSHIELD_FORWARD_OFFSET = 0.08;
+const WINDSHIELD_TILT_RADIANS = -0.5;
 const SIDE_WINDOW_LENGTH = 0.78;
 const SIDE_WINDOW_HEIGHT = 0.24 * CABIN_HEIGHT_SCALE;
 const DOOR_PANEL_HEIGHT = 0.42;
@@ -126,7 +128,15 @@ function GeometricCabinShell({
         <boxGeometry args={[CABIN_DEPTH * 0.62, CABIN_WALL_THICKNESS, CABIN_WIDTH - 0.52]} />
       </mesh>
 
-      <mesh position={[-CABIN_DEPTH / 2 + 0.03, 0.04 * CABIN_HEIGHT_SCALE, 0]} rotation={[0, 0, -0.28]} material={glassMaterial}>
+      <mesh
+        position={[
+          -CABIN_DEPTH / 2 - WINDSHIELD_FORWARD_OFFSET,
+          0.06 * CABIN_HEIGHT_SCALE,
+          0,
+        ]}
+        rotation={[0, 0, WINDSHIELD_TILT_RADIANS]}
+        material={glassMaterial}
+      >
         <boxGeometry args={[GLASS_THICKNESS, WINDSHIELD_HEIGHT, WINDSHIELD_WIDTH]} />
       </mesh>
       <mesh position={[CABIN_DEPTH / 2 - 0.03, 0.05 * CABIN_HEIGHT_SCALE, 0]} material={glassMaterial}>
