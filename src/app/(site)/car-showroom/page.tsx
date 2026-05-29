@@ -17,7 +17,7 @@ const marketCategoryOptions = [
   {
     key: "sedan",
     label: "小轿车",
-    primaryUrl: "/models/market/sedan-mainstream.glb",
+    primaryUrl: "/models/market/2023_bmw_m2_coupe.glb",
     fallbackUrl: "/models/cars/toy-car.glb",
     fallbackName: "ToyCar",
   },
@@ -38,12 +38,12 @@ type PaintOption = {
 };
 
 const paintOptions: PaintOption[] = [
+  { id: "pearl-white", label: "珍珠白", primary: "#e2e8f0" },
+  { id: "obsidian-black", label: "曜石黑", primary: "#111827" },
   { id: "glacier-blue", label: "冰川蓝", primary: "#0ea5e9" },
   { id: "lava-red", label: "熔岩红", primary: "#f43f5e" },
   { id: "forest-green", label: "森野绿", primary: "#22c55e" },
   { id: "star-purple", label: "星幕紫", primary: "#a855f7" },
-  { id: "pearl-white", label: "珍珠白", primary: "#e2e8f0" },
-  { id: "obsidian-black", label: "曜石黑", primary: "#111827" },
   { id: "sunset-gradient", label: "日落渐变", primary: "#fb7185", secondary: "#f59e0b" },
   { id: "aurora-gradient", label: "极光渐变", primary: "#06b6d4", secondary: "#8b5cf6" },
 ] as const;
@@ -74,7 +74,7 @@ export default function CarShowroomPage() {
   const [sunroofOpen, setSunroofOpen] = useState(false);
   const [autoTour, setAutoTour] = useState(false);
   const [selectedPaintId, setSelectedPaintId] = useState<(typeof paintOptions)[number]["id"]>(
-    "glacier-blue",
+    "pearl-white",
   );
   const [useAssetModel, setUseAssetModel] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<
@@ -230,7 +230,7 @@ export default function CarShowroomPage() {
     setSunroofOpen(false);
     setCameraPreset("overview");
     setAutoTour(false);
-    setSelectedPaintId("glacier-blue");
+    setSelectedPaintId("pearl-white");
     setSpeedKph(28);
     setBraking(false);
   }
@@ -282,7 +282,7 @@ export default function CarShowroomPage() {
           ))}
           <p className="text-xs text-slate-400">
             当前模型：{selectedModelLabel || "加载中..."}。你可将主流车型放到
-            `public/models/market/suv-mainstream.glb` / `sedan-mainstream.glb` /
+            `public/models/market/suv-mainstream.glb` / `2023_bmw_m2_coupe.glb` /
             `offroad-mainstream.glb`，页面会自动优先加载。
           </p>
           {useAssetModel && assetRigCaps ? (

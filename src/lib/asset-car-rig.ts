@@ -8,6 +8,25 @@ import {
 export const ASSET_DOOR_MAX_OPEN_RADIANS = (70 * Math.PI) / 180;
 export const ASSET_TRUNK_MAX_OPEN_RADIANS = (75 * Math.PI) / 180;
 
+/** Upper bound for GLB headlamp emissive (toneMapped off on lens materials). */
+export const SHOWROOM_HEADLAMP_INTENSITY = {
+  on: 10,
+  engineOn: 12,
+  minEmissive: 16,
+  emissiveScale: 3.4,
+} as const;
+
+/** Hazard blink — keep saturation; high HDR intensity reads white on screen. */
+export const SHOWROOM_HAZARD_INTENSITY = {
+  on: 5.5,
+  withHeadlights: 2.2,
+  /** Cap emissive so red stays red (not blown out to white). */
+  tailMax: 6.2,
+  tailMin: 2.8,
+} as const;
+
+export const SHOWROOM_TAIL_LAMP_COLOR = 0xc81e1e;
+
 export type ShowroomSpinAxis = "x" | "y" | "z";
 
 export type AssetCarRig = {
@@ -17,6 +36,10 @@ export type AssetCarRig = {
   trunkPivot: THREE.Group | null;
   sunroofNodes: THREE.Object3D[];
   headLightMaterials: ShowroomMaterial[];
+  /** World-space lamp centers for showroom spotlight placement. */
+  headLightPositions: THREE.Vector3[];
+  /** Body paint materials (profile-driven or auto-discovered). */
+  paintMaterials: ShowroomMaterial[];
   tailLightMaterials: ShowroomMaterial[];
   hazardMaterials: ShowroomMaterial[];
   /** Spin pivots centered on each accepted wheel (rotated about the axle). */
@@ -24,8 +47,6 @@ export type AssetCarRig = {
   rearWheels: THREE.Object3D[];
   /** Steering pivots wrapping the front spin pivots (rotated about vertical Y). */
   frontSteerPivots: THREE.Object3D[];
-  headLightAnchors: THREE.Vector3[];
-  tailLightAnchors: THREE.Vector3[];
   /** Human-readable summary for UI / debugging. */
   capabilities: {
     leftDoor: boolean;
@@ -43,10 +64,16 @@ export type AssetCarRig = {
 type MeshEntry = {
   mesh: THREE.Mesh;
   name: string;
+  materialName: string;
   center: THREE.Vector3;
   size: THREE.Vector3;
   volume: number;
 };
+
+function getSourceMaterialName(mesh: THREE.Mesh) {
+  const source = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
+  return source?.name ?? "";
+}
 
 type ShowroomMaterial = THREE.MeshStandardMaterial | THREE.MeshPhysicalMaterial;
 
@@ -93,12 +120,37 @@ export function ensureShowroomMaterial(mesh: THREE.Mesh): ShowroomMaterial | nul
     return cached;
   }
   const cloned = source.clone();
-  const emissiveBase =
-    source.emissive?.clone() ??
-    (source.color ? source.color.clone().multiplyScalar(0.35) : new THREE.Color(0, 0, 0));
+  const emissiveHsl = { h: 0, s: 0, l: 0 };
+  source.emissive.getHSL(emissiveHsl);
+  const hasAuthoredEmissive = (source.emissiveIntensity ?? 0) > 0.02 || emissiveHsl.l > 0.02;
+  const emissiveBase = hasAuthoredEmissive
+    ? source.emissive.clone()
+    : source.color
+      ? source.color.clone()
+      : new THREE.Color(0, 0, 0);
   cloned.userData.showroomBaseEmissive = emissiveBase;
   cloned.userData.showroomBaseEmissiveIntensity = source.emissiveIntensity ?? 0;
   mesh.userData.showroomMaterial = cloned;
+  mesh.material = cloned;
+  return cloned;
+}
+
+/** Clone body-paint materials separately from lamp clones. */
+export function ensureShowroomPaintMaterial(mesh: THREE.Mesh): ShowroomMaterial | null {
+  const cached = mesh.userData.showroomPaintMaterial as ShowroomMaterial | undefined;
+  if (cached) {
+    return cached;
+  }
+  const source = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
+  if (
+    !(source instanceof THREE.MeshStandardMaterial) &&
+    !(source instanceof THREE.MeshPhysicalMaterial)
+  ) {
+    return null;
+  }
+  const cloned = source.clone();
+  cloned.userData.showroomBaseColor = source.color.clone();
+  mesh.userData.showroomPaintMaterial = cloned;
   mesh.material = cloned;
   return cloned;
 }
@@ -115,11 +167,134 @@ function isHeadLightPart(name: string, center: THREE.Vector3, frontX: number) {
   if (isInteriorLight(name)) {
     return false;
   }
+  if (/(^|\/)(light1|lightled|glowtext)(_|\.|$)/i.test(name)) {
+    return false;
+  }
+  // Keep `nlightsf` for Brabus inner lenses; exclude other nlights* via profile only.
+  if (/(^|\/)nlights(?!f)/i.test(name)) {
+    return false;
+  }
   return (
-    /(?:^|[^a-z])hl\d|[^a-z]hl_|head\s*light|headlight|projection[_\s-]?lamp|hl_chrome|hl_cover|hl_inner/i.test(
+    /(?:^|[^a-z])hl\d|[^a-z]hl_|head\s*light|headlight|projection[_\s-]?lamp|hl_chrome|hl_cover|hl_inner|lights_lod0/i.test(
       name,
     ) || (center.x < frontX && /lamp|chrome[_\s-]?light/i.test(name) && !/tail|rear/i.test(name))
   );
+}
+
+function isOffroadHeadlampMesh(name: string) {
+  return /lights_lod0|lamp_alpha|\/\d+_lights_0|nlightsf/i.test(name);
+}
+
+function isBmwM2HeadlampMaterial(materialName: string) {
+  return /LightA_Material/i.test(materialName);
+}
+
+function isBmwM2TailMaterial(materialName: string) {
+  return /red_glass|LightEmissiveA/i.test(materialName);
+}
+
+function isSuvHeadlampMesh(name: string) {
+  if (/tail|taillamp|door_tail|int_|interior|door_int|roof_control/i.test(name)) {
+    return false;
+  }
+  return (
+    /\bHL\d_Mesh/i.test(name) ||
+    /Hl_Projection_lamp|Hl_inner_glass/i.test(name) ||
+    /HL_Chrome|Hl_Cover/i.test(name)
+  );
+}
+
+function isExcludedFromHeadlightDiscovery(name: string) {
+  return /tail|taillamp|door_tail_lamp|int_|interior|door_int.*light|roof_control/i.test(
+    name,
+  );
+}
+
+function applyShowroomHeadlampLens(material: ShowroomMaterial) {
+  const lampColor = new THREE.Color(0xffffff);
+  material.userData.showroomHeadlampLens = true;
+  material.userData.showroomBaseEmissive = lampColor;
+  material.userData.showroomBaseEmissiveIntensity = 0;
+  material.emissive.copy(lampColor);
+}
+
+function applyShowroomTailLamp(material: ShowroomMaterial) {
+  const lampColor = new THREE.Color(SHOWROOM_TAIL_LAMP_COLOR);
+  material.userData.showroomTailLamp = true;
+  material.userData.showroomBaseEmissive = lampColor;
+  material.userData.showroomBaseEmissiveIntensity = 0;
+  material.emissive.copy(lampColor);
+}
+
+function taillampPositionAllowed(
+  profile: MarketRigProfile | null,
+  profileTailLight: boolean,
+  materialName: string,
+  meshCenter: THREE.Vector3,
+  bounds: THREE.Box3,
+) {
+  if (profile?.id === "bmw-m2" && profileTailLight && isBmwM2TailMaterial(materialName)) {
+    if (/LightEmissiveA/i.test(materialName)) {
+      return true;
+    }
+    const size = bounds.getSize(new THREE.Vector3());
+    return meshCenter.x >= bounds.max.x - size.x * 0.28;
+  }
+  return true;
+}
+
+function shouldApplyHeadlampLensPreset(
+  profile: MarketRigProfile | null,
+  profileHeadLight: boolean,
+) {
+  return (
+    profileHeadLight &&
+    (profile?.id === "offroad-brabus" ||
+      profile?.id === "suv-q3" ||
+      profile?.id === "bmw-m2")
+  );
+}
+
+function headlampPositionAllowed(
+  profile: MarketRigProfile | null,
+  profileHeadLight: boolean,
+  name: string,
+  materialName: string,
+  meshCenter: THREE.Vector3,
+  meshSize: THREE.Vector3,
+  bounds: THREE.Box3,
+  carCenter: THREE.Vector3,
+  depth: number,
+  width: number,
+) {
+  if (profile?.id === "offroad-brabus" && profileHeadLight && isOffroadHeadlampMesh(name)) {
+    return true;
+  }
+  if (profile?.id === "suv-q3" && profileHeadLight && isSuvHeadlampMesh(name)) {
+    return true;
+  }
+  if (profile?.id === "bmw-m2" && profileHeadLight && isBmwM2HeadlampMaterial(materialName)) {
+    return true;
+  }
+  const isLocalizedPanel =
+    meshSize.x <= depth * 0.55 && meshSize.z <= width * 0.62;
+  return (
+    isPlausibleHeadlampPosition(meshCenter, bounds, carCenter) ||
+    (profileHeadLight && isLocalizedPanel)
+  );
+}
+
+/** Headlamps sit at the front corners, not the grille badge or roof LED strip. */
+function isPlausibleHeadlampPosition(
+  center: THREE.Vector3,
+  bounds: THREE.Box3,
+  carCenter: THREE.Vector3,
+) {
+  const size = bounds.getSize(new THREE.Vector3());
+  const nearFront = center.x <= bounds.min.x + size.x * 0.22;
+  const sideMounted = Math.abs(center.z - carCenter.z) >= size.z * 0.1;
+  const notRoofStrip = center.y <= bounds.min.y + size.y * 0.72;
+  return nearFront && sideMounted && notRoofStrip;
 }
 
 function isTailLightPart(name: string, center: THREE.Vector3, rearX: number) {
@@ -182,6 +357,7 @@ function collectMeshes(root: THREE.Object3D) {
     entries.push({
       mesh,
       name,
+      materialName: getSourceMaterialName(mesh),
       center,
       size,
       volume: Math.max(size.x * size.y * size.z, 1e-6),
@@ -448,10 +624,10 @@ export function discoverAssetCarRig(root: THREE.Object3D, modelUrl?: string): As
 
   const entries = collectMeshes(root);
   const headLightMaterials: ShowroomMaterial[] = [];
+  const headLightPositions: THREE.Vector3[] = [];
+  const paintMaterials: ShowroomMaterial[] = [];
   const tailLightMaterials: ShowroomMaterial[] = [];
   const hazardMaterials: ShowroomMaterial[] = [];
-  const headLightAnchors: THREE.Vector3[] = [];
-  const tailLightAnchors: THREE.Vector3[] = [];
   const sunroofNodes: THREE.Object3D[] = [];
   const leftDoorMeshes: THREE.Mesh[] = [];
   const rightDoorMeshes: THREE.Mesh[] = [];
@@ -471,8 +647,10 @@ export function discoverAssetCarRig(root: THREE.Object3D, modelUrl?: string): As
     meshSize.x <= depth * 0.55 && meshSize.z <= width * 0.62;
 
   for (const entry of entries) {
-    const { mesh, name, center: meshCenter, size: meshSize } = entry;
+    const { mesh, name, materialName, center: meshCenter, size: meshSize } = entry;
     const nameLower = name.toLowerCase();
+    const materialLower = materialName.toLowerCase();
+    const label = `${nameLower} ${materialLower}`;
 
     if (matchesAny(name, profile?.sunroof) || isSunroofPart(nameLower)) {
       if (!isInteriorLight(nameLower)) {
@@ -481,28 +659,87 @@ export function discoverAssetCarRig(root: THREE.Object3D, modelUrl?: string): As
       continue;
     }
 
-    if (matchesAny(name, profile?.headLight) || isHeadLightPart(nameLower, meshCenter, frontX)) {
-      const material = ensureShowroomMaterial(mesh);
+    if (matchesAny(name, profile?.paintMaterial) || matchesAny(materialName, profile?.paintMaterial)) {
+      const material = ensureShowroomPaintMaterial(mesh);
       if (material) {
-        headLightMaterials.push(material);
-        headLightAnchors.push(meshCenter.clone());
+        paintMaterials.push(material);
       }
       continue;
     }
 
+    const profileHeadLight =
+      matchesAny(name, profile?.headLight) ||
+      matchesAny(materialName, profile?.headLightMaterial);
+    const headLightCandidate =
+      profileHeadLight || isHeadLightPart(label, meshCenter, frontX);
     if (
-      matchesAny(name, profile?.hazardLight) ||
-      isHazardPart(nameLower) ||
-      matchesAny(name, profile?.tailLight) ||
-      isTailLightPart(nameLower, meshCenter, rearX)
+      !isExcludedFromHeadlightDiscovery(nameLower) &&
+      headLightCandidate &&
+      headlampPositionAllowed(
+        profile,
+        profileHeadLight,
+        name,
+        materialName,
+        meshCenter,
+        meshSize,
+        bounds,
+        center,
+        depth,
+        width,
+      )
     ) {
+      const material = ensureShowroomMaterial(mesh);
+      if (material) {
+        if (shouldApplyHeadlampLensPreset(profile, profileHeadLight)) {
+          applyShowroomHeadlampLens(material);
+        }
+        headLightMaterials.push(material);
+        // Full-width lamp bars span the bumper; anchor at the front face (showroom forward = -X).
+        if (meshSize.z > width * 0.32) {
+          if (headLightPositions.length < 2) {
+            const lampFrontX = meshCenter.x - meshSize.x * 0.46;
+            const halfZ = meshSize.z * 0.42;
+            headLightPositions.push(
+              new THREE.Vector3(lampFrontX, meshCenter.y, meshCenter.z + halfZ),
+              new THREE.Vector3(lampFrontX, meshCenter.y, meshCenter.z - halfZ),
+            );
+          }
+        } else if (meshCenter.x <= frontX) {
+          headLightPositions.push(meshCenter.clone());
+        }
+      }
+      continue;
+    }
+
+    const profileTailLight =
+      matchesAny(name, profile?.tailLight) ||
+      matchesAny(materialName, profile?.tailLightMaterial);
+    const profileHazardLight =
+      matchesAny(name, profile?.hazardLight) ||
+      matchesAny(materialName, profile?.hazardLightMaterial);
+    if (
+      profileHazardLight ||
+      isHazardPart(label) ||
+      profileTailLight ||
+      isTailLightPart(label, meshCenter, rearX)
+    ) {
+      if (
+        profileTailLight &&
+        !taillampPositionAllowed(profile, profileTailLight, materialName, meshCenter, bounds)
+      ) {
+        continue;
+      }
       const material = ensureShowroomMaterial(mesh);
       if (!material) {
         continue;
       }
+      applyShowroomTailLamp(material);
       tailLightMaterials.push(material);
-      tailLightAnchors.push(meshCenter.clone());
-      if (isHazardPart(nameLower) || /emiss|red_cover/i.test(nameLower)) {
+      if (
+        profileHazardLight ||
+        isHazardPart(label) ||
+        /emiss|red_cover|red_glass/i.test(label)
+      ) {
         hazardMaterials.push(material);
       }
       continue;
@@ -544,35 +781,28 @@ export function discoverAssetCarRig(root: THREE.Object3D, modelUrl?: string): As
   const trunkSorted = trunkMeshes.sort((a, b) => getMeshVolume(b) - getMeshVolume(a)).slice(0, 6);
   const trunkPivot = createTrunkPivot(root, trunkSorted);
 
-  hideMisplacedTemplateWheels(root, bounds);
-  const realWheels = findWheelNodes(root, profile);
+  let frontWheels: THREE.Object3D[] = [];
+  let rearWheels: THREE.Object3D[] = [];
+  let frontSteerPivots: THREE.Object3D[] = [];
   let wheelsSynthetic = false;
-  let frontWheels = realWheels.frontWheels;
-  let rearWheels = realWheels.rearWheels;
-  let frontSteerPivots = realWheels.frontSteerPivots;
-  if (frontWheels.length + rearWheels.length < 2) {
-    const synthetic = createSyntheticGroundWheels(root, bounds);
-    frontWheels = synthetic.frontWheels;
-    rearWheels = synthetic.rearWheels;
-    frontSteerPivots = synthetic.frontSteerPivots;
-    wheelsSynthetic = synthetic.synthetic;
+
+  if (!profile?.bakedWheels) {
+    hideMisplacedTemplateWheels(root, bounds);
+    const realWheels = findWheelNodes(root, profile);
+    frontWheels = realWheels.frontWheels;
+    rearWheels = realWheels.rearWheels;
+    frontSteerPivots = realWheels.frontSteerPivots;
+    if (frontWheels.length + rearWheels.length < 2) {
+      const synthetic = createSyntheticGroundWheels(root, bounds);
+      frontWheels = synthetic.frontWheels;
+      rearWheels = synthetic.rearWheels;
+      frontSteerPivots = synthetic.frontSteerPivots;
+      wheelsSynthetic = synthetic.synthetic;
+    }
   }
 
   if (hazardMaterials.length === 0 && tailLightMaterials.length > 0) {
     hazardMaterials.push(...tailLightMaterials.slice(0, 6));
-  }
-
-  if (headLightAnchors.length === 0) {
-    headLightAnchors.push(
-      new THREE.Vector3(bounds.min.x, bounds.min.y + size.y * 0.45, bounds.max.z - width * 0.2),
-      new THREE.Vector3(bounds.min.x, bounds.min.y + size.y * 0.45, bounds.min.z + width * 0.2),
-    );
-  }
-  if (tailLightAnchors.length === 0) {
-    tailLightAnchors.push(
-      new THREE.Vector3(bounds.max.x, bounds.min.y + size.y * 0.42, bounds.max.z - width * 0.2),
-      new THREE.Vector3(bounds.max.x, bounds.min.y + size.y * 0.42, bounds.min.z + width * 0.2),
-    );
   }
 
   return {
@@ -582,13 +812,13 @@ export function discoverAssetCarRig(root: THREE.Object3D, modelUrl?: string): As
     trunkPivot,
     sunroofNodes,
     headLightMaterials,
+    headLightPositions,
+    paintMaterials,
     tailLightMaterials,
     hazardMaterials,
     frontWheels,
     rearWheels,
     frontSteerPivots,
-    headLightAnchors,
-    tailLightAnchors,
     capabilities: {
       leftDoor: Boolean(leftDoorPivot),
       rightDoor: Boolean(rightDoorPivot),
@@ -612,20 +842,61 @@ export function applyWheelSpin(
   spinner.rotation.z = axis === "z" ? angle : 0;
 }
 
-export function setMaterialEmissive(
+/** Boost each lamp material using its own GLB emissive / diffuse — no external tint. */
+export function boostShowroomMaterialEmissive(
   materials: ShowroomMaterial[],
-  color: THREE.Color,
-  intensity: number,
+  active: boolean,
+  litIntensity: number,
   delta: number,
+  options?: { minActiveIntensity?: number },
 ) {
   for (const material of materials) {
-    const baseColor =
-      (material.userData.showroomBaseEmissive as THREE.Color | undefined) ??
-      new THREE.Color(0, 0, 0);
+    const storedBase = material.userData.showroomBaseEmissive as THREE.Color | undefined;
+    const baseColor = storedBase?.clone() ?? material.color.clone().multiplyScalar(0.65);
     const baseIntensity =
       (material.userData.showroomBaseEmissiveIntensity as number | undefined) ?? 0;
-    const targetColor = intensity > 0.05 ? color : baseColor;
-    const targetIntensity = intensity > 0.05 ? intensity : baseIntensity;
+    const isHeadlampLens = Boolean(material.userData.showroomHeadlampLens);
+    const isTailLamp = Boolean(material.userData.showroomTailLamp);
+    const { minEmissive, emissiveScale } = SHOWROOM_HEADLAMP_INTENSITY;
+    const minLit = isHeadlampLens
+      ? minEmissive
+      : (options?.minActiveIntensity ?? (isTailLamp ? 0 : 0.6));
+    const { tailMax, tailMin } = SHOWROOM_HAZARD_INTENSITY;
+    const headlampWhite =
+      (material.userData.showroomBaseEmissive as THREE.Color | undefined)?.clone() ??
+      new THREE.Color(0xffffff);
+    if (active && isHeadlampLens) {
+      headlampWhite.multiplyScalar(1.35);
+    }
+    const hazardRed =
+      (material.userData.showroomBaseEmissive as THREE.Color | undefined)?.clone() ??
+      new THREE.Color(SHOWROOM_TAIL_LAMP_COLOR);
+
+    let targetIntensity: number;
+    let targetColor: THREE.Color;
+    if (active && isTailLamp) {
+      targetColor = hazardRed;
+      targetIntensity = THREE.MathUtils.clamp(
+        Math.max(litIntensity, tailMin),
+        tailMin,
+        tailMax,
+      );
+    } else if (active && isHeadlampLens) {
+      targetColor = headlampWhite;
+      targetIntensity = Math.max(litIntensity * emissiveScale, baseIntensity * 2.5, minLit);
+    } else if (active) {
+      targetColor = baseColor;
+      targetIntensity = Math.max(litIntensity, baseIntensity * 2.5, minLit);
+    } else {
+      targetColor = storedBase ?? baseColor;
+      targetIntensity = baseIntensity;
+    }
+
+    if (active && isHeadlampLens) {
+      material.toneMapped = false;
+    } else {
+      material.toneMapped = true;
+    }
     material.emissive.lerp(targetColor, THREE.MathUtils.clamp(delta * 9, 0, 1));
     material.emissiveIntensity = THREE.MathUtils.damp(
       material.emissiveIntensity,

@@ -3,7 +3,32 @@ import * as THREE from "three";
 /** Longest axis after normalize; slightly above geometric `BODY_LENGTH` (3.2) for presence. */
 export const MARKET_MODEL_TARGET_LENGTH = 4;
 
+/** Must match showroom floor `SHOWROOM_GROUND_Y`. */
+export const MARKET_MODEL_GROUND_Y = -0.22;
+
 const HELPER_NAME_PATTERN = /(camera|cam|target|helper|gizmo|locator|control)/i;
+
+/** World bounds of visible meshes only (hidden helpers / rig templates excluded). */
+function getVisibleMeshBounds(root: THREE.Object3D) {
+  const bounds = new THREE.Box3();
+  const chunk = new THREE.Box3();
+  let hasMesh = false;
+  root.updateWorldMatrix(true, true);
+  root.traverse((child) => {
+    const mesh = child as THREE.Mesh;
+    if (!mesh.isMesh || !mesh.visible) {
+      return;
+    }
+    chunk.setFromObject(mesh);
+    if (!hasMesh) {
+      bounds.copy(chunk);
+      hasMesh = true;
+    } else {
+      bounds.union(chunk);
+    }
+  });
+  return hasMesh ? bounds : new THREE.Box3().setFromObject(root);
+}
 
 function hideHelperMeshes(root: THREE.Object3D) {
   root.traverse((child) => {
@@ -26,11 +51,12 @@ function hideHelperMeshes(root: THREE.Object3D) {
 export function normalizeMarketModel(
   root: THREE.Object3D,
   targetLength = MARKET_MODEL_TARGET_LENGTH,
+  groundY = MARKET_MODEL_GROUND_Y,
 ): THREE.Box3 {
   hideHelperMeshes(root);
   root.updateWorldMatrix(true, true);
 
-  const bounds = new THREE.Box3().setFromObject(root);
+  const bounds = getVisibleMeshBounds(root);
   const size = new THREE.Vector3();
   const center = new THREE.Vector3();
   bounds.getSize(size);
@@ -42,13 +68,14 @@ export function normalizeMarketModel(
   const scaleFactor = targetLength / maxDim;
   root.scale.multiplyScalar(scaleFactor);
 
-  root.updateWorldMatrix(true, true);
-  const groundedBounds = new THREE.Box3().setFromObject(root);
-  root.position.y -= groundedBounds.min.y;
-
   // Market GLBs are usually Z-forward; showroom camera presets assume -X forward.
   root.rotation.y = -Math.PI / 2;
   root.updateWorldMatrix(true, true);
 
-  return new THREE.Box3().setFromObject(root);
+  // Ground after rotation so tires sit on the showroom floor, not on an AABB from pre-rotate pose.
+  const groundedBounds = getVisibleMeshBounds(root);
+  root.position.y += groundY - groundedBounds.min.y;
+  root.updateWorldMatrix(true, true);
+
+  return getVisibleMeshBounds(root);
 }

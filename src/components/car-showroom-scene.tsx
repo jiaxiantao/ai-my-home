@@ -1,7 +1,7 @@
 "use client";
 
 import { Canvas, type ThreeEvent, useFrame } from "@react-three/fiber";
-import { ContactShadows, Environment, OrbitControls, PerspectiveCamera } from "@react-three/drei";
+import { Environment, OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
@@ -9,11 +9,20 @@ import {
   ASSET_DOOR_MAX_OPEN_RADIANS,
   ASSET_TRUNK_MAX_OPEN_RADIANS,
   applyWheelSpin,
+  boostShowroomMaterialEmissive,
   discoverAssetCarRig,
-  setMaterialEmissive,
+  SHOWROOM_HEADLAMP_INTENSITY,
+  SHOWROOM_HAZARD_INTENSITY,
+  SHOWROOM_TAIL_LAMP_COLOR,
   type AssetCarRig,
 } from "@/lib/asset-car-rig";
 import { normalizeMarketModel } from "@/lib/normalize-market-model";
+import {
+  SHOWROOM_GROUND_Y,
+  SHOWROOM_SCENE_LIGHTING,
+  ShowroomHeadlightSpotlights,
+  ShowroomReflectiveFloor,
+} from "@/components/showroom-environment";
 
 type OrbitControlsLike = {
   target: THREE.Vector3;
@@ -86,7 +95,6 @@ const STEERING_COLUMN_Z = 0.34;
 const WHEEL_RADIUS = 0.27;
 const WHEEL_WIDTH = 0.22;
 const WHEEL_SPOKE_COUNT = 10;
-const SHOWROOM_GROUND_Y = -0.22;
 const BODY_GROUND_CLEARANCE = 0.09;
 const WHEEL_TOUCH_CLEARANCE = 0.01;
 // Lower mount on the body so raising ride height keeps wheel contact with the floor.
@@ -115,7 +123,7 @@ function ShowroomAccentLights({
   useAssetModel: boolean;
   assetScene: THREE.Object3D | null;
 }) {
-  const interiorOn = lightsOn || cameraPreset === "cockpit";
+  const interiorOn = cameraPreset === "cockpit";
   const assetBounds = useMemo(() => {
     if (!assetScene) {
       return null;
@@ -124,41 +132,18 @@ function ShowroomAccentLights({
   }, [assetScene]);
 
   if (useAssetModel && assetBounds) {
+    if (!interiorOn) {
+      return null;
+    }
     const center = assetBounds.getCenter(new THREE.Vector3());
     const size = assetBounds.getSize(new THREE.Vector3());
     return (
-      <>
-        <pointLight
-          position={[center.x - 0.4, center.y + size.y * 0.35, center.z]}
-          intensity={interiorOn ? 0.55 : 0.06}
-          distance={4}
-          color="#bae6fd"
-        />
-        <pointLight
-          position={[assetBounds.min.x, center.y + size.y * 0.35, assetBounds.max.z - size.z * 0.2]}
-          intensity={lightsOn ? 2.4 : 0}
-          distance={4}
-          color="#fef3c7"
-        />
-        <pointLight
-          position={[assetBounds.min.x, center.y + size.y * 0.35, assetBounds.min.z + size.z * 0.2]}
-          intensity={lightsOn ? 2.4 : 0}
-          distance={4}
-          color="#fef3c7"
-        />
-        <pointLight
-          position={[assetBounds.max.x, center.y + size.y * 0.38, assetBounds.max.z - size.z * 0.2]}
-          intensity={lightsOn ? 1.2 : 0}
-          distance={3}
-          color="#fca5a5"
-        />
-        <pointLight
-          position={[assetBounds.max.x, center.y + size.y * 0.38, assetBounds.min.z + size.z * 0.2]}
-          intensity={lightsOn ? 1.2 : 0}
-          distance={3}
-          color="#fca5a5"
-        />
-      </>
+      <pointLight
+        position={[center.x - 0.4, center.y + size.y * 0.35, center.z]}
+        intensity={0.45}
+        distance={4}
+        color="#bae6fd"
+      />
     );
   }
 
@@ -554,9 +539,16 @@ function AssetModel({
   useEffect(() => {
     paintMaterialRefs.current = [];
     allColorMaterialRefs.current = [];
+
+    if (rig.paintMaterials.length > 0) {
+      paintMaterialRefs.current = rig.paintMaterials;
+      allColorMaterialRefs.current = rig.paintMaterials;
+      return;
+    }
+
     const excludeName =
-      /(wheel|tire|rim|glass|window|light|head|tail|lamp|indicator|interior|seat|mirror|grill|exhaust|brake|caliper|steer|handle|illum|led|plate)/;
-    const includeName = /(body|paint|door|hood|bonnet|fender|bumper|trunk|tailgate|hatch|shell|car)/;
+      /(wheel|tire|rim|glass|window|lighta|lightemissive|headlight|tail|red_glass|lamp|indicator|interior|seat|mirror|grille|exhaust|brake|caliper|steer|handle|calliper|carbon|engine|badge|coloured|manufacturerplate|base_material)/;
+    const includeName = /(body|paint|door|hood|bonnet|fender|bumper|trunk|tailgate|hatch|shell|car|paint_material)/;
     const candidates = new Map<string, { material: THREE.Material; score: number }>();
     const broadCandidates = new Map<string, { material: THREE.Material; score: number }>();
 
@@ -565,6 +557,13 @@ function AssetModel({
       if (!mesh.isMesh) {
         return;
       }
+      let ancestor: THREE.Object3D | null = mesh;
+      while (ancestor) {
+        if (ancestor.userData.showroomSyntheticWheel) {
+          return;
+        }
+        ancestor = ancestor.parent;
+      }
       const geometry = mesh.geometry;
       geometry.computeBoundingBox();
       const box = geometry.boundingBox;
@@ -572,12 +571,12 @@ function AssetModel({
       box?.getSize(size);
       const diagonal = size.length();
       const meshName = `${mesh.name} ${mesh.parent?.name ?? ""}`.toLowerCase();
-      if (excludeName.test(meshName)) {
-        return;
-      }
-
       const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
       for (const entry of materials) {
+        const materialName = (entry.name ?? "").toLowerCase();
+        if (excludeName.test(meshName) || excludeName.test(materialName)) {
+          continue;
+        }
         if (!("color" in entry)) {
           continue;
         }
@@ -603,7 +602,8 @@ function AssetModel({
           continue;
         }
 
-        const bonus = includeName.test(meshName) ? 2 : 1;
+        const bonus =
+          includeName.test(meshName) || includeName.test(materialName) ? 2 : 1;
         const score = Math.max(0.001, diagonal) * bonus;
         const prev = candidates.get(entry.uuid);
         if (!prev || prev.score < score) {
@@ -623,7 +623,7 @@ function AssetModel({
           .slice(0, 6)
           .map((entry) => entry.material);
     allColorMaterialRefs.current = [...broadCandidates.values()].map((entry) => entry.material);
-  }, [object]);
+  }, [object, rig.paintMaterials]);
 
   useEffect(() => {
     const primary = new THREE.Color(state.bodyColor);
@@ -642,12 +642,13 @@ function AssetModel({
         : primary;
       (material as { color: THREE.Color }).color.copy(target);
     }
-  }, [state.bodyColor, state.bodyColorSecondary]);
+  }, [state.bodyColor, state.bodyColorSecondary, rig.paintMaterials]);
 
   /* eslint-disable react-hooks/immutability -- three.js scene graph is mutated each frame */
   useFrame((renderState, delta) => {
     const t = renderState.clock.elapsedTime;
-    const hazardBlink = state.hazardOn ? (Math.sin(t * 8) > 0 ? 1 : 0.08) : 0.08;
+    const hazardPulse = state.hazardOn ? (Math.sin(t * 8) > 0 ? 1 : 0) : 0;
+    const hazardActive = hazardPulse > 0;
 
     if (rig.leftDoorPivot) {
       const target = state.leftDoorOpen ? -ASSET_DOOR_MAX_OPEN_RADIANS : 0;
@@ -720,15 +721,31 @@ function AssetModel({
     }
     lastVelocityRef.current = velocityRef.current;
 
-    const frontIntensity = state.lightsOn ? (state.engineOn ? 2.6 : 2.1) : 0.15;
-    const rearIntensity = state.lightsOn ? 0.55 + hazardBlink * 1.6 : hazardBlink * 1.6;
-    setMaterialEmissive(rig.headLightMaterials, new THREE.Color("#fde68a"), frontIntensity, delta);
-    setMaterialEmissive(rig.tailLightMaterials, new THREE.Color("#ef4444"), rearIntensity, delta);
-    setMaterialEmissive(
-      rig.hazardMaterials,
-      new THREE.Color("#fbbf24"),
-      hazardBlink * 2.2,
+    const headLit = state.lightsOn;
+    const headIntensity = headLit
+      ? state.engineOn
+        ? SHOWROOM_HEADLAMP_INTENSITY.engineOn
+        : SHOWROOM_HEADLAMP_INTENSITY.on
+      : 0;
+    const tailLit = state.lightsOn || hazardActive;
+    const tailIntensity = state.lightsOn
+      ? 1.1 + hazardPulse * SHOWROOM_HAZARD_INTENSITY.withHeadlights
+      : hazardPulse * SHOWROOM_HAZARD_INTENSITY.on;
+    const hazardMin = { minActiveIntensity: 0 };
+    boostShowroomMaterialEmissive(rig.headLightMaterials, headLit, headIntensity, delta);
+    boostShowroomMaterialEmissive(
+      rig.tailLightMaterials,
+      tailLit,
+      tailIntensity,
       delta,
+      hazardMin,
+    );
+    boostShowroomMaterialEmissive(
+      rig.hazardMaterials,
+      hazardActive,
+      hazardPulse * SHOWROOM_HAZARD_INTENSITY.on,
+      delta,
+      hazardMin,
     );
   });
 
@@ -741,23 +758,6 @@ function AssetModel({
         onToggleRightDoor={onToggleRightDoor}
         onToggleTrunk={onToggleTrunk}
       />
-      {rig.headLightAnchors.map((anchor, index) => (
-        <pointLight
-          key={`asset-headlight-${index}`}
-          position={[anchor.x, anchor.y, anchor.z]}
-          intensity={state.lightsOn ? (state.engineOn ? 3.2 : 2.6) : 0}
-          distance={3.5}
-          color="#fff7d6"
-        />
-      ))}
-      {state.lightsOn
-        ? rig.headLightAnchors.map((anchor, index) => (
-            <mesh key={`asset-head-glow-${index}`} position={[anchor.x - 0.05, anchor.y, anchor.z]}>
-              <sphereGeometry args={[0.08, 12, 12]} />
-              <meshStandardMaterial color="#fef9c3" emissive="#fde68a" emissiveIntensity={1.8} />
-            </mesh>
-          ))
-        : null}
     </group>
   );
 }
@@ -993,7 +993,7 @@ function CarModel({
 
   useFrame((renderState, delta) => {
     const t = renderState.clock.elapsedTime;
-    const hazardBlink = state.hazardOn ? (Math.sin(t * 8) > 0 ? 1 : 0.08) : 0.08;
+    const hazardPulse = state.hazardOn ? (Math.sin(t * 8) > 0 ? 1 : 0) : 0;
 
     if (leftDoorRef.current) {
       const target = state.leftDoorOpen ? -DOOR_MAX_OPEN_RADIANS : 0;
@@ -1163,7 +1163,11 @@ function CarModel({
     cabinPaintMaterial.color.lerp(cabinTarget, colorLerp);
 
     const frontIntensity = state.lightsOn ? (state.engineOn ? 2.6 : 2.1) : 0.2;
-    const rearIntensity = state.lightsOn ? 0.5 + hazardBlink * 1.7 : hazardBlink * 1.7;
+    const { tailMax, tailMin, withHeadlights, on } = SHOWROOM_HAZARD_INTENSITY;
+    const rearIntensity = state.lightsOn
+      ? THREE.MathUtils.clamp(0.4 + hazardPulse * withHeadlights, tailMin, tailMax)
+      : THREE.MathUtils.clamp(hazardPulse * on, 0, tailMax);
+    const tailEmissive = `#${new THREE.Color(SHOWROOM_TAIL_LAMP_COLOR).getHexString()}`;
     for (const lightRef of [leftHeadLightRef, rightHeadLightRef]) {
       if (!lightRef.current) {
         continue;
@@ -1181,6 +1185,7 @@ function CarModel({
         continue;
       }
       const mat = lightRef.current.material as THREE.MeshStandardMaterial;
+      mat.emissive.set(tailEmissive);
       mat.emissiveIntensity = THREE.MathUtils.damp(
         mat.emissiveIntensity,
         rearIntensity,
@@ -1497,9 +1502,30 @@ export function CarShowroomScene({
     <div className="h-[520px] overflow-hidden rounded-4xl border border-white/10 bg-slate-950/80">
       <Canvas shadows={{ type: THREE.PCFShadowMap }}>
         <CameraRig preset={cameraPreset} autoTour={autoTour} controlsRef={controlsRef} />
-        <color attach="background" args={["#020617"]} />
-        <Environment preset="night" />
-        <ambientLight intensity={0.42} />
+        <color attach="background" args={["#070d18"]} />
+        <Environment
+          preset={SHOWROOM_SCENE_LIGHTING.environmentPreset}
+          environmentIntensity={
+            state.lightsOn &&
+            (!useAssetModel || assetRig?.capabilities.headLights)
+              ? SHOWROOM_SCENE_LIGHTING.environmentIntensity.headlightsOn
+              : SHOWROOM_SCENE_LIGHTING.environmentIntensity.base
+          }
+        />
+        <hemisphereLight
+          args={[
+            SHOWROOM_SCENE_LIGHTING.hemisphere.sky,
+            SHOWROOM_SCENE_LIGHTING.hemisphere.ground,
+            SHOWROOM_SCENE_LIGHTING.hemisphere.intensity,
+          ]}
+        />
+        <ambientLight
+          intensity={
+            state.lightsOn && (!useAssetModel || assetRig?.capabilities.headLights)
+              ? SHOWROOM_SCENE_LIGHTING.ambient.headlightsOn
+              : SHOWROOM_SCENE_LIGHTING.ambient.base
+          }
+        />
         <ShowroomAccentLights
           lightsOn={state.lightsOn}
           cameraPreset={cameraPreset}
@@ -1508,12 +1534,26 @@ export function CarShowroomScene({
         />
         <directionalLight
           position={[5, 8, 3]}
-          intensity={1.2}
+          intensity={
+            state.lightsOn && (!useAssetModel || assetRig?.capabilities.headLights)
+              ? SHOWROOM_SCENE_LIGHTING.directional.headlightsOn
+              : SHOWROOM_SCENE_LIGHTING.directional.base
+          }
           castShadow
           shadow-mapSize-height={2048}
           shadow-mapSize-width={2048}
         />
-        <pointLight position={[-4, 2, -3]} intensity={0.25} color="#67e8f9" />
+        <directionalLight
+          position={[-3, 4, -2]}
+          intensity={SHOWROOM_SCENE_LIGHTING.rimDirectional}
+          color="#94a3b8"
+        />
+        <ShowroomHeadlightSpotlights lightsOn={state.lightsOn} rig={assetRig} />
+        <pointLight
+          position={[-4, 2, -3]}
+          intensity={SHOWROOM_SCENE_LIGHTING.fillPoint}
+          color="#93c5fd"
+        />
 
         {useAssetModel && assetScene && assetRig ? (
           <AssetModel
@@ -1533,20 +1573,11 @@ export function CarShowroomScene({
           />
         ) : null}
 
-        <mesh
-          receiveShadow
-          rotation={[-Math.PI / 2, 0, 0]}
-          position={[0, -0.22, 0]}
-        >
-          <circleGeometry args={[8, 64]} />
-          <meshStandardMaterial color="#0f172a" roughness={0.96} metalness={0.1} />
-        </mesh>
-        <ContactShadows
-          position={[0, -0.2, 0]}
-          opacity={0.48}
-          blur={2.4}
-          scale={10}
-          far={4}
+        <ShowroomReflectiveFloor
+          lightsOn={state.lightsOn}
+          headLightsActive={
+            useAssetModel ? Boolean(assetRig?.capabilities.headLights) : state.lightsOn
+          }
         />
 
         <OrbitControls

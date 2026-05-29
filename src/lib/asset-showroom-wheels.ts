@@ -27,11 +27,20 @@ export function hideMisplacedTemplateWheels(root: THREE.Object3D, bounds: THREE.
     if (!/(q3_tyre|tyre_nor|tyre5|tyre6|tyre7|tyre8|tyre10)/i.test(name)) {
       return;
     }
-    const center = new THREE.Box3().setFromObject(mesh).getCenter(new THREE.Vector3());
+    const box = new THREE.Box3().setFromObject(mesh);
+    const meshSize = new THREE.Vector3();
+    const center = new THREE.Vector3();
+    box.getSize(meshSize);
+    box.getCenter(center);
     const atBodyCenter =
       Math.abs(center.x - carCenter.x) < carSize.x * 0.16 &&
       Math.abs(center.z - carCenter.z) < carSize.z * 0.16;
-    if (atBodyCenter) {
+    // Tyre meshes rigged at the origin often span the full car in bind pose — never hide those.
+    const spansVehicle =
+      meshSize.x > carSize.x * 0.45 || meshSize.z > carSize.z * 0.45 || meshSize.y > carSize.y * 0.55;
+    const isTinyTemplate =
+      meshSize.x < carSize.x * 0.12 && meshSize.z < carSize.z * 0.12 && meshSize.y < carSize.y * 0.2;
+    if (atBodyCenter && isTinyTemplate && !spansVehicle) {
       mesh.visible = false;
     }
   });
@@ -75,6 +84,7 @@ export function createSyntheticGroundWheels(
     );
     tire.castShadow = true;
     tire.receiveShadow = true;
+    tire.userData.showroomSyntheticWheel = true;
 
     const spinPivot = new THREE.Group();
     spinPivot.position.set(mount.x, groundY, mount.z);
