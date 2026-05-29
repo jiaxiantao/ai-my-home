@@ -434,8 +434,7 @@ function CarModel({
     );
 
     const wheelRadius = 0.27;
-    // Wheel meshes are cylinders pre-rotated by PI/2 on X, so their axle is local Z.
-    // Rolling motion must rotate around local Z to stay physically consistent.
+    // Spin around horizontal axle (local Y on wheel mesh inside mount group).
     const angularSpeed = -velocityRef.current / wheelRadius;
     for (let index = 0; index < wheelSpinRefs.current.length; index += 1) {
       const wheel = wheelSpinRefs.current[index];
@@ -444,12 +443,7 @@ function CarModel({
       }
       const nextSpin = (wheelSpinAnglesRef.current[index] ?? 0) + delta * angularSpeed;
       wheelSpinAnglesRef.current[index] = nextSpin;
-
-      // Keep wheel installation angle stable: parallel to body and
-      // perpendicular to axle, only spinning around the axle axis (Z).
-      wheel.rotation.x = Math.PI / 2;
-      wheel.rotation.y = 0;
-      wheel.rotation.z = nextSpin;
+      wheel.rotation.set(0, nextSpin, 0);
     }
 
     const steerInput = THREE.MathUtils.clamp(state.steeringAngle, -42, 42) * (Math.PI / 180);
@@ -704,20 +698,21 @@ function CarModel({
                 }}
                 position={[position.x, position.y, position.z]}
               >
-                <mesh
-                  ref={(node) => {
-                    if (!node) {
-                      return;
-                    }
-                    wheelSpinRefs.current[index] = node;
-                  }}
-                  castShadow
-                  receiveShadow
-                  material={wheelMaterial}
-                  rotation={[Math.PI / 2, 0, 0]}
-                >
-                  <cylinderGeometry args={[0.27, 0.27, 0.22, 24]} />
-                </mesh>
+                <group rotation={[Math.PI / 2, 0, 0]}>
+                  <mesh
+                    ref={(node) => {
+                      if (!node) {
+                        return;
+                      }
+                      wheelSpinRefs.current[index] = node;
+                    }}
+                    castShadow
+                    receiveShadow
+                    material={wheelMaterial}
+                  >
+                    <cylinderGeometry args={[0.27, 0.27, 0.22, 24]} />
+                  </mesh>
+                </group>
               </group>
             );
           })}
