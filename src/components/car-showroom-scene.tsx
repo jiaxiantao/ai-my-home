@@ -1,8 +1,8 @@
 "use client";
 
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, type ThreeEvent, useFrame } from "@react-three/fiber";
 import { ContactShadows, Environment, OrbitControls, PerspectiveCamera } from "@react-three/drei";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
@@ -64,6 +64,14 @@ const TRUNK_SLOPE_ANGLE = Math.atan2(TRUNK_SLOPE_DY, TRUNK_SLOPE_DX);
 const TRUNK_SLOPE_CENTER_X = (CABIN_REAR_X + TRUNK_SLOPE_END_X) / 2;
 const TRUNK_SLOPE_CENTER_Y = (CABIN_TOP_Y + TRUNK_SLOPE_END_Y) / 2;
 const TRUNK_SLOPE_THICKNESS = TRUNK_PANEL_THICKNESS;
+const CABIN_FRONT_X = CABIN_CENTER_X - CABIN_DEPTH / 2;
+const HOOD_LENGTH = BODY_HALF_LENGTH - CABIN_FRONT_X - 0.08;
+const HOOD_CENTER_X = -BODY_HALF_LENGTH + HOOD_LENGTH / 2 + 0.02;
+const HOOD_HEIGHT = 0.1;
+const HOOD_Y = CHASSIS_HALF_HEIGHT - HOOD_HEIGHT / 2 + 0.02;
+const STEERING_COLUMN_X = CABIN_CENTER_X - 0.78;
+const STEERING_COLUMN_Y = INTERIOR_SEAT_Y + 0.38;
+const STEERING_COLUMN_Z = 0.34;
 
 const WHEEL_RADIUS = 0.27;
 const WHEEL_WIDTH = 0.22;
@@ -75,6 +83,70 @@ const WHEEL_TOUCH_CLEARANCE = 0.01;
 const WHEEL_MOUNT_Y = -0.06 - BODY_GROUND_CLEARANCE;
 const CAR_BASE_Y =
   SHOWROOM_GROUND_Y + WHEEL_RADIUS - WHEEL_MOUNT_Y + WHEEL_TOUCH_CLEARANCE;
+
+const interactivePointerHandlers = {
+  onPointerOver: (event: ThreeEvent<PointerEvent>) => {
+    event.stopPropagation();
+    document.body.style.cursor = "pointer";
+  },
+  onPointerOut: () => {
+    document.body.style.cursor = "";
+  },
+};
+
+function GeometricSteeringWheel({
+  pivotRef,
+}: {
+  pivotRef: RefObject<THREE.Group | null>;
+}) {
+  const wheelMaterial = useMemo(
+    () => new THREE.MeshStandardMaterial({ color: "#111827", metalness: 0.4, roughness: 0.55 }),
+    [],
+  );
+  const columnMaterial = useMemo(
+    () => new THREE.MeshStandardMaterial({ color: "#1f2937", metalness: 0.35, roughness: 0.6 }),
+    [],
+  );
+
+  return (
+    <group position={[STEERING_COLUMN_X, STEERING_COLUMN_Y, STEERING_COLUMN_Z]}>
+      <mesh position={[0.04, 0.1, 0]} rotation={[0, 0, Math.PI / 2]} castShadow material={columnMaterial}>
+        <cylinderGeometry args={[0.018, 0.018, 0.12, 10]} />
+      </mesh>
+      <group ref={pivotRef} position={[0.07, 0.15, 0]} rotation={[0, Math.PI / 2, 0]}>
+        <mesh rotation={[Math.PI / 2, 0, 0]} castShadow material={wheelMaterial}>
+          <torusGeometry args={[0.12, 0.026, 16, 36]} />
+        </mesh>
+      </group>
+    </group>
+  );
+}
+
+function ShowroomAccentLights({
+  lightsOn,
+  cameraPreset,
+}: {
+  lightsOn: boolean;
+  cameraPreset: CarCameraPreset;
+}) {
+  const interiorOn = lightsOn || cameraPreset === "cockpit";
+  return (
+    <>
+      <pointLight
+        position={[CABIN_CENTER_X - 0.35, CABIN_CENTER_Y + 0.12, 0]}
+        intensity={interiorOn ? 0.5 : 0.06}
+        distance={2.8}
+        color="#bae6fd"
+      />
+      <pointLight
+        position={[CABIN_CENTER_X + 0.15, CABIN_TOP_Y - 0.05, 0]}
+        intensity={interiorOn ? 0.22 : 0}
+        distance={2.2}
+        color="#f8fafc"
+      />
+    </>
+  );
+}
 
 function GeometricCabinShell({
   paintMaterial,
@@ -488,13 +560,21 @@ function getCameraPose(preset: CarCameraPreset) {
     return {
       // Cockpit pivot is anchored near the driver's head position so drag
       // rotation spins around the driver seat instead of the windshield.
-      position: new THREE.Vector3(-0.2, 1.02, 0.58),
-      target: new THREE.Vector3(-0.42, 0.92, 0.32),
+      position: new THREE.Vector3(
+        CABIN_CENTER_X - 0.35,
+        CABIN_CENTER_Y + 0.52,
+        STEERING_COLUMN_Z + 0.24,
+      ),
+      target: new THREE.Vector3(
+        STEERING_COLUMN_X - 0.08,
+        STEERING_COLUMN_Y + 0.12,
+        STEERING_COLUMN_Z,
+      ),
     };
   }
   return {
     position: new THREE.Vector3(5.2, 2.4, 4.6),
-    target: new THREE.Vector3(0, 0.45, 0),
+    target: new THREE.Vector3(0, CABIN_CENTER_Y, 0),
   };
 }
 
@@ -569,7 +649,7 @@ function CameraRig({
       const t = renderState.clock.elapsedTime * 0.22;
       const radius = 6.3;
       const targetY = 0.7 + Math.sin(t * 2) * 0.12;
-      const target = new THREE.Vector3(0, 0.48, 0);
+      const target = new THREE.Vector3(0, CABIN_CENTER_Y, 0);
       const position = new THREE.Vector3(
         Math.cos(t) * radius,
         2 + targetY,
@@ -623,7 +703,11 @@ function CarModel({
   const trunkRef = useRef<THREE.Group>(null);
   const seatLeftRef = useRef<THREE.Group>(null);
   const seatRightRef = useRef<THREE.Group>(null);
-  const steeringRef = useRef<THREE.Mesh>(null);
+  const steeringPivotRef = useRef<THREE.Group>(null);
+  const grilleMaterial = useMemo(
+    () => new THREE.MeshStandardMaterial({ color: "#0f172a", metalness: 0.5, roughness: 0.45 }),
+    [],
+  );
   const sunroofRef = useRef<THREE.Mesh>(null);
   const bodyPaintMaterial = useMemo(
     () => new THREE.MeshStandardMaterial({ color: "#0ea5e9", metalness: 0.35, roughness: 0.3 }),
@@ -645,9 +729,10 @@ function CarModel({
         roughness: 0.06,
         transparent: true,
         opacity: 0.45,
-        transmission: 0.86,
+        transmission: 0.88,
         thickness: 0.35,
         ior: 1.45,
+        envMapIntensity: 0.9,
         side: THREE.DoubleSide,
       }),
     [],
@@ -780,9 +865,9 @@ function CarModel({
       );
     }
 
-    if (steeringRef.current) {
-      steeringRef.current.rotation.x = THREE.MathUtils.damp(
-        steeringRef.current.rotation.x,
+    if (steeringPivotRef.current) {
+      steeringPivotRef.current.rotation.x = THREE.MathUtils.damp(
+        steeringPivotRef.current.rotation.x,
         steerInput,
         8,
         delta,
@@ -881,6 +966,17 @@ function CarModel({
           <mesh castShadow receiveShadow material={bodyPaintMaterial}>
             <boxGeometry args={[BODY_LENGTH, CHASSIS_HEIGHT, BODY_WIDTH]} />
           </mesh>
+          <mesh
+            castShadow
+            receiveShadow
+            position={[HOOD_CENTER_X, HOOD_Y, 0]}
+            material={bodyPaintMaterial}
+          >
+            <boxGeometry args={[HOOD_LENGTH, HOOD_HEIGHT, BODY_WIDTH * 0.92]} />
+          </mesh>
+          <mesh position={[-BODY_HALF_LENGTH + 0.05, HOOD_Y + 0.01, 0]} material={grilleMaterial} castShadow>
+            <boxGeometry args={[0.07, HOOD_HEIGHT * 0.85, BODY_WIDTH * 0.42]} />
+          </mesh>
           <GeometricCabinShell
             paintMaterial={cabinPaintMaterial}
             interiorMaterial={interiorMaterial}
@@ -906,14 +1002,20 @@ function CarModel({
             event.stopPropagation();
             onToggleLeftDoor();
           }}
+          {...interactivePointerHandlers}
         >
           <boxGeometry args={[1.1, DOOR_PANEL_HEIGHT, 0.08]} />
           {overlayOnly ? (
             <primitive object={hiddenHitboxMaterial} attach="material" />
           ) : (
-            <meshStandardMaterial color="#0369a1" metalness={0.42} roughness={0.35} />
+            <primitive object={cabinPaintMaterial} attach="material" />
           )}
         </mesh>
+        {!overlayOnly ? (
+          <mesh castShadow position={[0.2, 0.06, -0.08]} material={cabinPaintMaterial}>
+            <boxGeometry args={[0.07, 0.05, 0.05]} />
+          </mesh>
+        ) : null}
       </group>
 
       <group ref={rightDoorRef} position={[DOOR_CENTER_X, DOOR_CENTER_Y, -DOOR_SIDE_Z]}>
@@ -925,14 +1027,20 @@ function CarModel({
             event.stopPropagation();
             onToggleRightDoor();
           }}
+          {...interactivePointerHandlers}
         >
           <boxGeometry args={[1.1, DOOR_PANEL_HEIGHT, 0.08]} />
           {overlayOnly ? (
             <primitive object={hiddenHitboxMaterial} attach="material" />
           ) : (
-            <meshStandardMaterial color="#0369a1" metalness={0.42} roughness={0.35} />
+            <primitive object={cabinPaintMaterial} attach="material" />
           )}
         </mesh>
+        {!overlayOnly ? (
+          <mesh castShadow position={[0.2, 0.06, 0.08]} material={cabinPaintMaterial}>
+            <boxGeometry args={[0.07, 0.05, 0.05]} />
+          </mesh>
+        ) : null}
       </group>
 
       {!overlayOnly ? (
@@ -943,7 +1051,7 @@ function CarModel({
           receiveShadow
         >
           <boxGeometry args={[TRUNK_SLOPE_LENGTH, TRUNK_SLOPE_THICKNESS, TRUNK_PANEL_WIDTH]} />
-          <meshStandardMaterial color="#0369a1" metalness={0.38} roughness={0.36} />
+          <primitive object={cabinPaintMaterial} attach="material" />
         </mesh>
       ) : null}
 
@@ -956,12 +1064,13 @@ function CarModel({
             event.stopPropagation();
             onToggleTrunk();
           }}
+          {...interactivePointerHandlers}
         >
           <boxGeometry args={[TRUNK_LID_DEPTH, TRUNK_LID_HEIGHT, TRUNK_PANEL_WIDTH]} />
           {overlayOnly ? (
             <primitive object={hiddenHitboxMaterial} attach="material" />
           ) : (
-            <meshStandardMaterial color="#0284c7" metalness={0.35} roughness={0.38} />
+            <primitive object={cabinPaintMaterial} attach="material" />
           )}
         </mesh>
       </group>
@@ -974,10 +1083,7 @@ function CarModel({
           <group ref={seatRightRef} position={[CABIN_CENTER_X - 0.55, INTERIOR_SEAT_Y, -0.35]}>
             <GeometricSeat position={[0, 0, 0]} />
           </group>
-          <mesh ref={steeringRef} position={[CABIN_CENTER_X - 0.78, INTERIOR_SEAT_Y + 0.38, 0.34]} rotation={[0, Math.PI / 2, 0]}>
-            <torusGeometry args={[0.12, 0.026, 16, 36]} />
-            <meshStandardMaterial color="#111827" metalness={0.4} roughness={0.55} />
-          </mesh>
+          <GeometricSteeringWheel pivotRef={steeringPivotRef} />
           {[
             { x: -1.1, y: WHEEL_MOUNT_Y, z: 0.75, steer: true },
             { x: 1.08, y: WHEEL_MOUNT_Y, z: 0.75, steer: false },
@@ -1203,6 +1309,7 @@ export function CarShowroomScene({
         <color attach="background" args={["#020617"]} />
         <Environment preset="night" />
         <ambientLight intensity={0.42} />
+        <ShowroomAccentLights lightsOn={state.lightsOn} cameraPreset={cameraPreset} />
         <directionalLight
           position={[5, 8, 3]}
           intensity={1.2}
