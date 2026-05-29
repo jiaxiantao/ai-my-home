@@ -17,11 +17,14 @@ const BODY_LENGTH = 3.2;
 const BODY_WIDTH = 1.55;
 const BODY_HALF_LENGTH = BODY_LENGTH / 2;
 const CABIN_CENTER_X = 0.15;
-const CABIN_CENTER_Y = 0.45;
 const CABIN_DEPTH = 1.9;
 const CABIN_HEIGHT = 0.5;
 const CABIN_WIDTH = 1.4;
-const BODY_HEIGHT = 0.55;
+const BODY_HEIGHT_SCALE = 1.5;
+const BODY_HEIGHT = 0.55 * BODY_HEIGHT_SCALE;
+const BODY_HALF_HEIGHT = BODY_HEIGHT / 2;
+const CABIN_ON_BODY_OVERLAP = 0.075;
+const CABIN_CENTER_Y = BODY_HALF_HEIGHT + CABIN_HEIGHT / 2 - CABIN_ON_BODY_OVERLAP;
 const CABIN_WALL_THICKNESS = 0.06;
 const GLASS_THICKNESS = 0.018;
 const WINDSHIELD_HEIGHT = 0.34;
@@ -32,14 +35,18 @@ const CABIN_FLOOR_Y = CABIN_CENTER_Y - CABIN_HEIGHT / 2;
 const INTERIOR_SEAT_Y = CABIN_FLOOR_Y + 0.1;
 const TRUNK_PANEL_THICKNESS = 0.06;
 const TRUNK_LID_DEPTH = TRUNK_PANEL_THICKNESS;
+const CABIN_TOP_Y = CABIN_CENTER_Y + CABIN_HEIGHT / 2;
+const DOOR_CENTER_Y = CABIN_CENTER_Y - 0.1;
+const SUNROOF_Y = CABIN_TOP_Y + 0.04;
+const HEADLIGHT_Y = BODY_HALF_HEIGHT * 0.8;
+const TAILLIGHT_Y = BODY_HALF_HEIGHT * 0.73;
 const TRUNK_HINGE_X = BODY_HALF_LENGTH;
-const TRUNK_HINGE_Y = 0.57;
+const TRUNK_HINGE_Y = CABIN_TOP_Y - 0.13;
 const TRUNK_HINGE_Z = 0;
 const TRUNK_LID_OUTWARD_OFFSET = TRUNK_PANEL_THICKNESS / 2;
 const TRUNK_LID_HALF_HEIGHT = 0.17;
 const TRUNK_PANEL_WIDTH = CABIN_WIDTH;
 const CABIN_REAR_X = CABIN_CENTER_X + CABIN_DEPTH / 2;
-const CABIN_TOP_Y = CABIN_CENTER_Y + CABIN_HEIGHT / 2;
 const TRUNK_SLOPE_END_X = TRUNK_HINGE_X - 0.04;
 const TRUNK_SLOPE_END_Y = TRUNK_HINGE_Y + 0.01;
 const TRUNK_SLOPE_DX = TRUNK_SLOPE_END_X - CABIN_REAR_X;
@@ -863,7 +870,7 @@ function CarModel({
           />
         </>
       ) : null}
-      <mesh ref={sunroofRef} position={[-0.02, 0.74, 0]} receiveShadow>
+      <mesh ref={sunroofRef} position={[-0.02, SUNROOF_Y, 0]} receiveShadow>
         <boxGeometry args={[0.72, 0.03, 0.42]} />
         {overlayOnly ? (
           <primitive object={hiddenHitboxMaterial} attach="material" />
@@ -872,7 +879,7 @@ function CarModel({
         )}
       </mesh>
 
-      <group ref={leftDoorRef} position={[-1.0, 0.35, 0.82]}>
+      <group ref={leftDoorRef} position={[-1.0, DOOR_CENTER_Y, 0.82]}>
         <mesh
           castShadow
           receiveShadow
@@ -891,7 +898,7 @@ function CarModel({
         </mesh>
       </group>
 
-      <group ref={rightDoorRef} position={[-1.0, 0.35, -0.82]}>
+      <group ref={rightDoorRef} position={[-1.0, DOOR_CENTER_Y, -0.82]}>
         <mesh
           castShadow
           receiveShadow
@@ -986,7 +993,7 @@ function CarModel({
         </>
       ) : null}
 
-      <mesh ref={leftHeadLightRef} position={[-1.56, 0.22, 0.45]} visible={!overlayOnly}>
+      <mesh ref={leftHeadLightRef} position={[-1.56, HEADLIGHT_Y, 0.45]} visible={!overlayOnly}>
         <sphereGeometry args={[0.09, 20, 20]} />
         <meshStandardMaterial
           emissive={state.lightsOn ? "#fde68a" : "#0f172a"}
@@ -994,7 +1001,7 @@ function CarModel({
           color={state.lightsOn ? "#fef3c7" : "#334155"}
         />
       </mesh>
-      <mesh ref={rightHeadLightRef} position={[-1.56, 0.22, -0.45]} visible={!overlayOnly}>
+      <mesh ref={rightHeadLightRef} position={[-1.56, HEADLIGHT_Y, -0.45]} visible={!overlayOnly}>
         <sphereGeometry args={[0.09, 20, 20]} />
         <meshStandardMaterial
           emissive={state.lightsOn ? "#fde68a" : "#0f172a"}
@@ -1002,11 +1009,11 @@ function CarModel({
           color={state.lightsOn ? "#fef3c7" : "#334155"}
         />
       </mesh>
-      <mesh ref={leftTailLightRef} position={[1.57, 0.2, 0.44]} visible={!overlayOnly}>
+      <mesh ref={leftTailLightRef} position={[1.57, TAILLIGHT_Y, 0.44]} visible={!overlayOnly}>
         <sphereGeometry args={[0.07, 16, 16]} />
         <meshStandardMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={0.2} />
       </mesh>
-      <mesh ref={rightTailLightRef} position={[1.57, 0.2, -0.44]} visible={!overlayOnly}>
+      <mesh ref={rightTailLightRef} position={[1.57, TAILLIGHT_Y, -0.44]} visible={!overlayOnly}>
         <sphereGeometry args={[0.07, 16, 16]} />
         <meshStandardMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={0.2} />
       </mesh>
@@ -1014,13 +1021,13 @@ function CarModel({
       {state.lightsOn && !overlayOnly ? (
         <>
           <pointLight
-            position={[-2.2, 0.24, 0.45]}
+            position={[-2.2, HEADLIGHT_Y + 0.02, 0.45]}
             intensity={state.engineOn ? 4.8 : 3.8}
             distance={5.5}
             color="#fef3c7"
           />
           <pointLight
-            position={[-2.2, 0.24, -0.45]}
+            position={[-2.2, HEADLIGHT_Y + 0.02, -0.45]}
             intensity={state.engineOn ? 4.8 : 3.8}
             distance={5.5}
             color="#fef3c7"
