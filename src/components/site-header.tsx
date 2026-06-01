@@ -27,6 +27,7 @@ const navItems = [
   { href: "/notes", label: "Notes" },
   { href: "/assistant", label: "Assistant" },
   { href: "/agents", label: "Agents" },
+  { href: "/release-center", label: "Release Center" },
   { href: "/car-showroom", label: "3D看车" },
   { href: "/cases", label: "Cases" },
   { href: "/status", label: "Status" },
