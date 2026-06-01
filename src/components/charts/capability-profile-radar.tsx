@@ -5,15 +5,7 @@ import { useMemo } from "react";
 
 import { useECharts } from "@/components/charts/use-echarts";
 import { withChartTheme } from "@/lib/chart-theme";
-
-export type CapabilityProfileScores = {
-  fullstackApi: number;
-  engineeringDemos: number;
-  cicdRelease: number;
-  edgeAi: number;
-  visualization: number;
-  security: number;
-};
+import type { CapabilityProfileScores } from "@/lib/capability-scores";
 
 export function CapabilityProfileRadar({
   scores,

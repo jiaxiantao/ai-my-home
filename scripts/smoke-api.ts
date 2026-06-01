@@ -90,10 +90,22 @@ const checks: Array<Check & CheckRequest> = [
         throw new Error(`expected 200, got ${status}`);
       }
 
-      const data = body as { overview?: { notesCount?: number } };
+      const data = body as {
+        overview?: { notesCount?: number };
+        capabilityProfile?: { fullstackApi?: number };
+        release?: { orderCount?: number; byStatus?: Record<string, number> };
+      };
 
       if (typeof data.overview?.notesCount !== "number") {
         throw new Error("missing overview.notesCount");
+      }
+
+      if (typeof data.capabilityProfile?.fullstackApi !== "number") {
+        throw new Error("missing capabilityProfile.fullstackApi");
+      }
+
+      if (typeof data.release?.orderCount !== "number") {
+        throw new Error("missing release.orderCount");
       }
     },
   },

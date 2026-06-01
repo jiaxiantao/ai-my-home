@@ -113,8 +113,16 @@ export function FullstackDashboard({
   llmLabel?: string;
 }) {
   const [activePanel, setActivePanel] = useState<DashboardPanelId>("overview");
-  const { overview, knowledge, flow, featured, currentTracks, recentLogs, analytics } =
-    data;
+  const {
+    overview,
+    knowledge,
+    flow,
+    featured,
+    currentTracks,
+    recentLogs,
+    analytics,
+    release,
+  } = data;
 
   const timelineData =
     analytics.notesByMonth.length > 0
@@ -135,6 +143,11 @@ export function FullstackDashboard({
       label: "Demo Lab",
       value: overview.demoCapabilitiesCount,
       detail: "交互实验台",
+    },
+    {
+      label: "Release",
+      value: release.orderCount,
+      detail: `${release.appCount} 应用 · ${release.byStatus.released} 已上线`,
     },
   ];
 
@@ -189,7 +202,7 @@ export function FullstackDashboard({
       <div className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 md:p-8">
         <DashboardPanelMount id="overview" active={activePanel}>
           <div className="grid gap-6">
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
               {metricCards.map((metric) => (
                 <article
                   key={metric.label}

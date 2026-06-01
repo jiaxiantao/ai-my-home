@@ -630,6 +630,54 @@ async function appendAudit(
   order.auditLogs = [entry, ...order.auditLogs].slice(0, 20);
 }
 
+export type ReleaseSummary = {
+  appCount: number;
+  orderCount: number;
+  byStatus: Record<ReleaseOrderStatus, number>;
+  recentOrders: Array<{
+    id: string;
+    appName: string;
+    version: string;
+    status: ReleaseOrderStatus;
+    changeTicket: string;
+    createdAt: string;
+  }>;
+};
+
+function emptyStatusCounts(): Record<ReleaseOrderStatus, number> {
+  return {
+    draft: 0,
+    built: 0,
+    testing: 0,
+    staging: 0,
+    released: 0,
+  };
+}
+
+export async function getReleaseSummary(): Promise<ReleaseSummary> {
+  const apps = await listReleaseApps();
+  const orders = await listReleaseOrders();
+  const byStatus = emptyStatusCounts();
+
+  for (const order of orders) {
+    byStatus[order.status] += 1;
+  }
+
+  return {
+    appCount: apps.length,
+    orderCount: orders.length,
+    byStatus,
+    recentOrders: orders.slice(0, 5).map((order) => ({
+      id: order.id,
+      appName: order.appName,
+      version: order.version,
+      status: order.status,
+      changeTicket: order.changeTicket,
+      createdAt: order.createdAt,
+    })),
+  };
+}
+
 function appendMemoryAuditLog(
   order: ReleaseOrder,
   input: {

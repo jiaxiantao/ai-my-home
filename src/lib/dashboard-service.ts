@@ -1,8 +1,13 @@
+import {
+  buildCapabilityScores,
+  type CapabilityProfileScores,
+} from "@/lib/capability-scores";
 import { getHomepageContent } from "@/lib/content-service";
 import { insightArticles } from "@/lib/editorial-content";
 import { currentTracks, workLogs } from "@/lib/ongoing-content";
 import { getNoteAnalytics, type NoteAnalytics } from "@/lib/note-analytics";
 import { listPublishedNotes } from "@/lib/notes-service";
+import { getReleaseSummary, type ReleaseSummary } from "@/lib/release-service";
 
 export type DashboardFlowNode = {
   id: string;
@@ -49,6 +54,8 @@ export type DashboardData = {
     summary: string;
   }>;
   analytics: NoteAnalytics;
+  capabilityProfile: CapabilityProfileScores;
+  release: ReleaseSummary;
 };
 
 type HomepageContent = Awaited<ReturnType<typeof getHomepageContent>>;
@@ -56,10 +63,11 @@ type HomepageContent = Awaited<ReturnType<typeof getHomepageContent>>;
 export async function getDashboardData(
   preloaded?: HomepageContent,
 ): Promise<DashboardData> {
-  const [{ domains, caseStudies }, notes, analytics] = await Promise.all([
+  const [{ domains, caseStudies }, notes, analytics, release] = await Promise.all([
     preloaded ? Promise.resolve(preloaded) : getHomepageContent(),
     listPublishedNotes(),
     getNoteAnalytics(),
+    getReleaseSummary(),
   ]);
   const featuredInsight = insightArticles.find((a) => a.featured);
   const featuredCase = caseStudies[0];
@@ -118,16 +126,18 @@ export async function getDashboardData(
     },
   ];
 
+  const overview = {
+    notesCount: notes.length,
+    domainsCount: domains.length,
+    caseStudiesCount: caseStudies.length,
+    tracksCount: currentTracks.length,
+    publishedNotesCount: notes.filter((n) => n.isPublished).length,
+    demoCapabilitiesCount: 13,
+  };
+
   return {
     generatedAt: new Date().toISOString(),
-    overview: {
-      notesCount: notes.length,
-      domainsCount: domains.length,
-      caseStudiesCount: caseStudies.length,
-      tracksCount: currentTracks.length,
-      publishedNotesCount: notes.filter((n) => n.isPublished).length,
-      demoCapabilitiesCount: 13,
-    },
+    overview,
     knowledge: {
       recentNotes: notes.slice(0, 5).map((n) => ({
         id: n.id,
@@ -152,5 +162,10 @@ export async function getDashboardData(
     })),
     recentLogs: workLogs.slice(0, 3),
     analytics,
+    capabilityProfile: buildCapabilityScores({
+      ...overview,
+      releaseOrderCount: release.orderCount,
+    }),
+    release,
   };
 }

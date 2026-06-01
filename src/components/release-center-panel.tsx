@@ -4,7 +4,22 @@ import { useEffect, useMemo, useState } from "react";
 
 import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
-import type { ReleaseApp, ReleaseOrder } from "@/lib/release-center-types";
+import type {
+  ReleaseApp,
+  ReleaseOrder,
+  ReleaseOrderStatus,
+} from "@/lib/release-center-types";
+
+type StatusFilter = ReleaseOrderStatus | "all";
+
+const STATUS_FILTERS: Array<{ key: StatusFilter; label: string }> = [
+  { key: "all", label: "全部" },
+  { key: "draft", label: "草稿" },
+  { key: "built", label: "已构建" },
+  { key: "testing", label: "测试中" },
+  { key: "staging", label: "预发" },
+  { key: "released", label: "已上线" },
+];
 
 type ReleaseData = {
   apps: ReleaseApp[];
@@ -43,6 +58,8 @@ export function ReleaseCenterPanel() {
   const [approvalDraft, setApprovalDraft] = useState<
     Record<string, { approver: string; reason: string }>
   >({});
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   async function loadData() {
     setLoading(true);
@@ -77,11 +94,37 @@ export function ReleaseCenterPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const releaseSummary = useMemo(() => {
-    const released = orders.filter((item) => item.status === "released").length;
-    const inProgress = orders.filter((item) => item.status !== "released").length;
-    return { released, inProgress };
+  const statusCounts = useMemo(() => {
+    const counts: Record<ReleaseOrderStatus, number> = {
+      draft: 0,
+      built: 0,
+      testing: 0,
+      staging: 0,
+      released: 0,
+    };
+    for (const order of orders) {
+      counts[order.status] += 1;
+    }
+    return counts;
   }, [orders]);
+
+  const filteredOrders = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    return orders.filter((order) => {
+      if (statusFilter !== "all" && order.status !== statusFilter) {
+        return false;
+      }
+      if (!query) {
+        return true;
+      }
+      return (
+        order.version.toLowerCase().includes(query) ||
+        order.appName.toLowerCase().includes(query) ||
+        order.changeTicket.toLowerCase().includes(query) ||
+        order.branch.toLowerCase().includes(query)
+      );
+    });
+  }, [orders, searchQuery, statusFilter]);
 
   async function createApp() {
     setMessage("");
@@ -142,10 +185,28 @@ export function ReleaseCenterPanel() {
 
   return (
     <div className="grid gap-6">
-      <section className="grid gap-4 rounded-[2rem] border border-white/10 bg-white/5 p-6 md:grid-cols-3">
-        <Metric label="应用数" value={String(apps.length)} />
-        <Metric label="发布中" value={String(releaseSummary.inProgress)} />
-        <Metric label="已完成" value={String(releaseSummary.released)} />
+      <section className="grid gap-4 rounded-[2rem] border border-white/10 bg-white/5 p-6">
+        <div className="grid gap-4 md:grid-cols-4">
+          <Metric label="应用数" value={String(apps.length)} />
+          <Metric label="发布单" value={String(orders.length)} />
+          <Metric
+            label="进行中"
+            value={String(orders.length - statusCounts.released)}
+          />
+          <Metric label="已上线" value={String(statusCounts.released)} />
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {(
+            Object.entries(statusCounts) as Array<[ReleaseOrderStatus, number]>
+          ).map(([status, count]) => (
+            <span
+              key={status}
+              className="rounded-full border border-white/10 bg-slate-950/60 px-3 py-1 text-xs text-slate-300"
+            >
+              {status} · {count}
+            </span>
+          ))}
+        </div>
       </section>
 
       {!authenticated ? (
@@ -239,13 +300,47 @@ export function ReleaseCenterPanel() {
       </section>
 
       <section className="grid gap-4">
-        <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-400">
-          3) 发布流水线执行
-        </p>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-400">
+            3) 发布流水线执行
+          </p>
+          <p className="text-xs text-slate-500">
+            显示 {filteredOrders.length} / {orders.length} 张发布单
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {STATUS_FILTERS.map((item) => {
+            const count =
+              item.key === "all" ? orders.length : statusCounts[item.key];
+            const active = statusFilter === item.key;
+            return (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => setStatusFilter(item.key)}
+                className={`rounded-full border px-3 py-1.5 text-xs transition ${
+                  active
+                    ? "border-cyan-300/35 bg-cyan-300/10 text-cyan-100"
+                    : "border-white/10 bg-white/5 text-slate-300 hover:border-white/20"
+                }`}
+              >
+                {item.label} ({count})
+              </button>
+            );
+          })}
+        </div>
+
+        <Input
+          placeholder="搜索版本 / 应用 / 分支 / 变更单"
+          value={searchQuery}
+          onChange={setSearchQuery}
+        />
+
         {loading ? (
           <p className="text-sm text-slate-400">加载中...</p>
-        ) : orders.length ? (
-          orders.map((order) => (
+        ) : filteredOrders.length ? (
+          filteredOrders.map((order) => (
             <article
               key={order.id}
               className="grid gap-4 rounded-[1.5rem] border border-white/10 bg-slate-950/75 p-5"
@@ -442,6 +537,10 @@ export function ReleaseCenterPanel() {
               </div>
             </article>
           ))
+        ) : orders.length ? (
+          <p className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-400">
+            没有符合筛选条件的发布单，试试调整状态或搜索关键词。
+          </p>
         ) : (
           <p className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-400">
             暂无发布单，先创建一个应用和发布单。
