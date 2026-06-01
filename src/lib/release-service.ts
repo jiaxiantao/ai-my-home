@@ -768,6 +768,25 @@ async function appendAudit(
   order.auditLogs = [entry, ...order.auditLogs].slice(0, 20);
 }
 
+export type ReleaseStoreMode = "postgresql" | "memory" | "unavailable";
+
+export async function probeReleaseStoreMode(): Promise<ReleaseStoreMode> {
+  const db = getDb();
+  if (!db) {
+    return "memory";
+  }
+
+  try {
+    await db.releaseApp.count();
+    return "postgresql";
+  } catch (error) {
+    if (isReleaseSchemaError(error)) {
+      return "memory";
+    }
+    return "unavailable";
+  }
+}
+
 export type ReleaseSummary = {
   appCount: number;
   orderCount: number;

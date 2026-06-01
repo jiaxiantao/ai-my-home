@@ -6,8 +6,9 @@ export {
   getReleaseSummary,
   listReleaseApps,
   listReleaseOrders,
+  probeReleaseStoreMode,
   rollbackReleaseProduction,
   runReleaseBuild,
   updateReleaseChecks,
 } from "@/lib/release-service";
-export type { ReleaseSummary } from "@/lib/release-service";
+export type { ReleaseStoreMode, ReleaseSummary } from "@/lib/release-service";

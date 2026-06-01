@@ -33,6 +33,7 @@ const checks: Array<Check & CheckRequest> = [
       const data = body as {
         ok?: boolean;
         db?: { connected?: boolean; ok?: boolean };
+        release?: { store?: string };
       };
 
       if (typeof data.ok !== "boolean") {
@@ -43,6 +44,10 @@ const checks: Array<Check & CheckRequest> = [
         throw new Error(
           `database unhealthy (connected=${String(data.db?.connected)}, ok=${String(data.db?.ok)})`,
         );
+      }
+
+      if (!data.release?.store) {
+        throw new Error("missing release.store in health payload");
       }
     },
   },

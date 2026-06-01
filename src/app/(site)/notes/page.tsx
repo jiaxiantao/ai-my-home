@@ -5,6 +5,8 @@ import Link from "next/link";
 import { NoteLibrary } from "@/components/note-library";
 import { NoteManager } from "@/components/note-manager";
 import { NoteSearchDemo } from "@/components/note-search-demo";
+import { NotesIntelligenceBridge } from "@/components/notes-intelligence-bridge";
+import { buildNoteAssistantPrompts } from "@/lib/note-assistant-prompts";
 import { SectionHeading } from "@/components/section-heading";
 import { SectionSkeleton } from "@/components/section-skeleton";
 import { listPublishedNotes } from "@/lib/notes-service";
@@ -25,6 +27,7 @@ export const metadata: Metadata = {
 
 export default async function NotesPage() {
   const publishedNotes = await listPublishedNotes();
+  const assistantPrompts = buildNoteAssistantPrompts(publishedNotes);
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-14 px-6 py-10 lg:px-8 lg:py-14">
@@ -43,6 +46,8 @@ export default async function NotesPage() {
           用 Assistant 追问
         </Link>
       </section>
+
+      <NotesIntelligenceBridge prompts={assistantPrompts} />
 
       <section className="space-y-6">
         <SectionHeading eyebrow="pg_trgm" title="相似度检索演示" />

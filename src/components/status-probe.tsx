@@ -11,6 +11,7 @@ type HealthData = {
   db?: { connected?: boolean; ok?: boolean; latencyMs?: number };
   llm?: { configured?: boolean; label?: string };
   search?: { pgTrgm?: boolean };
+  release?: { store?: "postgresql" | "memory" | "unavailable" };
   server?: { node?: string; totalMs?: number };
   timestamp?: string;
 };
@@ -320,9 +321,20 @@ export function StatusProbe() {
           detail={health?.search?.pgTrgm ? "扩展已安装" : "使用内存检索"}
         />
         <StatusCard
-          label="Node.js"
-          ok={Boolean(health?.server?.node)}
-          detail={health?.server?.node ?? "—"}
+          label="Release Store"
+          ok={
+            health?.release?.store === "postgresql" ||
+            health?.release?.store === "memory"
+          }
+          detail={
+            health?.release?.store === "postgresql"
+              ? "PostgreSQL 持久化"
+              : health?.release?.store === "memory"
+                ? "内存演示（未建表）"
+                : health?.release?.store === "unavailable"
+                  ? "不可用"
+                  : "探测中…"
+          }
         />
       </div>
 

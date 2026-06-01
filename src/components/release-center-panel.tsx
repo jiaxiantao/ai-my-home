@@ -397,11 +397,11 @@ export function ReleaseCenterPanel() {
           <p className="text-sm text-slate-400">加载中...</p>
         ) : filteredOrders.length ? (
           filteredOrders.map((order) => (
-            <article
+            <details
               key={order.id}
-              className="grid gap-4 rounded-[1.5rem] border border-white/10 bg-slate-950/75 p-5"
+              className="group rounded-[1.5rem] border border-white/10 bg-slate-950/75 open:border-cyan-300/20"
             >
-              <div className="flex flex-wrap items-center justify-between gap-3">
+              <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3 p-5 marker:content-none [&::-webkit-details-marker]:hidden">
                 <div>
                   <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
                     {order.appName}
@@ -414,7 +414,9 @@ export function ReleaseCenterPanel() {
                 <span className="rounded-full border border-cyan-300/25 bg-cyan-300/10 px-3 py-1 text-xs text-cyan-100">
                   {formatReleaseOrderStatus(order.status)}
                 </span>
-              </div>
+              </summary>
+
+              <div className="grid gap-4 border-t border-white/10 p-5 pt-4">
               {order.lock.locked ? (
                 <p className="rounded-xl border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-xs text-amber-100">
                   pipeline locked by {order.lock.by} · {order.lock.reason}
@@ -591,7 +593,8 @@ export function ReleaseCenterPanel() {
                   )}
                 </div>
               </div>
-            </article>
+              </div>
+            </details>
           ))
         ) : orders.length ? (
           <p className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-400">

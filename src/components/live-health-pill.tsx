@@ -6,6 +6,7 @@ type HealthPayload = {
   db?: { connected?: boolean; ok?: boolean; latencyMs?: number };
   llm?: { configured?: boolean; label?: string };
   search?: { pgTrgm?: boolean };
+  release?: { store?: "postgresql" | "memory" | "unavailable" };
 };
 
 export function LiveHealthPill() {
@@ -29,6 +30,7 @@ export function LiveHealthPill() {
         const dbOk = Boolean(data.db?.ok);
         const llmOk = Boolean(data.llm?.configured);
         const trgm = data.search?.pgTrgm ? "pg_trgm" : "memory";
+        const release = data.release?.store ?? "—";
 
         setStatus(dbOk && llmOk ? "ok" : "degraded");
         setDetail(
@@ -36,6 +38,7 @@ export function LiveHealthPill() {
             data.db?.connected ? `db ${data.db.latencyMs ?? 0}ms` : "db off",
             data.llm?.label,
             trgm,
+            `release ${release}`,
           ]
             .filter(Boolean)
             .join(" · "),
@@ -73,7 +76,7 @@ export function LiveHealthPill() {
 
   return (
     <a
-      href="/api/health"
+      href="/status"
       className={`inline-flex max-w-full flex-col gap-0.5 rounded-2xl border px-4 py-3 transition hover:brightness-110 ${tone}`}
     >
       <span className="text-xs font-semibold uppercase tracking-[0.18em]">

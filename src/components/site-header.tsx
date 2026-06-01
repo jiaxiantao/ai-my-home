@@ -133,13 +133,18 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-20 border-b border-white/10 bg-slate-950/70 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
-        <Link
-          href="/"
-          className="text-sm font-semibold tracking-[0.24em] text-white"
-          onClick={() => setOpen(false)}
-        >
-          XJ / FRONTEND SYSTEMS
-        </Link>
+        <div className="flex flex-col gap-1">
+          <Link
+            href="/"
+            className="text-sm font-semibold tracking-[0.24em] text-white"
+            onClick={() => setOpen(false)}
+          >
+            XJ / FRONTEND SYSTEMS
+          </Link>
+          <p className="hidden text-[10px] text-slate-500 lg:block">
+            <kbd className="rounded border border-white/10 px-1 font-mono">⌘K</kbd> 快捷导航
+          </p>
+        </div>
 
         <nav
           ref={desktopNavRef}
