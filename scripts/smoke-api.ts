@@ -154,6 +154,34 @@ const checks: Array<Check & CheckRequest> = [
     },
   },
   {
+    name: "release-apps",
+    path: "/api/release/apps",
+    assert: (status, body) => {
+      if (status !== 200) {
+        throw new Error(`expected 200, got ${status}`);
+      }
+
+      const data = body as { apps?: unknown[] };
+      if (!Array.isArray(data.apps)) {
+        throw new Error("missing apps array");
+      }
+    },
+  },
+  {
+    name: "release-orders",
+    path: "/api/release/orders",
+    assert: (status, body) => {
+      if (status !== 200) {
+        throw new Error(`expected 200, got ${status}`);
+      }
+
+      const data = body as { orders?: unknown[] };
+      if (!Array.isArray(data.orders)) {
+        throw new Error("missing orders array");
+      }
+    },
+  },
+  {
     name: "status-probes",
     path: "/api/status/probes?probeKey=agent-sse&limit=5",
     assert: (status, body) => {

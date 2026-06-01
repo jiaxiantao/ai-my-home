@@ -9,6 +9,8 @@ const apiProofs = [
   { href: "/api/notes", label: "GET /api/notes" },
   { href: "/api/notes/search?q=架构", label: "GET /api/notes/search" },
   { href: "/api/chat", label: "POST /api/chat" },
+  { href: "/api/release/apps", label: "GET /api/release/apps" },
+  { href: "/api/release/orders", label: "GET /api/release/orders" },
 ];
 
 export function HomeProofBar({ dashboard }: { dashboard: DashboardData }) {

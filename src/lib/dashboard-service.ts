@@ -110,6 +110,12 @@ export async function getDashboardData(
       description: "文章与观点沉淀，偏长期复用",
       status: "curated",
     },
+    {
+      id: "release",
+      label: "Release Center",
+      description: "发布单 · 构建 · 测试/预发/生产门禁 · 审计与回滚",
+      status: "interactive",
+    },
   ];
 
   return {
@@ -120,7 +126,7 @@ export async function getDashboardData(
       caseStudiesCount: caseStudies.length,
       tracksCount: currentTracks.length,
       publishedNotesCount: notes.filter((n) => n.isPublished).length,
-      demoCapabilitiesCount: 4,
+      demoCapabilitiesCount: 13,
     },
     knowledge: {
       recentNotes: notes.slice(0, 5).map((n) => ({

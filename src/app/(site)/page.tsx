@@ -7,6 +7,7 @@ import { CopyButton } from "@/components/copy-button";
 import { HomeProofBar } from "@/components/home-proof-bar";
 import { SectionHeading } from "@/components/section-heading";
 import { SectionSkeleton } from "@/components/section-skeleton";
+import { ReleaseCenterSpotlight } from "@/components/release-center-spotlight";
 import { SystemsVisualization } from "@/components/systems-visualization";
 import { getHomepageContent } from "@/lib/content-service";
 import { getDashboardData } from "@/lib/dashboard-service";
@@ -107,6 +108,12 @@ export default async function Home() {
                 判断台
               </Link>
               <Link
+                href="/release-center"
+                className="inline-flex items-center gap-2 rounded-full border border-white/10 px-5 py-2.5 text-sm font-semibold text-slate-400 transition hover:bg-white/5"
+              >
+                发布中心
+              </Link>
+              <Link
                 href="/resume"
                 className="inline-flex items-center rounded-full border border-white/10 px-5 py-2.5 text-sm font-semibold text-slate-300 transition hover:text-white"
               >
@@ -134,6 +141,14 @@ export default async function Home() {
           <FullstackDashboard data={dashboard} llmLabel={llmLabel} />
         </section>
 
+        <section id="release-center" className="space-y-6">
+          <SectionHeading
+            eyebrow="Release Engineering"
+            title="发布单 · 构建 · 分环境门禁"
+          />
+          <ReleaseCenterSpotlight />
+        </section>
+
         <section id="cross-platform" className="space-y-6">
           <SectionHeading
             eyebrow="Cross-Platform"
@@ -153,7 +168,7 @@ export default async function Home() {
         <section id="tech-demos" className="space-y-6">
           <SectionHeading
             eyebrow="Engineering Demos"
-            title="可交互样例：性能 · 网络 · 渲染 · 状态 · 流 · Worker · 检索"
+            title="可交互样例：性能 · 网络 · 渲染 · 状态 · 流 · Worker · 检索 · 安全"
           />
           <EngineeringShowcase />
         </section>

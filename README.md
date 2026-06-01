@@ -21,6 +21,7 @@
 | `#edge-ai` | **端侧智能**：Transformers.js 情感分类、WASM/Worker 基准、MediaPipe 姿势、Agent 工具循环 |
 | `#tech-demos` | 工程 Demo：Web Vitals、API 延迟、虚拟列表、状态机、SSE、**Worker 计算**、**pg_trgm vs 内存检索** |
 | `#demo-lab` | 架构 / 性能 / 工作流判断台 |
+| `#release-center` | **工程化发布单**：应用注册、构建、测试/预发/生产门禁、审计与回滚 |
 | `#topology` | 能力连接图 |
 
 ## 本地开发
@@ -86,6 +87,10 @@ F5 启动扩展开发宿主；命令：解释 / 补全 / 重构选中代码（�
 - `POST /api/chat` — SSE / JSON 对话
 - `POST /api/agent` — Agent 工具循环（SSE trace）
 - `GET /api/health` — DB / LLM / pg_trgm 状态（首页实时探测）
+- `GET /api/release/apps` — 发布中心应用列表
+- `GET /api/release/orders` — 发布单列表
+- `POST /api/release/orders` — 创建发布单（需 admin）
+- `POST /api/release/orders/[id]/action` — 构建 / 门禁 / 分环境发布 / 生产回滚（需 admin）
 
 ## Docker
 

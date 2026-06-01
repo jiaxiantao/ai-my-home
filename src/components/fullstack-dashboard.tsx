@@ -440,6 +440,8 @@ export function FullstackDashboard({
               <span>→</span>
               <span>chat</span>
               <span>→</span>
+              <span>release center</span>
+              <span>→</span>
               <span>cases / insights</span>
             </div>
           </div>

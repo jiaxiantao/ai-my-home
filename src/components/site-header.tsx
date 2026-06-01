@@ -100,6 +100,21 @@ export function SiteHeader() {
     };
   }, []);
 
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key !== "Escape") {
+        return;
+      }
+      setActiveDropdown(null);
+      setOpen(false);
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
   function cancelCloseTimer() {
     if (closeTimerRef.current) {
       clearTimeout(closeTimerRef.current);
@@ -150,7 +165,12 @@ export function SiteHeader() {
                   aria-expanded={expanded}
                 >
                   {group.label}
-                  <ChevronDown className="h-3.5 w-3.5" />
+                  <ChevronDown
+                    className={cn(
+                      "h-3.5 w-3.5 transition-transform duration-200",
+                      expanded && "rotate-180",
+                    )}
+                  />
                 </button>
                 {expanded ? (
                   <div
