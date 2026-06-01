@@ -173,26 +173,32 @@ export function SiteHeader() {
                     )}
                   />
                 </button>
-                {expanded ? (
-                  <div
-                    className="absolute left-0 top-full z-20 min-w-44 pt-2"
-                    onMouseEnter={cancelCloseTimer}
-                    onMouseLeave={scheduleDropdownClose}
-                  >
-                    <div className="rounded-xl border border-white/10 bg-slate-950/95 p-2 shadow-2xl">
+                <div
+                  className={cn(
+                    "absolute left-0 top-full z-20 min-w-44 pt-2 transition-opacity duration-150",
+                    expanded
+                      ? "pointer-events-auto opacity-100"
+                      : "pointer-events-none opacity-0",
+                  )}
+                  aria-hidden={!expanded}
+                  onMouseEnter={cancelCloseTimer}
+                  onMouseLeave={scheduleDropdownClose}
+                >
+                  <div className="rounded-xl border border-white/10 bg-slate-950/95 p-2 shadow-2xl">
                     {group.items.map((item) => (
                       <Link
                         key={item.href}
                         href={item.href}
+                        data-testid={`nav-${group.id}-${item.label.replace(/\s+/g, "-").toLowerCase()}`}
                         onClick={() => setActiveDropdown(null)}
+                        tabIndex={expanded ? 0 : -1}
                         className="block rounded-lg px-3 py-2 text-xs text-slate-300 transition hover:bg-white/10 hover:text-white"
                       >
                         {item.label}
                       </Link>
                     ))}
-                    </div>
                   </div>
-                ) : null}
+                </div>
               </div>
             );
           })}

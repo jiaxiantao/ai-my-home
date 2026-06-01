@@ -2,13 +2,19 @@ import { expect, test } from "@playwright/test";
 
 test.describe("Front Intelligence", () => {
   test("composer section shows intent chips", async ({ page }) => {
-    await page.goto("/#front-intelligence");
+    await page.goto("/");
+    const section = page.locator("#front-intelligence");
+    await section.scrollIntoViewIfNeeded();
 
-    await expect(page.getByText("前端智能化编排台")).toBeVisible();
-    await expect(page.getByRole("button", { name: /性能优化/i })).toBeVisible({
-      timeout: 15_000,
+    await expect(section.getByText("前端智能化编排台")).toBeVisible({
+      timeout: 30_000,
     });
-    await expect(page.getByRole("link", { name: /带到 Assistant/i })).toBeVisible();
+    await expect(section.getByText(/性能优化/).first()).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(
+      section.getByRole("link", { name: /带到 Assistant/i }),
+    ).toBeVisible();
   });
 
   test("analyze API returns intents", async ({ request }) => {

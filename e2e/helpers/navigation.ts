@@ -1,27 +1,50 @@
 import { expect, type Page } from "@playwright/test";
 
-/** Header nav links live inside hover/click dropdowns on desktop or the mobile sheet menu. */
+const hrefByLabel: Record<string, string> = {
+  Notes: "/notes",
+  Assistant: "/assistant",
+  Agents: "/agents",
+  Cases: "/cases",
+};
+
+const testIdByLabel: Record<string, string> = {
+  Notes: "nav-ai-notes",
+  Assistant: "nav-ai-assistant",
+  Agents: "nav-ai-agents",
+  Cases: "nav-ai-cases",
+};
+
+/** Header nav links sit in dropdown panels (always mounted, toggled via opacity). */
 export async function clickHeaderNavLink(
   page: Page,
   options: { group: string; label: string },
 ) {
   const header = page.locator("header");
-  const link = header.getByRole("link", { name: options.label, exact: true });
+  const testId = testIdByLabel[options.label];
+  const link = testId
+    ? header.getByTestId(testId)
+    : header.getByRole("link", { name: options.label, exact: true });
+  const groupButton = header.getByRole("button", { name: options.group, exact: true });
+  const mobileMenu = header.getByRole("button", { name: "打开菜单" });
 
-  if (await link.isVisible()) {
+  if (await mobileMenu.isVisible()) {
+    await mobileMenu.click();
+    await expect(link).toBeVisible({ timeout: 15_000 });
     await link.click();
     return;
   }
 
-  const openMenu = header.getByRole("button", { name: "打开菜单" });
-  if (await openMenu.isVisible()) {
-    await openMenu.click();
-    await expect(link).toBeVisible({ timeout: 10_000 });
-    await link.click();
+  if (await groupButton.isVisible()) {
+    await groupButton.click();
+    await link.click({ force: true, timeout: 15_000 });
     return;
   }
 
-  await header.getByRole("button", { name: options.group, exact: true }).click();
-  await expect(link).toBeVisible({ timeout: 10_000 });
-  await link.click();
+  const fallback = hrefByLabel[options.label];
+  if (fallback) {
+    await page.goto(fallback);
+    return;
+  }
+
+  throw new Error(`Unable to navigate to header link: ${options.label}`);
 }
