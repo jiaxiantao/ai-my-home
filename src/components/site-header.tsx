@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ChevronDown, Menu } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useAuth } from "@/components/auth-provider";
 import { Badge } from "@/components/ui/badge";
@@ -52,6 +52,7 @@ const navGroups = [
 ] as const;
 
 export function SiteHeader() {
+  const desktopNavRef = useRef<HTMLElement | null>(null);
   const [open, setOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
@@ -74,6 +75,22 @@ export function SiteHeader() {
     await logout();
   }
 
+  useEffect(() => {
+    function handlePointerDown(event: PointerEvent) {
+      if (!desktopNavRef.current) return;
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (!desktopNavRef.current.contains(target)) {
+        setActiveDropdown(null);
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, []);
+
   return (
     <header className="sticky top-0 z-20 border-b border-white/10 bg-slate-950/70 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
@@ -85,16 +102,14 @@ export function SiteHeader() {
           XJ / FRONTEND SYSTEMS
         </Link>
 
-        <nav className="hidden items-center gap-6 text-sm text-slate-300 lg:flex">
+        <nav
+          ref={desktopNavRef}
+          className="hidden items-center gap-6 text-sm text-slate-300 lg:flex"
+        >
           {navGroups.map((group) => {
             const expanded = activeDropdown === group.id;
             return (
-              <div
-                key={group.id}
-                className="relative"
-                onMouseEnter={() => setActiveDropdown(group.id)}
-                onMouseLeave={() => setActiveDropdown((current) => (current === group.id ? null : current))}
-              >
+              <div key={group.id} className="relative">
                 <button
                   type="button"
                   onClick={() =>
@@ -109,7 +124,8 @@ export function SiteHeader() {
                   <ChevronDown className="h-3.5 w-3.5" />
                 </button>
                 {expanded ? (
-                  <div className="absolute left-0 top-full z-20 mt-2 min-w-44 rounded-xl border border-white/10 bg-slate-950/95 p-2 shadow-2xl">
+                  <div className="absolute left-0 top-full z-20 min-w-44 pt-2">
+                    <div className="rounded-xl border border-white/10 bg-slate-950/95 p-2 shadow-2xl">
                     {group.items.map((item) => (
                       <Link
                         key={item.href}
@@ -120,6 +136,7 @@ export function SiteHeader() {
                         {item.label}
                       </Link>
                     ))}
+                    </div>
                   </div>
                 ) : null}
               </div>
