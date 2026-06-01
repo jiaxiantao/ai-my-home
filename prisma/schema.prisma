@@ -89,3 +89,59 @@ model IntelligenceProfile {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model ReleaseApp {
+  id           String         @id @default(cuid())
+  name         String
+  repo         String
+  buildCommand String
+  testCommand  String
+  createdAt    DateTime       @default(now())
+  orders       ReleaseOrder[]
+}
+
+model ReleaseOrder {
+  id              String   @id @default(cuid())
+  appId           String
+  appName         String
+  version         String
+  branch          String
+  changeTicket    String
+  status          String   @default("draft")
+  buildStatus     String   @default("pending")
+  buildDurationMs Int?
+  buildArtifact   String?
+  buildLogs       String[] @default([])
+  unitPassed      Boolean  @default(false)
+  e2ePassed       Boolean  @default(false)
+  securityPassed  Boolean  @default(false)
+  approved        Boolean  @default(false)
+  approver        String?
+  approvalReason  String?
+  approvedAt      DateTime?
+  testStatus      String   @default("pending")
+  testDeployedAt  DateTime?
+  preStatus       String   @default("pending")
+  preDeployedAt   DateTime?
+  prodStatus      String   @default("pending")
+  prodDeployedAt  DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  app             ReleaseApp @relation(fields: [appId], references: [id], onDelete: Cascade)
+  auditLogs       ReleaseAuditLog[]
+
+  @@index([appId, createdAt])
+  @@index([status])
+}
+
+model ReleaseAuditLog {
+  id        String   @id @default(cuid())
+  orderId   String
+  operator  String
+  action    String
+  detail    String   @db.Text
+  createdAt DateTime @default(now())
+  order     ReleaseOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, createdAt])
+}

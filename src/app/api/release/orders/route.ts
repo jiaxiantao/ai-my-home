@@ -12,14 +12,14 @@ const createOrderSchema = z.object({
 });
 
 export async function GET() {
-  return NextResponse.json({ orders: listReleaseOrders() });
+  return NextResponse.json({ orders: await listReleaseOrders() });
 }
 
 export async function POST(request: Request) {
   try {
     assertAdminTokenFromRequest(request);
     const body = createOrderSchema.parse(await request.json());
-    const order = createReleaseOrder(body);
+    const order = await createReleaseOrder(body);
     return NextResponse.json({ order }, { status: 201 });
   } catch (error) {
     if (error instanceof AdminAuthError) {

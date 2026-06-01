@@ -12,14 +12,14 @@ const createAppSchema = z.object({
 });
 
 export async function GET() {
-  return NextResponse.json({ apps: listReleaseApps() });
+  return NextResponse.json({ apps: await listReleaseApps() });
 }
 
 export async function POST(request: Request) {
   try {
     assertAdminTokenFromRequest(request);
     const body = createAppSchema.parse(await request.json());
-    const app = createReleaseApp(body);
+    const app = await createReleaseApp(body);
     return NextResponse.json({ app }, { status: 201 });
   } catch (error) {
     if (error instanceof AdminAuthError) {

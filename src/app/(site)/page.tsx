@@ -2,6 +2,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
+import { CapabilityProfileSection } from "@/components/capability-profile-section";
 import { CaseProofCard } from "@/components/case-proof-card";
 import { CopyButton } from "@/components/copy-button";
 import { HomeProofBar } from "@/components/home-proof-bar";
@@ -123,6 +124,11 @@ export default async function Home() {
           </div>
 
           <HomeProofBar dashboard={dashboard} />
+        </section>
+
+        <section id="capability-radar" className="space-y-6">
+          <SectionHeading eyebrow="Capability" title="六维能力雷达 · 一眼看覆盖面" />
+          <CapabilityProfileSection dashboard={dashboard} />
         </section>
 
         <section id="viz" className="space-y-6">

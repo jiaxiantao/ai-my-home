@@ -47,18 +47,23 @@ export async function POST(
     const { id } = await context.params;
 
     if (payload.action === "run_build") {
-      const order = runReleaseBuild(id, "admin");
+      const order = await runReleaseBuild(id, "admin");
       return NextResponse.json({ order });
     }
     if (payload.action === "set_checks") {
-      const order = updateReleaseChecks(id, payload.checks, payload.approval, "admin");
+      const order = await updateReleaseChecks(
+        id,
+        payload.checks,
+        payload.approval,
+        "admin",
+      );
       return NextResponse.json({ order });
     }
     if (payload.action === "rollback_prod") {
-      const order = rollbackReleaseProduction(id, "admin");
+      const order = await rollbackReleaseProduction(id, "admin");
       return NextResponse.json({ order });
     }
-    const order = deployReleaseEnvironment(id, payload.environment, "admin");
+    const order = await deployReleaseEnvironment(id, payload.environment, "admin");
     return NextResponse.json({ order });
   } catch (error) {
     if (error instanceof AdminAuthError) {

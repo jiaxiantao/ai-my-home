@@ -66,6 +66,9 @@ const seededNotes = [
 ];
 
 async function main() {
+  await prisma.releaseAuditLog.deleteMany();
+  await prisma.releaseOrder.deleteMany();
+  await prisma.releaseApp.deleteMany();
   await prisma.note.deleteMany();
   await prisma.topic.deleteMany();
   await prisma.caseStudy.deleteMany();
@@ -116,6 +119,15 @@ async function main() {
     });
   }
 
+  await prisma.releaseApp.create({
+    data: {
+      name: "ai-my-home-web",
+      repo: "github.com/jiaxiantao/ai-my-home",
+      buildCommand: "pnpm build",
+      testCommand: "pnpm lint && pnpm test:e2e",
+    },
+  });
+
   const pgTrgm = await ensurePgTrgmExtension();
 
   console.log(
@@ -123,6 +135,7 @@ async function main() {
       `Seeded ${domainDetails.length} domains`,
       `${caseStudies.length} cases`,
       `${seededNotes.length} notes`,
+      `1 release app`,
       `pg_trgm: ${pgTrgm ? "enabled" : "unavailable (memory fallback)"}`,
     ].join(" · "),
   );

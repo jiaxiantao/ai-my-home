@@ -92,6 +92,8 @@ F5 启动扩展开发宿主；命令：解释 / 补全 / 重构选中代码（�
 - `POST /api/release/orders` — 创建发布单（需 admin）
 - `POST /api/release/orders/[id]/action` — 构建 / 门禁 / 分环境发布 / 生产回滚（需 admin）
 
+发布中心数据持久化在 PostgreSQL（`ReleaseApp` / `ReleaseOrder` / `ReleaseAuditLog`），`pnpm db:seed` 会预置默认应用。
+
 ## Docker
 
 ```bash

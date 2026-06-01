@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
-import type { ReleaseApp, ReleaseOrder } from "@/lib/release-center-store";
+import type { ReleaseApp, ReleaseOrder } from "@/lib/release-center-types";
 
 type ReleaseData = {
   apps: ReleaseApp[];
