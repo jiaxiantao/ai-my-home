@@ -53,6 +53,7 @@ const navGroups = [
 
 export function SiteHeader() {
   const desktopNavRef = useRef<HTMLElement | null>(null);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [open, setOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
@@ -91,6 +92,28 @@ export function SiteHeader() {
     };
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) {
+        clearTimeout(closeTimerRef.current);
+      }
+    };
+  }, []);
+
+  function cancelCloseTimer() {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  }
+
+  function scheduleDropdownClose() {
+    cancelCloseTimer();
+    closeTimerRef.current = setTimeout(() => {
+      setActiveDropdown(null);
+    }, 130);
+  }
+
   return (
     <header className="sticky top-0 z-20 border-b border-white/10 bg-slate-950/70 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
@@ -112,6 +135,12 @@ export function SiteHeader() {
               <div key={group.id} className="relative">
                 <button
                   type="button"
+                  onMouseEnter={() => {
+                    cancelCloseTimer();
+                    setActiveDropdown(group.id);
+                  }}
+                  onMouseLeave={scheduleDropdownClose}
+                  onFocus={() => setActiveDropdown(group.id)}
                   onClick={() =>
                     setActiveDropdown((current) =>
                       current === group.id ? null : group.id,
@@ -124,7 +153,11 @@ export function SiteHeader() {
                   <ChevronDown className="h-3.5 w-3.5" />
                 </button>
                 {expanded ? (
-                  <div className="absolute left-0 top-full z-20 min-w-44 pt-2">
+                  <div
+                    className="absolute left-0 top-full z-20 min-w-44 pt-2"
+                    onMouseEnter={cancelCloseTimer}
+                    onMouseLeave={scheduleDropdownClose}
+                  >
                     <div className="rounded-xl border border-white/10 bg-slate-950/95 p-2 shadow-2xl">
                     {group.items.map((item) => (
                       <Link
