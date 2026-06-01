@@ -1,12 +1,24 @@
 import type { ChatMessage } from "@/lib/chat-types";
 import type { IntelligencePreferences } from "@/lib/front-intelligence-preferences";
 
-type IntentLabel =
+export type IntentLabel =
   | "architecture"
   | "performance"
   | "debug"
   | "workflow"
   | "implementation";
+
+export const INTENT_LABELS: Record<IntentLabel, string> = {
+  architecture: "架构设计",
+  performance: "性能优化",
+  debug: "问题排查",
+  workflow: "工程流程",
+  implementation: "实现落地",
+};
+
+export function formatIntentLabel(label: IntentLabel) {
+  return INTENT_LABELS[label];
+}
 
 export type ComposerIntelligence = {
   intents: Array<{ label: IntentLabel; score: number }>;

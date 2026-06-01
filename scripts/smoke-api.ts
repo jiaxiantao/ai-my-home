@@ -98,6 +98,10 @@ const checks: Array<Check & CheckRequest> = [
           byStatus?: Record<string, number>;
           recentOrders?: unknown[];
         };
+        intelligence?: {
+          samplePrompts?: unknown[];
+          llmLabel?: string;
+        };
       };
 
       if (typeof data.overview?.notesCount !== "number") {
@@ -114,6 +118,36 @@ const checks: Array<Check & CheckRequest> = [
 
       if (!Array.isArray(data.release?.recentOrders)) {
         throw new Error("missing release.recentOrders array");
+      }
+
+      if (!Array.isArray(data.intelligence?.samplePrompts)) {
+        throw new Error("missing intelligence.samplePrompts");
+      }
+    },
+  },
+  {
+    name: "intelligence-analyze",
+    path: "/api/intelligence/analyze",
+    method: "POST",
+    body: {
+      input: "首页性能慢，请给优化步骤和 p95 目标",
+    },
+    assert: (status, body) => {
+      if (status !== 200) {
+        throw new Error(`expected 200, got ${status}`);
+      }
+
+      const data = body as {
+        intelligence?: { intents?: Array<{ label: string }> };
+        engine?: string;
+      };
+
+      if (!data.engine?.includes("front-intelligence")) {
+        throw new Error("missing front-intelligence engine marker");
+      }
+
+      if (!data.intelligence?.intents?.length) {
+        throw new Error("missing intelligence.intents");
       }
     },
   },

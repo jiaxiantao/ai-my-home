@@ -7,7 +7,16 @@ import { insightArticles } from "@/lib/editorial-content";
 import { currentTracks, workLogs } from "@/lib/ongoing-content";
 import { getNoteAnalytics, type NoteAnalytics } from "@/lib/note-analytics";
 import { listPublishedNotes } from "@/lib/notes-service";
+import { buildIntelligenceSamplePrompts } from "@/lib/intelligence-samples";
+import { getLlmLabel, isLlmConfigured } from "@/lib/llm-config";
 import { getReleaseSummary, type ReleaseSummary } from "@/lib/release-service";
+
+export type DashboardIntelligence = {
+  llmConfigured: boolean;
+  llmLabel: string;
+  features: Array<{ id: string; label: string; href: string }>;
+  samplePrompts: string[];
+};
 
 export type DashboardFlowNode = {
   id: string;
@@ -56,9 +65,18 @@ export type DashboardData = {
   analytics: NoteAnalytics;
   capabilityProfile: CapabilityProfileScores;
   release: ReleaseSummary;
+  intelligence: DashboardIntelligence;
 };
 
 type HomepageContent = Awaited<ReturnType<typeof getHomepageContent>>;
+
+function safeDashboardLlmLabel() {
+  try {
+    return getLlmLabel();
+  } catch {
+    return "unconfigured";
+  }
+}
 
 export async function getDashboardData(
   preloaded?: HomepageContent,
@@ -103,7 +121,13 @@ export async function getDashboardData(
     {
       id: "chat",
       label: "Grounded Chat",
-      description: "笔记检索 + OpenAI 兼容接口生成回答",
+      description: "笔记检索 + Prompt 编排 + OpenAI 兼容对话",
+      status: "interactive",
+    },
+    {
+      id: "composer",
+      label: "Front Intelligence",
+      description: "浏览器内意图识别、Prompt 改写与偏好模板",
       status: "interactive",
     },
     {
@@ -167,5 +191,16 @@ export async function getDashboardData(
       releaseOrderCount: release.orderCount,
     }),
     release,
+    intelligence: {
+      llmConfigured: isLlmConfigured(),
+      llmLabel: safeDashboardLlmLabel(),
+      features: [
+        { id: "composer", label: "Prompt 编排台", href: "/#front-intelligence" },
+        { id: "edge-ai", label: "端侧推理", href: "/#edge-ai" },
+        { id: "assistant", label: "笔记增强对话", href: "/assistant" },
+        { id: "agents", label: "Agent 工具循环", href: "/agents" },
+      ],
+      samplePrompts: buildIntelligenceSamplePrompts(notes, caseStudies),
+    },
   };
 }

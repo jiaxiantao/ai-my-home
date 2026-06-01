@@ -2,9 +2,10 @@
 
 import dynamic from "next/dynamic";
 import { useState } from "react";
-import { Bot, Cpu, Scan, Sparkles } from "lucide-react";
+import { Bot, BrainCircuit, Cpu, Scan, Sparkles } from "lucide-react";
 
 import { AgentOrchestratorDemo } from "@/components/demos/agent-orchestrator-demo";
+import { FrontIntelligenceComposerDemo } from "@/components/demos/front-intelligence-composer-demo";
 
 const BrowserMlDemo = dynamic(
   () =>
@@ -26,7 +27,7 @@ const MediapipePoseDemo = dynamic(
   { ssr: false, loading: () => <DemoSkeleton label="MediaPipe Pose" /> },
 );
 
-type EdgeTabId = "transformers" | "wasm" | "pose" | "agent";
+type EdgeTabId = "transformers" | "wasm" | "pose" | "composer" | "agent";
 
 const tabs: Array<{
   id: EdgeTabId;
@@ -51,6 +52,12 @@ const tabs: Array<{
     title: "MediaPipe Pose",
     tech: "姿势估计 · 摄像头",
     icon: Scan,
+  },
+  {
+    id: "composer",
+    title: "Prompt 编排",
+    tech: "意图识别 · 改写",
+    icon: BrainCircuit,
   },
   {
     id: "agent",
@@ -103,6 +110,7 @@ export function EdgeAiShowcase() {
         {active === "transformers" ? <BrowserMlDemo /> : null}
         {active === "wasm" ? <WasmAccelerationDemo /> : null}
         {active === "pose" ? <MediapipePoseDemo /> : null}
+        {active === "composer" ? <FrontIntelligenceComposerDemo compact /> : null}
         {active === "agent" ? <AgentOrchestratorDemo /> : null}
       </div>
     </div>

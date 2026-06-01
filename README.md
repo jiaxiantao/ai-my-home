@@ -18,7 +18,8 @@
 | `#viz` | Three.js 拓扑 + ECharts + 笔记分析（PostgreSQL） |
 | `#dashboard` | 全栈看板：Profile / Notes / Chat / Demo Lab 聚合 |
 | `#cross-platform` | **大前端**：移动端 H5 视口、小程序分层、桌面运行时选型（可切换交互 Demo） |
-| `#edge-ai` | **端侧智能**：Transformers.js 情感分类、WASM/Worker 基准、MediaPipe 姿势、Agent 工具循环 |
+| `#front-intelligence` | **前端智能化**：浏览器内意图识别、Prompt 改写、偏好模板，一键带入 Assistant |
+| `#edge-ai` | **端侧智能**：Transformers.js 情感分类、WASM/Worker 基准、MediaPipe 姿势、Prompt 编排、Agent 工具循环 |
 | `#tech-demos` | 工程 Demo：Web Vitals、API 延迟、虚拟列表、状态机、SSE、**Worker 计算**、**pg_trgm vs 内存检索** |
 | `#demo-lab` | 架构 / 性能 / 工作流判断台 |
 | `#release-center` | **工程化发布单**：应用注册、构建、测试/预发/生产门禁、审计与回滚 |
@@ -74,6 +75,13 @@ ollama serve
 
 Assistant（`/assistant`）与 `/api/chat` 使用同一套 LLM 配置。`/agents` 提供工具编排循环（`/api/agent` SSE）。
 
+### 前端智能化（Front Intelligence）
+
+- 首页 `#front-intelligence`：纯前端规则引擎 `analyzeComposer()`，识别架构/性能/排查等意图并改写 Prompt
+- `POST /api/intelligence/analyze`：同上能力的 HTTP 接口（冒烟测试覆盖）
+- `/assistant`：编排结果 + 笔记检索 + LLM 对话；偏好与学习画像可经 `PUT /api/intelligence/profile` 持久化（admin）
+- 登录 admin 后，Assistant / Agent Demo 的偏好会自动与云端画像同步
+
 ### 端侧 AI 与 Agent
 
 - 首页 `#edge-ai`：按需加载 `@xenova/transformers`、`@mediapipe/tasks-vision`（首次会下载模型）
@@ -92,7 +100,9 @@ F5 启动扩展开发宿主；命令：解释 / 补全 / 重构选中代码（�
 ## API 速览
 
 - `GET /api/profile` — 结构化简历 JSON
-- `GET /api/dashboard` — 首页看板聚合
+- `GET /api/dashboard` — 首页看板聚合（含 `intelligence.samplePrompts`）
+- `POST /api/intelligence/analyze` — 前端智能化 Prompt 分析（意图 / 改写 / 动作建议）
+- `GET/PUT /api/intelligence/profile` — 智能化偏好与学习画像（admin）
 - `GET /api/notes/search?q=&limit=&engine=memory` — 笔记检索（默认 pg_trgm，可强制 memory）
 - `GET /api/analytics/notes` — 图表数据
 - `POST /api/chat` — SSE / JSON 对话

@@ -8,6 +8,7 @@ import { CopyButton } from "@/components/copy-button";
 import { HomeProofBar } from "@/components/home-proof-bar";
 import { SectionHeading } from "@/components/section-heading";
 import { SectionSkeleton } from "@/components/section-skeleton";
+import { FrontIntelligenceSpotlight } from "@/components/front-intelligence-spotlight";
 import { ReleaseCenterSpotlight } from "@/components/release-center-spotlight";
 import { SystemsVisualization } from "@/components/systems-visualization";
 import { getHomepageContent } from "@/lib/content-service";
@@ -99,6 +100,9 @@ export default async function Home() {
               <Link href="#cross-platform" className="inline-flex items-center gap-2 rounded-full border border-white/10 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/5">
                 大前端
               </Link>
+              <Link href="#front-intelligence" className="inline-flex items-center gap-2 rounded-full border border-violet-300/25 bg-violet-300/10 px-5 py-2.5 text-sm font-semibold text-violet-100 transition hover:bg-violet-300/15">
+                智能编排
+              </Link>
               <Link href="#edge-ai" className="inline-flex items-center gap-2 rounded-full border border-white/10 px-5 py-2.5 text-sm font-semibold text-slate-400 transition hover:bg-white/5">
                 端侧 AI
               </Link>
@@ -129,6 +133,14 @@ export default async function Home() {
         <section id="capability-radar" className="space-y-6">
           <SectionHeading eyebrow="Capability" title="六维能力雷达 · 一眼看覆盖面" />
           <CapabilityProfileSection dashboard={dashboard} />
+        </section>
+
+        <section id="front-intelligence" className="space-y-6">
+          <SectionHeading
+            eyebrow="Front Intelligence"
+            title="前端智能化：意图识别 · Prompt 编排 · 偏好学习"
+          />
+          <FrontIntelligenceSpotlight dashboard={dashboard} llmLabel={llmLabel} />
         </section>
 
         <section id="viz" className="space-y-6">

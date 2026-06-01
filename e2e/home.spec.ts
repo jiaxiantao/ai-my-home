@@ -8,6 +8,7 @@ test.describe("Homepage", () => {
 
     for (const id of [
       "capability-radar",
+      "front-intelligence",
       "viz",
       "dashboard",
       "release-center",

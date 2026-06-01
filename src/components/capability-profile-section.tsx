@@ -5,11 +5,11 @@ import { CapabilityProfileRadar } from "@/components/charts/capability-profile-r
 import type { DashboardData } from "@/lib/dashboard-service";
 
 const capabilityLinks = [
+  { href: "/#front-intelligence", label: "智能编排" },
   { href: "/#tech-demos", label: "工程 Demo" },
   { href: "/release-center", label: "发布中心" },
   { href: "/#edge-ai", label: "端侧 AI" },
-  { href: "/#viz", label: "3D 可视化" },
-  { href: "/status", label: "运行时诊断" },
+  { href: "/assistant", label: "AI 工作台" },
 ] as const;
 
 export function CapabilityProfileSection({

@@ -7,6 +7,7 @@ import {
   ChatSessionSidebar,
 } from "@/components/assistant/chat-session-sidebar";
 import { ChatComposer } from "@/components/assistant/chat-composer";
+import { IntelligenceComposerPreview } from "@/components/intelligence-composer-preview";
 import { IntelligenceLearningPanel } from "@/components/intelligence-learning-panel";
 import { useAuth } from "@/components/auth-provider";
 import {
@@ -706,56 +707,18 @@ export function AssistantChat({
                 }}
               />
             </div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {intelligence.intents.map((intent) => (
-                <span
-                  key={intent.label}
-                  className="rounded-full border border-cyan-200/30 bg-cyan-200/10 px-3 py-1 text-[11px] text-cyan-100"
-                >
-                  {intent.label} · {Math.round(intent.score * 100)}%
-                </span>
-              ))}
+            <div className="mt-3">
+              <IntelligenceComposerPreview
+                intelligence={intelligence}
+                onApplyRewrite={() =>
+                  setComposer(intelligence.rewrittenPrompt ?? composer)
+                }
+                onAppendAction={(action) =>
+                  setComposer((current) => `${current.trim()}\n${action}`.trim())
+                }
+                onSelectFollowUp={(follow) => setComposer(follow)}
+              />
             </div>
-            {intelligence.rewrittenPrompt ? (
-              <button
-                type="button"
-                onClick={() => setComposer(intelligence.rewrittenPrompt ?? composer)}
-                className="mt-3 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-200 hover:border-white/30"
-              >
-                应用智能改写
-              </button>
-            ) : null}
-            <div className="mt-3 flex flex-wrap gap-2">
-              {intelligence.actions.map((action) => (
-                <button
-                  key={action}
-                  type="button"
-                  onClick={() => setComposer((current) => `${current.trim()}\n${action}`.trim())}
-                  className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300 hover:border-white/20"
-                >
-                  + {action}
-                </button>
-              ))}
-            </div>
-            {intelligence.followUps.length ? (
-              <div className="mt-3 border-t border-white/10 pt-3">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">
-                  基于上一条回答，建议继续追问
-                </p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {intelligence.followUps.map((follow) => (
-                    <button
-                      key={follow}
-                      type="button"
-                      onClick={() => setComposer(follow)}
-                      className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-xs text-emerald-100 hover:border-emerald-200/40"
-                    >
-                      {follow}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : null}
           </div>
 
           <div className="mt-6 grid max-h-[32rem] gap-4 overflow-y-auto pr-1">

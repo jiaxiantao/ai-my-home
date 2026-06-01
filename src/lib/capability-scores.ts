@@ -32,7 +32,9 @@ export function buildCapabilityScores(
     fullstackApi: clampScore(72 + notesBoost),
     engineeringDemos: clampScore(68 + demoBoost),
     cicdRelease: clampScore(78 + Math.min(overview.caseStudiesCount * 3, 18) + releaseBoost),
-    edgeAi: clampScore(80 + Math.min(overview.tracksCount * 4, 12)),
+    edgeAi: clampScore(
+      82 + Math.min(overview.tracksCount * 4, 12) + Math.min(overview.demoCapabilitiesCount, 8),
+    ),
     visualization: clampScore(74 + Math.min(overview.domainsCount * 3, 18)),
     security: clampScore(70 + Math.min(overview.publishedNotesCount, 20)),
   };

@@ -34,6 +34,7 @@ const navGroups = [
     id: "ai",
     label: "智能与内容",
     items: [
+      { href: "/#front-intelligence", label: "智能编排" },
       { href: "/#edge-ai", label: "端侧 AI" },
       { href: "/assistant", label: "Assistant" },
       { href: "/agents", label: "Agents" },

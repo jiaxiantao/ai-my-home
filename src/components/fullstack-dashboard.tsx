@@ -444,11 +444,20 @@ export function FullstackDashboard({
                   </>
                 );
 
-                if (node.id === "release") {
+                const flowHref =
+                  node.id === "release"
+                    ? "/release-center"
+                    : node.id === "composer"
+                      ? "/#front-intelligence"
+                      : node.id === "chat"
+                        ? "/assistant"
+                        : null;
+
+                if (flowHref) {
                   return (
                     <Link
                       key={node.id}
-                      href="/release-center"
+                      href={flowHref}
                       className="relative block rounded-2xl border border-white/10 bg-white/5 p-5 transition hover:border-cyan-300/30 hover:bg-cyan-300/5"
                     >
                       {card}
