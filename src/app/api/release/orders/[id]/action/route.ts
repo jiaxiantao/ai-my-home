@@ -4,6 +4,7 @@ import { z } from "zod";
 import { AdminAuthError, assertAdminTokenFromRequest } from "@/lib/admin-auth";
 import {
   deployReleaseEnvironment,
+  rollbackReleaseProduction,
   runReleaseBuild,
   updateReleaseChecks,
 } from "@/lib/release-center-store";
@@ -25,6 +26,9 @@ const actionSchema = z.discriminatedUnion("action", [
     action: z.literal("deploy"),
     environment: z.enum(["test", "pre", "prod"]),
   }),
+  z.object({
+    action: z.literal("rollback_prod"),
+  }),
 ]);
 
 export async function POST(
@@ -37,14 +41,18 @@ export async function POST(
     const { id } = await context.params;
 
     if (payload.action === "run_build") {
-      const order = runReleaseBuild(id);
+      const order = runReleaseBuild(id, "admin");
       return NextResponse.json({ order });
     }
     if (payload.action === "set_checks") {
-      const order = updateReleaseChecks(id, payload.checks);
+      const order = updateReleaseChecks(id, payload.checks, "admin");
       return NextResponse.json({ order });
     }
-    const order = deployReleaseEnvironment(id, payload.environment);
+    if (payload.action === "rollback_prod") {
+      const order = rollbackReleaseProduction(id, "admin");
+      return NextResponse.json({ order });
+    }
+    const order = deployReleaseEnvironment(id, payload.environment, "admin");
     return NextResponse.json({ order });
   } catch (error) {
     if (error instanceof AdminAuthError) {

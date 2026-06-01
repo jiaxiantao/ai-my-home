@@ -247,6 +247,11 @@ export function ReleaseCenterPanel() {
                   {order.status}
                 </span>
               </div>
+              {order.lock.locked ? (
+                <p className="rounded-xl border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-xs text-amber-100">
+                  pipeline locked by {order.lock.by} · {order.lock.reason}
+                </p>
+              ) : null}
 
               <div className="grid gap-3 md:grid-cols-3">
                 <StagePill
@@ -344,6 +349,36 @@ export function ReleaseCenterPanel() {
                 >
                   发布生产环境
                 </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={!authenticated || busyOrderId === order.id}
+                  onClick={() =>
+                    void runAction(order.id, {
+                      action: "rollback_prod",
+                    })
+                  }
+                >
+                  生产回滚
+                </Button>
+              </div>
+
+              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                  审计日志
+                </p>
+                <div className="mt-2 grid gap-1 font-mono text-[11px] text-slate-400">
+                  {order.auditLogs.length ? (
+                    order.auditLogs.slice(0, 6).map((log) => (
+                      <p key={log.id}>
+                        [{new Date(log.at).toLocaleTimeString()}] {log.operator} ·{" "}
+                        {log.action} · {log.detail}
+                      </p>
+                    ))
+                  ) : (
+                    <p>暂无操作记录</p>
+                  )}
+                </div>
               </div>
             </article>
           ))
