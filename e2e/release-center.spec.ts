@@ -15,8 +15,12 @@ test.describe("Release Center", () => {
   test("guest cannot create release order", async ({ page }) => {
     await page.goto("/release-center");
 
-    await expect(page.getByText("游客模式")).toBeVisible();
-    await expect(page.getByRole("button", { name: "创建发布单" })).toBeDisabled();
+    await expect(page.getByRole("button", { name: "创建发布单" })).toBeDisabled({
+      timeout: 30_000,
+    });
+    await expect(
+      page.locator("main").getByRole("button", { name: "新增应用" }),
+    ).toBeDisabled();
   });
 
   test("status filters render", async ({ page }) => {

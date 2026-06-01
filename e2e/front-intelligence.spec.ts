@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test.describe("Front Intelligence", () => {
   test("composer section shows intent chips", async ({ page }) => {
     await page.goto("/");
-    const section = page.locator("#front-intelligence");
+    const section = page.locator("main section#front-intelligence").first();
     await section.scrollIntoViewIfNeeded();
 
     await expect(section.getByText("前端智能化编排台")).toBeVisible({

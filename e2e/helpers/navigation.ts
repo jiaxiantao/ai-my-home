@@ -14,11 +14,16 @@ const testIdByLabel: Record<string, string> = {
   Cases: "nav-ai-cases",
 };
 
-/** Header nav links sit in dropdown panels (always mounted, toggled via opacity). */
+/** Open the header menu and navigate (no force click — avoids hitting page content below). */
 export async function clickHeaderNavLink(
   page: Page,
   options: { group: string; label: string },
 ) {
+  const href = hrefByLabel[options.label];
+  if (!href) {
+    throw new Error(`Unknown header nav label: ${options.label}`);
+  }
+
   const header = page.locator("header");
   const testId = testIdByLabel[options.label];
   const link = testId
@@ -31,20 +36,16 @@ export async function clickHeaderNavLink(
     await mobileMenu.click();
     await expect(link).toBeVisible({ timeout: 15_000 });
     await link.click();
-    return;
-  }
-
-  if (await groupButton.isVisible()) {
+  } else {
     await groupButton.click();
-    await link.click({ force: true, timeout: 15_000 });
-    return;
+    await expect(groupButton).toHaveAttribute("aria-expanded", "true", {
+      timeout: 10_000,
+    });
+    await expect(link).toBeVisible({ timeout: 10_000 });
+    await link.click();
   }
 
-  const fallback = hrefByLabel[options.label];
-  if (fallback) {
-    await page.goto(fallback);
-    return;
-  }
-
-  throw new Error(`Unable to navigate to header link: ${options.label}`);
+  await page.waitForURL(new RegExp(`${href.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`), {
+    timeout: 30_000,
+  });
 }

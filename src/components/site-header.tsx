@@ -157,11 +157,7 @@ export function SiteHeader() {
                   }}
                   onMouseLeave={scheduleDropdownClose}
                   onFocus={() => setActiveDropdown(group.id)}
-                  onClick={() =>
-                    setActiveDropdown((current) =>
-                      current === group.id ? null : group.id,
-                    )
-                  }
+                  onClick={() => setActiveDropdown(group.id)}
                   className="inline-flex items-center gap-1 text-sm text-slate-300 transition hover:text-white"
                   aria-expanded={expanded}
                 >
