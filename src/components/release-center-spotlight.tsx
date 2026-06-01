@@ -3,6 +3,7 @@ import { ArrowRight, GitBranch, ShieldCheck } from "lucide-react";
 
 import { formatReleaseOrderStatus } from "@/lib/release-labels";
 import type { ReleaseSummary } from "@/lib/release-service";
+import { formatReleaseStoreMode } from "@/lib/release-store-labels";
 
 const pipelineStages = [
   { label: "Build", detail: "产物构建" },
@@ -68,6 +69,9 @@ export function ReleaseCenterSpotlight({ release }: { release: ReleaseSummary })
         ) : null}
 
         <div className="flex flex-wrap gap-2 text-xs text-slate-300">
+          <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 font-mono">
+            store: {formatReleaseStoreMode(release.storeMode)}
+          </span>
           <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1">
             <GitBranch className="h-3.5 w-3.5 text-cyan-200" />
             发布单状态机

@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { PerformanceLaneChart } from "@/components/charts/performance-lane-chart";
+import { NoteSearchIntelligenceHints } from "@/components/note-search-intelligence-hints";
 import type { NoteSearchResponse } from "@/lib/note-search";
 
 export function NoteSearchDemo() {
@@ -96,6 +97,8 @@ export function NoteSearchDemo() {
           {error}
         </p>
       ) : null}
+
+      <NoteSearchIntelligenceHints query={query} />
 
       {result?.results.length ? (
         <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">

@@ -790,6 +790,7 @@ export async function probeReleaseStoreMode(): Promise<ReleaseStoreMode> {
 export type ReleaseSummary = {
   appCount: number;
   orderCount: number;
+  storeMode: ReleaseStoreMode;
   byStatus: Record<ReleaseOrderStatus, number>;
   recentOrders: Array<{
     id: string;
@@ -812,8 +813,11 @@ function emptyStatusCounts(): Record<ReleaseOrderStatus, number> {
 }
 
 export async function getReleaseSummary(): Promise<ReleaseSummary> {
-  const apps = await listReleaseApps();
-  const orders = await listReleaseOrders();
+  const [apps, orders, storeMode] = await Promise.all([
+    listReleaseApps(),
+    listReleaseOrders(),
+    probeReleaseStoreMode(),
+  ]);
   const byStatus = emptyStatusCounts();
 
   for (const order of orders) {
@@ -823,6 +827,7 @@ export async function getReleaseSummary(): Promise<ReleaseSummary> {
   return {
     appCount: apps.length,
     orderCount: orders.length,
+    storeMode,
     byStatus,
     recentOrders: orders.slice(0, 5).map((order) => ({
       id: order.id,

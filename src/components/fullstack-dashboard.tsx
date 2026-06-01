@@ -20,7 +20,9 @@ import {
   LazyTagDistributionChart,
 } from "@/components/charts/lazy-dashboard-charts";
 import { DashboardPanelMount } from "@/components/dashboard-panel-mount";
+import { DashboardReleasePanel } from "@/components/dashboard-release-panel";
 import type { DashboardData } from "@/lib/dashboard-service";
+import { formatReleaseStoreMode } from "@/lib/release-store-labels";
 
 function PanelLoading() {
   return (
@@ -51,6 +53,7 @@ type DashboardPanelId =
   | "overview"
   | "knowledge"
   | "flow"
+  | "release"
   | "assistant"
   | "decision";
 
@@ -77,6 +80,12 @@ const panels: Array<{
     label: "Live Delivery Flow",
     summary: "Profile → Notes → Chat → Cases",
     icon: GitBranch,
+  },
+  {
+    id: "release",
+    label: "Release Pipeline",
+    summary: "发布单状态与最近变更",
+    icon: Activity,
   },
   {
     id: "assistant",
@@ -147,7 +156,7 @@ export function FullstackDashboard({
     {
       label: "Release",
       value: release.orderCount,
-      detail: `${release.appCount} 应用 · ${release.byStatus.released} 已上线`,
+      detail: `${release.appCount} 应用 · ${formatReleaseStoreMode(release.storeMode)}`,
     },
   ];
 
@@ -487,6 +496,10 @@ export function FullstackDashboard({
               <span>cases / insights</span>
             </div>
           </div>
+        </DashboardPanelMount>
+
+        <DashboardPanelMount id="release" active={activePanel}>
+          <DashboardReleasePanel release={release} />
         </DashboardPanelMount>
 
         <DashboardPanelMount id="assistant" active={activePanel}>

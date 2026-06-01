@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Command, Search } from "lucide-react";
+import { Command, MessageCircle, Search } from "lucide-react";
 
 const commands = [
   { label: "首页", href: "/", group: "导航", keywords: ["home", "index"] },
@@ -19,6 +20,7 @@ const commands = [
 ] as const;
 
 export function CommandPalette() {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
 
@@ -51,6 +53,16 @@ export function CommandPalette() {
     );
   }, [query]);
 
+  const askQuery = query.trim();
+
+  function goAskAssistant() {
+    if (!askQuery) {
+      return;
+    }
+    setOpen(false);
+    router.push(`/assistant?q=${encodeURIComponent(askQuery)}`);
+  }
+
   if (!open) {
     return null;
   }
@@ -74,7 +86,13 @@ export function CommandPalette() {
             autoFocus
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="搜索页面或能力…"
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && askQuery && event.metaKey) {
+                event.preventDefault();
+                goAskAssistant();
+              }
+            }}
+            placeholder="搜索页面，或输入问题后 ⌘↵ 问 Assistant…"
             className="flex-1 bg-transparent text-sm text-white outline-none placeholder:text-slate-500"
           />
           <kbd className="rounded border border-white/10 px-1.5 py-0.5 font-mono text-[10px] text-slate-500">
@@ -82,6 +100,23 @@ export function CommandPalette() {
           </kbd>
         </div>
         <ul className="max-h-80 overflow-y-auto p-2">
+          {askQuery ? (
+            <li className="mb-1 border-b border-white/10 pb-2">
+              <button
+                type="button"
+                onClick={goAskAssistant}
+                className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm text-violet-100 transition hover:bg-violet-300/10"
+              >
+                <span className="inline-flex items-center gap-2">
+                  <MessageCircle className="h-3.5 w-3.5 text-violet-300" />
+                  向 Assistant 提问
+                </span>
+                <span className="max-w-[45%] truncate text-[10px] text-slate-500">
+                  {askQuery}
+                </span>
+              </button>
+            </li>
+          ) : null}
           {filtered.length ? (
             filtered.map((item) => (
               <li key={item.href}>
