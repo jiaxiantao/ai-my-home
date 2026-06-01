@@ -14,12 +14,13 @@ const apiProofs = [
 ];
 
 export function HomeProofBar({ dashboard }: { dashboard: DashboardData }) {
-  const { overview } = dashboard;
+  const { overview, release } = dashboard;
 
   const stats = [
     { label: "Notes", value: String(overview.notesCount) },
     { label: "Cases", value: String(overview.caseStudiesCount) },
     { label: "Domains", value: String(overview.domainsCount) },
+    { label: "Release", value: String(release.orderCount) },
     { label: "Demo 台", value: String(overview.demoCapabilitiesCount) },
   ];
 
@@ -27,7 +28,7 @@ export function HomeProofBar({ dashboard }: { dashboard: DashboardData }) {
     <div className="grid gap-4">
       <LiveHealthPill />
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {stats.map((stat) => (
           <div
             key={stat.label}

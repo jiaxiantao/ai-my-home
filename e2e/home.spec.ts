@@ -7,8 +7,10 @@ test.describe("Homepage", () => {
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
     for (const id of [
+      "capability-radar",
       "viz",
       "dashboard",
+      "release-center",
       "cross-platform",
       "edge-ai",
       "tech-demos",

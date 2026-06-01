@@ -152,7 +152,7 @@ export default async function Home() {
             eyebrow="Release Engineering"
             title="发布单 · 构建 · 分环境门禁"
           />
-          <ReleaseCenterSpotlight />
+          <ReleaseCenterSpotlight release={dashboard.release} />
         </section>
 
         <section id="cross-platform" className="space-y-6">

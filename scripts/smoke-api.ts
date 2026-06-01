@@ -93,7 +93,11 @@ const checks: Array<Check & CheckRequest> = [
       const data = body as {
         overview?: { notesCount?: number };
         capabilityProfile?: { fullstackApi?: number };
-        release?: { orderCount?: number; byStatus?: Record<string, number> };
+        release?: {
+          orderCount?: number;
+          byStatus?: Record<string, number>;
+          recentOrders?: unknown[];
+        };
       };
 
       if (typeof data.overview?.notesCount !== "number") {
@@ -106,6 +110,10 @@ const checks: Array<Check & CheckRequest> = [
 
       if (typeof data.release?.orderCount !== "number") {
         throw new Error("missing release.orderCount");
+      }
+
+      if (!Array.isArray(data.release?.recentOrders)) {
+        throw new Error("missing release.recentOrders array");
       }
     },
   },

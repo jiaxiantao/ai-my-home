@@ -418,33 +418,53 @@ export function FullstackDashboard({
             </article>
 
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {flow.map((node, index) => (
-                <article
-                  key={node.id}
-                  className="relative rounded-2xl border border-white/10 bg-white/5 p-5"
-                >
-                  <span className="text-xs font-semibold text-cyan-300/80">
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                  <div className="mt-2 flex items-center justify-between gap-2">
-                    <h3 className="text-base font-semibold text-white">{node.label}</h3>
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wider ${
-                        node.status === "live"
-                          ? "bg-emerald-400/15 text-emerald-200"
-                          : node.status === "interactive"
-                            ? "bg-cyan-400/15 text-cyan-200"
-                            : "bg-slate-500/20 text-slate-300"
-                      }`}
-                    >
-                      {node.status}
+              {flow.map((node, index) => {
+                const card = (
+                  <>
+                    <span className="text-xs font-semibold text-cyan-300/80">
+                      {String(index + 1).padStart(2, "0")}
                     </span>
-                  </div>
-                  <p className="mt-3 text-sm leading-7 text-slate-400">
-                    {node.description}
-                  </p>
-                </article>
-              ))}
+                    <div className="mt-2 flex items-center justify-between gap-2">
+                      <h3 className="text-base font-semibold text-white">{node.label}</h3>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wider ${
+                          node.status === "live"
+                            ? "bg-emerald-400/15 text-emerald-200"
+                            : node.status === "interactive"
+                              ? "bg-cyan-400/15 text-cyan-200"
+                              : "bg-slate-500/20 text-slate-300"
+                        }`}
+                      >
+                        {node.status}
+                      </span>
+                    </div>
+                    <p className="mt-3 text-sm leading-7 text-slate-400">
+                      {node.description}
+                    </p>
+                  </>
+                );
+
+                if (node.id === "release") {
+                  return (
+                    <Link
+                      key={node.id}
+                      href="/release-center"
+                      className="relative block rounded-2xl border border-white/10 bg-white/5 p-5 transition hover:border-cyan-300/30 hover:bg-cyan-300/5"
+                    >
+                      {card}
+                    </Link>
+                  );
+                }
+
+                return (
+                  <article
+                    key={node.id}
+                    className="relative rounded-2xl border border-white/10 bg-white/5 p-5"
+                  >
+                    {card}
+                  </article>
+                );
+              })}
             </div>
             <div className="flex flex-wrap gap-2 text-sm text-slate-500">
               <span>profile</span>

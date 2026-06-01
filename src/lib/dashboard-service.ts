@@ -121,7 +121,7 @@ export async function getDashboardData(
     {
       id: "release",
       label: "Release Center",
-      description: "发布单 · 构建 · 测试/预发/生产门禁 · 审计与回滚",
+      description: `${release.orderCount} 张发布单 · 构建 · 测试/预发/生产门禁 · 审计与回滚`,
       status: "interactive",
     },
   ];

@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { ArrowRight, GitBranch, ShieldCheck } from "lucide-react";
 
+import { formatReleaseOrderStatus } from "@/lib/release-labels";
+import type { ReleaseSummary } from "@/lib/release-service";
+
 const pipelineStages = [
   { label: "Build", detail: "产物构建" },
   { label: "Test", detail: "Unit + E2E" },
@@ -8,7 +11,9 @@ const pipelineStages = [
   { label: "Prod", detail: "审批 + 窗口" },
 ] as const;
 
-export function ReleaseCenterSpotlight() {
+export function ReleaseCenterSpotlight({ release }: { release: ReleaseSummary }) {
+  const inProgress = release.orderCount - release.byStatus.released;
+
   return (
     <div className="grid gap-6 rounded-4xl border border-white/10 bg-gradient-to-br from-cyan-300/10 via-slate-950/80 to-slate-950/90 p-6 md:grid-cols-[1.1fr_0.9fr] md:p-8">
       <div className="space-y-4">
@@ -19,6 +24,49 @@ export function ReleaseCenterSpotlight() {
         <p className="max-w-xl text-sm leading-7 text-slate-400">
           应用注册、构建流水线、质量门禁与测试/预发/生产分环境发布，配套审计日志、并发锁与生产回滚，用于展示真实交付治理能力。
         </p>
+
+        <div className="grid grid-cols-3 gap-2">
+          <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">应用</p>
+            <p className="mt-1 text-xl font-semibold tabular-nums text-white">
+              {release.appCount}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">发布单</p>
+            <p className="mt-1 text-xl font-semibold tabular-nums text-white">
+              {release.orderCount}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">进行中</p>
+            <p className="mt-1 text-xl font-semibold tabular-nums text-white">
+              {inProgress}
+            </p>
+          </div>
+        </div>
+
+        {release.recentOrders.length > 0 ? (
+          <ul className="space-y-2 rounded-2xl border border-white/10 bg-slate-950/50 p-3">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+              最近发布单
+            </p>
+            {release.recentOrders.slice(0, 3).map((order) => (
+              <li
+                key={order.id}
+                className="flex flex-wrap items-center justify-between gap-2 text-xs"
+              >
+                <span className="text-slate-200">
+                  {order.appName} · {order.version}
+                </span>
+                <span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-2 py-0.5 text-cyan-100">
+                  {formatReleaseOrderStatus(order.status)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
         <div className="flex flex-wrap gap-2 text-xs text-slate-300">
           <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1">
             <GitBranch className="h-3.5 w-3.5 text-cyan-200" />

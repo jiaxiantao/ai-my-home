@@ -36,6 +36,17 @@ pnpm dev
 
 打开 [http://localhost:3000](http://localhost:3000)。
 
+### 发布中心与数据库
+
+`pnpm db:setup`（`prisma db push` + `seed`）会创建并初始化：
+
+- `ReleaseApp` / `ReleaseOrder` / `ReleaseAuditLog`（发布中心持久化）
+- 默认应用 `ai-my-home-web`（见 `prisma/seed.ts`）
+
+若已配置 `DATABASE_URL` 但未执行 `db:setup`，发布中心会**自动降级为进程内内存存储**（开发环境控制台会提示），站点仍可运行，但重启后发布单不保留。执行 `pnpm db:setup` 后即可写入 PostgreSQL。
+
+> `pnpm db:seed` 会清空并重建发布中心演示数据，请勿在生产库随意执行。
+
 ### 环境变量（`.env.example`）
 
 - `DATABASE_URL` — PostgreSQL
@@ -119,7 +130,7 @@ pnpm dev          # 终端 1
 pnpm smoke        # 终端 2
 ```
 
-覆盖 `/api/health`、`/profile`、`/dashboard`、`/notes/search`、`/analytics/notes`。CI 在 `pnpm build` 后会启动生产服务并自动执行 `pnpm smoke`。
+覆盖 `/api/health`、`/profile`、`/dashboard`（含 `capabilityProfile` / `release`）、`/notes/search`、`/analytics/notes`、`/release/apps`、`/release/orders`。CI 在 `pnpm build` 后会启动生产服务并自动执行 `pnpm smoke`。
 
 ## E2E（Playwright）
 

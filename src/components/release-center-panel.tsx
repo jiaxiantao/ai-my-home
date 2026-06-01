@@ -4,21 +4,26 @@ import { useEffect, useMemo, useState } from "react";
 
 import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import type {
   ReleaseApp,
   ReleaseOrder,
   ReleaseOrderStatus,
 } from "@/lib/release-center-types";
+import {
+  RELEASE_ORDER_STATUS_LABELS,
+  formatReleaseOrderStatus,
+} from "@/lib/release-labels";
 
 type StatusFilter = ReleaseOrderStatus | "all";
 
 const STATUS_FILTERS: Array<{ key: StatusFilter; label: string }> = [
   { key: "all", label: "全部" },
-  { key: "draft", label: "草稿" },
-  { key: "built", label: "已构建" },
-  { key: "testing", label: "测试中" },
-  { key: "staging", label: "预发" },
-  { key: "released", label: "已上线" },
+  ...(
+    Object.entries(RELEASE_ORDER_STATUS_LABELS) as Array<
+      [ReleaseOrderStatus, string]
+    >
+  ).map(([key, label]) => ({ key, label })),
 ];
 
 type ReleaseData = {
@@ -41,7 +46,11 @@ export function ReleaseCenterPanel() {
   const [orders, setOrders] = useState<ReleaseOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyOrderId, setBusyOrderId] = useState<string | null>(null);
-  const [message, setMessage] = useState<string>("");
+  const [loadError, setLoadError] = useState("");
+  const [feedback, setFeedback] = useState<{
+    kind: "error" | "success";
+    text: string;
+  } | null>(null);
 
   const [appForm, setAppForm] = useState({
     name: "",
@@ -63,11 +72,18 @@ export function ReleaseCenterPanel() {
 
   async function loadData() {
     setLoading(true);
+    setLoadError("");
     try {
       const [appsRes, ordersRes] = await Promise.all([
         fetch("/api/release/apps", { cache: "no-store" }),
         fetch("/api/release/orders", { cache: "no-store" }),
       ]);
+
+      if (!appsRes.ok || !ordersRes.ok) {
+        setLoadError("加载发布中心数据失败，请稍后点击刷新重试。");
+        return;
+      }
+
       const appsPayload = (await appsRes.json()) as { apps?: ReleaseApp[] };
       const ordersPayload = (await ordersRes.json()) as { orders?: ReleaseOrder[] };
       const next: ReleaseData = {
@@ -79,6 +95,8 @@ export function ReleaseCenterPanel() {
       if (!orderForm.appId && next.apps[0]) {
         setOrderForm((current) => ({ ...current, appId: next.apps[0]!.id }));
       }
+    } catch {
+      setLoadError("网络异常，无法加载发布中心数据。");
     } finally {
       setLoading(false);
     }
@@ -127,7 +145,7 @@ export function ReleaseCenterPanel() {
   }, [orders, searchQuery, statusFilter]);
 
   async function createApp() {
-    setMessage("");
+    setFeedback(null);
     const response = await fetch("/api/release/apps", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -135,15 +153,16 @@ export function ReleaseCenterPanel() {
     });
     const payload = (await response.json()) as { error?: string };
     if (!response.ok) {
-      setMessage(payload.error ?? "创建应用失败");
+      setFeedback({ kind: "error", text: payload.error ?? "创建应用失败" });
       return;
     }
     setAppForm((current) => ({ ...current, name: "", repo: "" }));
+    setFeedback({ kind: "success", text: "应用已创建。" });
     await loadData();
   }
 
   async function createOrder() {
-    setMessage("");
+    setFeedback(null);
     const response = await fetch("/api/release/orders", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -151,7 +170,7 @@ export function ReleaseCenterPanel() {
     });
     const payload = (await response.json()) as { error?: string };
     if (!response.ok) {
-      setMessage(payload.error ?? "创建发布单失败");
+      setFeedback({ kind: "error", text: payload.error ?? "创建发布单失败" });
       return;
     }
     setOrderForm((current) => ({
@@ -160,12 +179,13 @@ export function ReleaseCenterPanel() {
       branch: "main",
       changeTicket: "",
     }));
+    setFeedback({ kind: "success", text: "发布单已创建。" });
     await loadData();
   }
 
   async function runAction(orderId: string, body: object) {
     setBusyOrderId(orderId);
-    setMessage("");
+    setFeedback(null);
     try {
       const response = await fetch(`/api/release/orders/${orderId}/action`, {
         method: "POST",
@@ -174,9 +194,10 @@ export function ReleaseCenterPanel() {
       });
       const payload = (await response.json()) as { error?: string };
       if (!response.ok) {
-        setMessage(payload.error ?? "发布动作执行失败");
+        setFeedback({ kind: "error", text: payload.error ?? "发布动作执行失败" });
         return;
       }
+      setFeedback({ kind: "success", text: "流水线动作已执行。" });
       await loadData();
     } finally {
       setBusyOrderId(null);
@@ -203,7 +224,7 @@ export function ReleaseCenterPanel() {
               key={status}
               className="rounded-full border border-white/10 bg-slate-950/60 px-3 py-1 text-xs text-slate-300"
             >
-              {status} · {count}
+              {formatReleaseOrderStatus(status)} · {count}
             </span>
           ))}
         </div>
@@ -215,9 +236,21 @@ export function ReleaseCenterPanel() {
         </p>
       ) : null}
 
-      {message ? (
-        <p className="rounded-2xl border border-cyan-300/20 bg-cyan-300/10 px-4 py-3 text-sm text-cyan-100">
-          {message}
+      {loadError ? (
+        <p className="rounded-2xl border border-rose-300/20 bg-rose-300/10 px-4 py-3 text-sm text-rose-100">
+          {loadError}
+        </p>
+      ) : null}
+
+      {feedback ? (
+        <p
+          className={`rounded-2xl border px-4 py-3 text-sm ${
+            feedback.kind === "success"
+              ? "border-emerald-300/20 bg-emerald-300/10 text-emerald-100"
+              : "border-cyan-300/20 bg-cyan-300/10 text-cyan-100"
+          }`}
+        >
+          {feedback.text}
         </p>
       ) : null}
 
@@ -227,25 +260,35 @@ export function ReleaseCenterPanel() {
           <Input
             placeholder="应用名，如 ai-my-home-web"
             value={appForm.name}
-            onChange={(value) => setAppForm((current) => ({ ...current, name: value }))}
+            onChange={(event) =>
+              setAppForm((current) => ({ ...current, name: event.target.value }))
+            }
           />
           <Input
             placeholder="仓库地址"
             value={appForm.repo}
-            onChange={(value) => setAppForm((current) => ({ ...current, repo: value }))}
+            onChange={(event) =>
+              setAppForm((current) => ({ ...current, repo: event.target.value }))
+            }
           />
           <Input
             placeholder="构建命令"
             value={appForm.buildCommand}
-            onChange={(value) =>
-              setAppForm((current) => ({ ...current, buildCommand: value }))
+            onChange={(event) =>
+              setAppForm((current) => ({
+                ...current,
+                buildCommand: event.target.value,
+              }))
             }
           />
           <Input
             placeholder="测试命令"
             value={appForm.testCommand}
-            onChange={(value) =>
-              setAppForm((current) => ({ ...current, testCommand: value }))
+            onChange={(event) =>
+              setAppForm((current) => ({
+                ...current,
+                testCommand: event.target.value,
+              }))
             }
           />
           <Button disabled={!authenticated} onClick={() => void createApp()}>
@@ -272,22 +315,25 @@ export function ReleaseCenterPanel() {
           <Input
             placeholder="版本号，如 v1.2.0"
             value={orderForm.version}
-            onChange={(value) =>
-              setOrderForm((current) => ({ ...current, version: value }))
+            onChange={(event) =>
+              setOrderForm((current) => ({ ...current, version: event.target.value }))
             }
           />
           <Input
             placeholder="分支，如 main / release/2026.06"
             value={orderForm.branch}
-            onChange={(value) =>
-              setOrderForm((current) => ({ ...current, branch: value }))
+            onChange={(event) =>
+              setOrderForm((current) => ({ ...current, branch: event.target.value }))
             }
           />
           <Input
             placeholder="变更单号，如 CR-2026-0612"
             value={orderForm.changeTicket}
-            onChange={(value) =>
-              setOrderForm((current) => ({ ...current, changeTicket: value }))
+            onChange={(event) =>
+              setOrderForm((current) => ({
+                ...current,
+                changeTicket: event.target.value,
+              }))
             }
           />
           <Button
@@ -304,9 +350,19 @@ export function ReleaseCenterPanel() {
           <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-400">
             3) 发布流水线执行
           </p>
-          <p className="text-xs text-slate-500">
-            显示 {filteredOrders.length} / {orders.length} 张发布单
-          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-xs text-slate-500">
+              显示 {filteredOrders.length} / {orders.length} 张发布单
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={loading}
+              onClick={() => void loadData()}
+            >
+              刷新
+            </Button>
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -334,7 +390,7 @@ export function ReleaseCenterPanel() {
         <Input
           placeholder="搜索版本 / 应用 / 分支 / 变更单"
           value={searchQuery}
-          onChange={setSearchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
         />
 
         {loading ? (
@@ -356,7 +412,7 @@ export function ReleaseCenterPanel() {
                   <p className="mt-1 text-xs text-slate-400">{order.changeTicket}</p>
                 </div>
                 <span className="rounded-full border border-cyan-300/25 bg-cyan-300/10 px-3 py-1 text-xs text-cyan-100">
-                  {order.status}
+                  {formatReleaseOrderStatus(order.status)}
                 </span>
               </div>
               {order.lock.locked ? (
@@ -431,11 +487,11 @@ export function ReleaseCenterPanel() {
                 <Input
                   placeholder="审批人，如 release-oncall"
                   value={approvalDraft[order.id]?.approver ?? order.approval.approver ?? ""}
-                  onChange={(value) =>
+                  onChange={(event) =>
                     setApprovalDraft((current) => ({
                       ...current,
                       [order.id]: {
-                        approver: value,
+                        approver: event.target.value,
                         reason: current[order.id]?.reason ?? order.approval.reason ?? "",
                       },
                     }))
@@ -444,13 +500,13 @@ export function ReleaseCenterPanel() {
                 <Input
                   placeholder="审批理由，如 低峰窗口+回滚验证完成"
                   value={approvalDraft[order.id]?.reason ?? order.approval.reason ?? ""}
-                  onChange={(value) =>
+                  onChange={(event) =>
                     setApprovalDraft((current) => ({
                       ...current,
                       [order.id]: {
                         approver:
                           current[order.id]?.approver ?? order.approval.approver ?? "",
-                        reason: value,
+                        reason: event.target.value,
                       },
                     }))
                   }
@@ -557,25 +613,6 @@ function Metric({ label, value }: { label: string; value: string }) {
       <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{label}</p>
       <p className="mt-2 text-2xl font-semibold text-white">{value}</p>
     </article>
-  );
-}
-
-function Input({
-  placeholder,
-  value,
-  onChange,
-}: {
-  placeholder: string;
-  value: string;
-  onChange: (next: string) => void;
-}) {
-  return (
-    <input
-      placeholder={placeholder}
-      value={value}
-      onChange={(event) => onChange(event.target.value)}
-      className="h-10 rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-slate-100 outline-none focus:border-cyan-300/40"
-    />
   );
 }
 
