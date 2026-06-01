@@ -23,6 +23,10 @@ export default function ReleaseCenterPage() {
           从应用注册、构建产物、质量门禁到测试/预发/生产环境推进，完整展示 CI/CD
           的流程化能力。每个发布动作都受门禁约束，确保“能发”与“该发”分离。
         </p>
+        <p className="mt-3 text-xs text-slate-500">
+          生产发布窗口默认 10:00 - 22:00（可通过 RELEASE_PROD_WINDOW_START_HOUR /
+          RELEASE_PROD_WINDOW_END_HOUR 调整）。
+        </p>
       </section>
 
       <section className="space-y-6">

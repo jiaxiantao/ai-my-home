@@ -21,6 +21,12 @@ const actionSchema = z.discriminatedUnion("action", [
         approved: z.boolean().optional(),
       })
       .default({}),
+    approval: z
+      .object({
+        approver: z.string().trim().optional(),
+        reason: z.string().trim().optional(),
+      })
+      .optional(),
   }),
   z.object({
     action: z.literal("deploy"),
@@ -45,7 +51,7 @@ export async function POST(
       return NextResponse.json({ order });
     }
     if (payload.action === "set_checks") {
-      const order = updateReleaseChecks(id, payload.checks, "admin");
+      const order = updateReleaseChecks(id, payload.checks, payload.approval, "admin");
       return NextResponse.json({ order });
     }
     if (payload.action === "rollback_prod") {

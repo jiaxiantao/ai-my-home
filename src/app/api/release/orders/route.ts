@@ -8,6 +8,7 @@ const createOrderSchema = z.object({
   appId: z.string().trim().min(1, "appId is required"),
   version: z.string().trim().min(1, "version is required"),
   branch: z.string().trim().min(1, "branch is required"),
+  changeTicket: z.string().trim().min(1, "changeTicket is required"),
 });
 
 export async function GET() {

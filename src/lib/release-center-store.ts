@@ -34,6 +34,7 @@ export type ReleaseOrder = {
   appName: string;
   version: string;
   branch: string;
+  changeTicket: string;
   createdAt: string;
   status: "draft" | "built" | "testing" | "staging" | "released";
   build: {
@@ -43,6 +44,11 @@ export type ReleaseOrder = {
     logs: string[];
   };
   checks: ReleaseChecks;
+  approval: {
+    approver: string | null;
+    reason: string | null;
+    approvedAt: string | null;
+  };
   environments: Record<
     ReleaseEnvironment,
     {
@@ -113,6 +119,7 @@ export function createReleaseOrder(input: {
   appId: string;
   version: string;
   branch: string;
+  changeTicket: string;
 }) {
   const app = releaseApps.find((item) => item.id === input.appId);
   if (!app) {
@@ -125,6 +132,7 @@ export function createReleaseOrder(input: {
     appName: app.name,
     version: input.version.trim(),
     branch: input.branch.trim(),
+    changeTicket: input.changeTicket.trim(),
     createdAt: nowIso(),
     status: "draft",
     build: {
@@ -138,6 +146,11 @@ export function createReleaseOrder(input: {
       e2ePassed: false,
       securityPassed: false,
       approved: false,
+    },
+    approval: {
+      approver: null,
+      reason: null,
+      approvedAt: null,
     },
     environments: {
       test: { status: "pending", deployedAt: null },
@@ -155,7 +168,7 @@ export function createReleaseOrder(input: {
   appendAuditLog(order, {
     operator: "admin",
     action: "create_order",
-    detail: `创建发布单 ${order.version} (${order.branch})`,
+    detail: `创建发布单 ${order.version} (${order.branch}) · ${order.changeTicket}`,
   });
   releaseOrders.unshift(order);
   return order;
@@ -164,14 +177,38 @@ export function createReleaseOrder(input: {
 export function updateReleaseChecks(
   orderId: string,
   checks: Partial<ReleaseChecks>,
+  approvalInput:
+    | {
+        approver?: string;
+        reason?: string;
+      }
+    | undefined,
   operator: ReleaseOperator = "admin",
 ) {
   return withOrderLock(orderId, operator, "更新质量门禁", (order) => {
+    const nextApproved =
+      checks.approved === undefined ? order.checks.approved : checks.approved;
+
+    if (nextApproved) {
+      const approver = approvalInput?.approver?.trim() ?? order.approval.approver ?? "";
+      const reason = approvalInput?.reason?.trim() ?? order.approval.reason ?? "";
+      if (!approver || !reason) {
+        throw new Error("Approver and approval reason are required before approval");
+      }
+      order.approval.approver = approver;
+      order.approval.reason = reason;
+      order.approval.approvedAt = nowIso();
+    } else if (checks.approved === false) {
+      order.approval.approvedAt = null;
+    }
+
     order.checks = { ...order.checks, ...checks };
     appendAuditLog(order, {
       operator,
       action: "set_checks",
-      detail: `更新门禁：${JSON.stringify(checks)}`,
+      detail: `更新门禁：${JSON.stringify(checks)}${
+        approvalInput ? ` · 审批信息：${JSON.stringify(approvalInput)}` : ""
+      }`,
     });
     return order;
   });
@@ -252,13 +289,17 @@ export function deployReleaseEnvironment(
         "Security gate and manual approval are required for production",
       );
     }
+    if (!order.approval.approver || !order.approval.reason) {
+      throw new Error("Approver and reason are required for production deployment");
+    }
+    assertProdReleaseWindow();
     order.environments.prod.status = "success";
     order.environments.prod.deployedAt = nowIso();
     order.status = "released";
     appendAuditLog(order, {
       operator,
       action: "deploy_prod",
-      detail: "发布到生产环境",
+      detail: `发布到生产环境 · approver=${order.approval.approver}`,
     });
     return order;
   });
@@ -275,6 +316,7 @@ export function rollbackReleaseProduction(
     order.environments.prod.status = "failed";
     order.status = "staging";
     order.checks.approved = false;
+    order.approval.approvedAt = null;
     appendAuditLog(order, {
       operator,
       action: "rollback_prod",
@@ -282,6 +324,18 @@ export function rollbackReleaseProduction(
     });
     return order;
   });
+}
+
+function assertProdReleaseWindow(date = new Date()) {
+  const start = Number(process.env.RELEASE_PROD_WINDOW_START_HOUR ?? "10");
+  const end = Number(process.env.RELEASE_PROD_WINDOW_END_HOUR ?? "22");
+  const hour = date.getHours();
+  const inWindow = start < end ? hour >= start && hour < end : hour >= start || hour < end;
+  if (!inWindow) {
+    throw new Error(
+      `Production release window is ${String(start).padStart(2, "0")}:00-${String(end).padStart(2, "0")}:00`,
+    );
+  }
 }
 
 function getReleaseOrderOrThrow(orderId: string) {

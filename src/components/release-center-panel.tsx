@@ -38,7 +38,11 @@ export function ReleaseCenterPanel() {
     appId: "",
     version: "",
     branch: "main",
+    changeTicket: "",
   });
+  const [approvalDraft, setApprovalDraft] = useState<
+    Record<string, { approver: string; reason: string }>
+  >({});
 
   async function loadData() {
     setLoading(true);
@@ -107,7 +111,12 @@ export function ReleaseCenterPanel() {
       setMessage(payload.error ?? "创建发布单失败");
       return;
     }
-    setOrderForm((current) => ({ ...current, version: "", branch: "main" }));
+    setOrderForm((current) => ({
+      ...current,
+      version: "",
+      branch: "main",
+      changeTicket: "",
+    }));
     await loadData();
   }
 
@@ -213,8 +222,15 @@ export function ReleaseCenterPanel() {
               setOrderForm((current) => ({ ...current, branch: value }))
             }
           />
+          <Input
+            placeholder="变更单号，如 CR-2026-0612"
+            value={orderForm.changeTicket}
+            onChange={(value) =>
+              setOrderForm((current) => ({ ...current, changeTicket: value }))
+            }
+          />
           <Button
-            disabled={!authenticated || !orderForm.appId}
+            disabled={!authenticated || !orderForm.appId || !orderForm.changeTicket.trim()}
             onClick={() => void createOrder()}
           >
             创建发布单
@@ -242,6 +258,7 @@ export function ReleaseCenterPanel() {
                   <h3 className="text-lg font-semibold text-white">
                     {order.version} · {order.branch}
                   </h3>
+                  <p className="mt-1 text-xs text-slate-400">{order.changeTicket}</p>
                 </div>
                 <span className="rounded-full border border-cyan-300/25 bg-cyan-300/10 px-3 py-1 text-xs text-cyan-100">
                   {order.status}
@@ -289,6 +306,19 @@ export function ReleaseCenterPanel() {
                       void runAction(order.id, {
                         action: "set_checks",
                         checks: { [item.key]: !order.checks[item.key] },
+                        approval:
+                          item.key === "approved"
+                            ? {
+                                approver:
+                                  approvalDraft[order.id]?.approver ??
+                                  order.approval.approver ??
+                                  "",
+                                reason:
+                                  approvalDraft[order.id]?.reason ??
+                                  order.approval.reason ??
+                                  "",
+                              }
+                            : undefined,
                       })
                     }
                     className={`rounded-xl border px-3 py-2 text-left text-xs transition ${
@@ -300,6 +330,36 @@ export function ReleaseCenterPanel() {
                     {item.label}
                   </button>
                 ))}
+              </div>
+
+              <div className="grid gap-2 rounded-xl border border-white/10 bg-white/5 p-3 md:grid-cols-2">
+                <Input
+                  placeholder="审批人，如 release-oncall"
+                  value={approvalDraft[order.id]?.approver ?? order.approval.approver ?? ""}
+                  onChange={(value) =>
+                    setApprovalDraft((current) => ({
+                      ...current,
+                      [order.id]: {
+                        approver: value,
+                        reason: current[order.id]?.reason ?? order.approval.reason ?? "",
+                      },
+                    }))
+                  }
+                />
+                <Input
+                  placeholder="审批理由，如 低峰窗口+回滚验证完成"
+                  value={approvalDraft[order.id]?.reason ?? order.approval.reason ?? ""}
+                  onChange={(value) =>
+                    setApprovalDraft((current) => ({
+                      ...current,
+                      [order.id]: {
+                        approver:
+                          current[order.id]?.approver ?? order.approval.approver ?? "",
+                        reason: value,
+                      },
+                    }))
+                  }
+                />
               </div>
 
               <div className="flex flex-wrap gap-2">
