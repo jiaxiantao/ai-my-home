@@ -31,6 +31,35 @@ const memoryApps: ReleaseApp[] = [
 
 const memoryOrders: ReleaseOrder[] = [];
 
+let releaseDbUnavailable = false;
+
+function isReleaseSchemaError(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code: string }).code === "P2021"
+  );
+}
+
+function markReleaseDbUnavailable(error: unknown) {
+  if (!isReleaseSchemaError(error) || releaseDbUnavailable) {
+    return;
+  }
+
+  releaseDbUnavailable = true;
+
+  if (process.env.NODE_ENV !== "production") {
+    console.warn(
+      "[release] PostgreSQL release tables are missing — using in-memory store. Run `pnpm db:setup` to persist.",
+    );
+  }
+}
+
+function shouldUseReleaseMemoryStore() {
+  return !getDb() || releaseDbUnavailable;
+}
+
 function nowIso() {
   return new Date().toISOString();
 }
@@ -184,15 +213,23 @@ function mapOrderToDbData(order: ReleaseOrder) {
 }
 
 async function persistDbOrder(order: ReleaseOrder) {
+  if (shouldUseReleaseMemoryStore()) {
+    return;
+  }
+
   const db = getDb();
   if (!db) {
     return;
   }
 
-  await db.releaseOrder.update({
-    where: { id: order.id },
-    data: mapOrderToDbData(order),
-  });
+  try {
+    await db.releaseOrder.update({
+      where: { id: order.id },
+      data: mapOrderToDbData(order),
+    });
+  } catch (error) {
+    markReleaseDbUnavailable(error);
+  }
 }
 
 async function appendDbAuditLog(
@@ -203,62 +240,116 @@ async function appendDbAuditLog(
     detail: string;
   },
 ) {
+  if (shouldUseReleaseMemoryStore()) {
+    return;
+  }
+
   const db = getDb();
   if (!db) {
     return;
   }
 
-  await db.releaseAuditLog.create({
-    data: {
-      orderId,
-      operator: input.operator,
-      action: input.action,
-      detail: input.detail,
-    },
-  });
-
-  const overflow = await db.releaseAuditLog.findMany({
-    where: { orderId },
-    orderBy: { createdAt: "desc" },
-    skip: 20,
-    select: { id: true },
-  });
-
-  if (overflow.length) {
-    await db.releaseAuditLog.deleteMany({
-      where: { id: { in: overflow.map((item) => item.id) } },
+  try {
+    await db.releaseAuditLog.create({
+      data: {
+        orderId,
+        operator: input.operator,
+        action: input.action,
+        detail: input.detail,
+      },
     });
+
+    const overflow = await db.releaseAuditLog.findMany({
+      where: { orderId },
+      orderBy: { createdAt: "desc" },
+      skip: 20,
+      select: { id: true },
+    });
+
+    if (overflow.length) {
+      await db.releaseAuditLog.deleteMany({
+        where: { id: { in: overflow.map((item) => item.id) } },
+      });
+    }
+  } catch (error) {
+    markReleaseDbUnavailable(error);
   }
 }
 
 async function loadDbOrder(orderId: string) {
+  if (shouldUseReleaseMemoryStore()) {
+    return null;
+  }
+
   const db = getDb();
   if (!db) {
     return null;
   }
 
-  const row = await db.releaseOrder.findUnique({
-    where: { id: orderId },
-    include: {
-      auditLogs: { orderBy: { createdAt: "desc" }, take: 20 },
-    },
-  });
+  try {
+    const row = await db.releaseOrder.findUnique({
+      where: { id: orderId },
+      include: {
+        auditLogs: { orderBy: { createdAt: "desc" }, take: 20 },
+      },
+    });
 
-  if (!row) {
+    if (!row) {
+      return null;
+    }
+
+    return applyRuntimeLock(mapDbOrder(row));
+  } catch (error) {
+    markReleaseDbUnavailable(error);
     return null;
   }
+}
 
-  return applyRuntimeLock(mapDbOrder(row));
+function listMemoryReleaseApps() {
+  return [...memoryApps].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+function listMemoryReleaseOrders() {
+  return [...memoryOrders]
+    .map(applyRuntimeLock)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export async function listReleaseApps(): Promise<ReleaseApp[]> {
-  const db = getDb();
-  if (!db) {
-    return [...memoryApps].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  if (shouldUseReleaseMemoryStore()) {
+    return listMemoryReleaseApps();
   }
 
-  const apps = await db.releaseApp.findMany({ orderBy: { createdAt: "desc" } });
-  return apps.map(mapDbApp);
+  const db = getDb();
+  if (!db) {
+    return listMemoryReleaseApps();
+  }
+
+  try {
+    const apps = await db.releaseApp.findMany({ orderBy: { createdAt: "desc" } });
+    return apps.map(mapDbApp);
+  } catch (error) {
+    markReleaseDbUnavailable(error);
+    return listMemoryReleaseApps();
+  }
+}
+
+function createMemoryReleaseApp(input: {
+  name: string;
+  repo: string;
+  buildCommand: string;
+  testCommand: string;
+}): ReleaseApp {
+  const app: ReleaseApp = {
+    id: randomUUID(),
+    name: input.name.trim(),
+    repo: input.repo.trim(),
+    buildCommand: input.buildCommand.trim(),
+    testCommand: input.testCommand.trim(),
+    createdAt: nowIso(),
+  };
+  memoryApps.unshift(app);
+  return app;
 }
 
 export async function createReleaseApp(input: {
@@ -267,48 +358,102 @@ export async function createReleaseApp(input: {
   buildCommand: string;
   testCommand: string;
 }): Promise<ReleaseApp> {
-  const db = getDb();
-  if (!db) {
-    const app: ReleaseApp = {
-      id: randomUUID(),
-      name: input.name.trim(),
-      repo: input.repo.trim(),
-      buildCommand: input.buildCommand.trim(),
-      testCommand: input.testCommand.trim(),
-      createdAt: nowIso(),
-    };
-    memoryApps.unshift(app);
-    return app;
+  if (shouldUseReleaseMemoryStore()) {
+    return createMemoryReleaseApp(input);
   }
 
-  const app = await db.releaseApp.create({
-    data: {
-      name: input.name.trim(),
-      repo: input.repo.trim(),
-      buildCommand: input.buildCommand.trim(),
-      testCommand: input.testCommand.trim(),
-    },
-  });
+  const db = getDb();
+  if (!db) {
+    return createMemoryReleaseApp(input);
+  }
 
-  return mapDbApp(app);
+  try {
+    const app = await db.releaseApp.create({
+      data: {
+        name: input.name.trim(),
+        repo: input.repo.trim(),
+        buildCommand: input.buildCommand.trim(),
+        testCommand: input.testCommand.trim(),
+      },
+    });
+
+    return mapDbApp(app);
+  } catch (error) {
+    markReleaseDbUnavailable(error);
+    return createMemoryReleaseApp(input);
+  }
 }
 
 export async function listReleaseOrders(): Promise<ReleaseOrder[]> {
-  const db = getDb();
-  if (!db) {
-    return [...memoryOrders]
-      .map(applyRuntimeLock)
-      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  if (shouldUseReleaseMemoryStore()) {
+    return listMemoryReleaseOrders();
   }
 
-  const rows = await db.releaseOrder.findMany({
-    orderBy: { createdAt: "desc" },
-    include: {
-      auditLogs: { orderBy: { createdAt: "desc" }, take: 20 },
-    },
-  });
+  const db = getDb();
+  if (!db) {
+    return listMemoryReleaseOrders();
+  }
 
-  return rows.map((row) => applyRuntimeLock(mapDbOrder(row)));
+  try {
+    const rows = await db.releaseOrder.findMany({
+      orderBy: { createdAt: "desc" },
+      include: {
+        auditLogs: { orderBy: { createdAt: "desc" }, take: 20 },
+      },
+    });
+
+    return rows.map((row) => applyRuntimeLock(mapDbOrder(row)));
+  } catch (error) {
+    markReleaseDbUnavailable(error);
+    return listMemoryReleaseOrders();
+  }
+}
+
+function createMemoryReleaseOrder(
+  app: ReleaseApp,
+  input: {
+    version: string;
+    branch: string;
+    changeTicket: string;
+  },
+): ReleaseOrder {
+  const order: ReleaseOrder = {
+    id: randomUUID(),
+    appId: app.id,
+    appName: app.name,
+    version: input.version.trim(),
+    branch: input.branch.trim(),
+    changeTicket: input.changeTicket.trim(),
+    createdAt: nowIso(),
+    status: "draft",
+    build: {
+      status: "pending",
+      durationMs: null,
+      artifact: null,
+      logs: [],
+    },
+    checks: {
+      unitPassed: false,
+      e2ePassed: false,
+      securityPassed: false,
+      approved: false,
+    },
+    approval: { approver: null, reason: null, approvedAt: null },
+    environments: {
+      test: { status: "pending", deployedAt: null },
+      pre: { status: "pending", deployedAt: null },
+      prod: { status: "pending", deployedAt: null },
+    },
+    lock: emptyLock(),
+    auditLogs: [],
+  };
+  appendMemoryAuditLog(order, {
+    operator: "admin",
+    action: "create_order",
+    detail: `创建发布单 ${order.version} (${order.branch}) · ${order.changeTicket}`,
+  });
+  memoryOrders.unshift(order);
+  return applyRuntimeLock(order);
 }
 
 export async function createReleaseOrder(input: {
@@ -323,69 +468,42 @@ export async function createReleaseOrder(input: {
     throw new Error("Application not found");
   }
 
+  if (shouldUseReleaseMemoryStore()) {
+    return createMemoryReleaseOrder(app, input);
+  }
+
   const db = getDb();
   if (!db) {
-    const order: ReleaseOrder = {
-      id: randomUUID(),
-      appId: app.id,
-      appName: app.name,
-      version: input.version.trim(),
-      branch: input.branch.trim(),
-      changeTicket: input.changeTicket.trim(),
-      createdAt: nowIso(),
-      status: "draft",
-      build: {
-        status: "pending",
-        durationMs: null,
-        artifact: null,
-        logs: [],
+    return createMemoryReleaseOrder(app, input);
+  }
+
+  try {
+    const row = await db.releaseOrder.create({
+      data: {
+        appId: app.id,
+        appName: app.name,
+        version: input.version.trim(),
+        branch: input.branch.trim(),
+        changeTicket: input.changeTicket.trim(),
       },
-      checks: {
-        unitPassed: false,
-        e2ePassed: false,
-        securityPassed: false,
-        approved: false,
-      },
-      approval: { approver: null, reason: null, approvedAt: null },
-      environments: {
-        test: { status: "pending", deployedAt: null },
-        pre: { status: "pending", deployedAt: null },
-        prod: { status: "pending", deployedAt: null },
-      },
-      lock: emptyLock(),
-      auditLogs: [],
-    };
-    appendMemoryAuditLog(order, {
+      include: { auditLogs: true },
+    });
+
+    await appendDbAuditLog(row.id, {
       operator: "admin",
       action: "create_order",
-      detail: `创建发布单 ${order.version} (${order.branch}) · ${order.changeTicket}`,
+      detail: `创建发布单 ${row.version} (${row.branch}) · ${row.changeTicket}`,
     });
-    memoryOrders.unshift(order);
-    return applyRuntimeLock(order);
+
+    const loaded = await loadDbOrder(row.id);
+    if (!loaded) {
+      return createMemoryReleaseOrder(app, input);
+    }
+    return loaded;
+  } catch (error) {
+    markReleaseDbUnavailable(error);
+    return createMemoryReleaseOrder(app, input);
   }
-
-  const row = await db.releaseOrder.create({
-    data: {
-      appId: app.id,
-      appName: app.name,
-      version: input.version.trim(),
-      branch: input.branch.trim(),
-      changeTicket: input.changeTicket.trim(),
-    },
-    include: { auditLogs: true },
-  });
-
-  await appendDbAuditLog(row.id, {
-    operator: "admin",
-    action: "create_order",
-    detail: `创建发布单 ${row.version} (${row.branch}) · ${row.changeTicket}`,
-  });
-
-  const loaded = await loadDbOrder(row.id);
-  if (!loaded) {
-    throw new Error("Failed to load created release order");
-  }
-  return loaded;
 }
 
 export async function updateReleaseChecks(
@@ -544,21 +662,29 @@ function assertProdReleaseWindow(date = new Date()) {
   }
 }
 
-async function getReleaseOrderOrThrow(orderId: string) {
-  const db = getDb();
-  if (!db) {
-    const order = memoryOrders.find((item) => item.id === orderId);
-    if (!order) {
-      throw new Error("Release order not found");
-    }
-    return applyRuntimeLock(order);
-  }
-
-  const order = await loadDbOrder(orderId);
+function getMemoryReleaseOrderOrThrow(orderId: string) {
+  const order = memoryOrders.find((item) => item.id === orderId);
   if (!order) {
     throw new Error("Release order not found");
   }
-  return order;
+  return applyRuntimeLock(order);
+}
+
+async function getReleaseOrderOrThrow(orderId: string) {
+  if (shouldUseReleaseMemoryStore()) {
+    return getMemoryReleaseOrderOrThrow(orderId);
+  }
+
+  const order = await loadDbOrder(orderId);
+  if (order) {
+    return order;
+  }
+
+  if (shouldUseReleaseMemoryStore()) {
+    return getMemoryReleaseOrderOrThrow(orderId);
+  }
+
+  throw new Error("Release order not found");
 }
 
 async function withOrderLock<T>(
@@ -592,17 +718,24 @@ async function withOrderLock<T>(
   }
 }
 
-async function persistOrder(order: ReleaseOrder) {
-  const db = getDb();
-  if (!db) {
-    const index = memoryOrders.findIndex((item) => item.id === order.id);
-    if (index >= 0) {
-      memoryOrders[index] = { ...order, lock: emptyLock() };
-    }
+function persistMemoryOrder(order: ReleaseOrder) {
+  const index = memoryOrders.findIndex((item) => item.id === order.id);
+  const next = { ...order, lock: emptyLock() };
+  if (index >= 0) {
+    memoryOrders[index] = next;
     return;
   }
+  memoryOrders.unshift(next);
+}
 
-  await persistDbOrder(order);
+async function persistOrder(order: ReleaseOrder) {
+  if (!shouldUseReleaseMemoryStore()) {
+    await persistDbOrder(order);
+  }
+
+  if (shouldUseReleaseMemoryStore()) {
+    persistMemoryOrder(order);
+  }
 }
 
 async function appendAudit(
@@ -613,13 +746,18 @@ async function appendAudit(
     detail: string;
   },
 ) {
-  const db = getDb();
-  if (!db) {
+  if (shouldUseReleaseMemoryStore()) {
     appendMemoryAuditLog(order, input);
     return;
   }
 
   await appendDbAuditLog(order.id, input);
+
+  if (shouldUseReleaseMemoryStore()) {
+    appendMemoryAuditLog(order, input);
+    return;
+  }
+
   const entry = {
     id: randomUUID(),
     at: nowIso(),
