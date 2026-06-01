@@ -7,8 +7,9 @@ test.describe("Release Center", () => {
     await expect(page.getByRole("heading", { level: 1 })).toContainText(
       "工程化发布单",
     );
-    await expect(page.getByText("应用数")).toBeVisible();
-    await expect(page.getByText("发布流水线执行")).toBeVisible();
+    const main = page.locator("main");
+    await expect(main.getByText("应用数", { exact: true }).first()).toBeVisible();
+    await expect(main.getByText("发布流水线执行")).toBeVisible();
   });
 
   test("guest cannot create release order", async ({ page }) => {

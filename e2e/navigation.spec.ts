@@ -1,13 +1,12 @@
 import { expect, test } from "@playwright/test";
 
+import { clickHeaderNavLink } from "./helpers/navigation";
+
 test.describe("Site navigation", () => {
   test("header links to Notes", async ({ page }) => {
     await page.goto("/");
 
-    await page
-      .locator("header")
-      .getByRole("link", { name: "Notes", exact: true })
-      .click();
+    await clickHeaderNavLink(page, { group: "智能与内容", label: "Notes" });
 
     await expect(page).toHaveURL(/\/notes$/);
     await expect(page.getByRole("heading", { level: 1 })).toContainText(
@@ -18,10 +17,7 @@ test.describe("Site navigation", () => {
   test("header links to Assistant", async ({ page }) => {
     await page.goto("/");
 
-    await page
-      .locator("header")
-      .getByRole("link", { name: "Assistant", exact: true })
-      .click();
+    await clickHeaderNavLink(page, { group: "智能与内容", label: "Assistant" });
 
     await expect(page).toHaveURL(/\/assistant$/);
     await expect(page.getByRole("heading", { level: 1 })).toContainText(

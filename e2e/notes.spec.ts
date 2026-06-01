@@ -19,9 +19,10 @@ test.describe("Notes", () => {
 
     await compareButton.click();
 
-    await expect(page.getByText("PostgreSQL pg_trgm")).toBeVisible({
+    const comparePanel = page.locator("main");
+    await expect(comparePanel.getByText("PostgreSQL pg_trgm").first()).toBeVisible({
       timeout: 20_000,
     });
-    await expect(page.getByText("内存 token 打分")).toBeVisible();
+    await expect(comparePanel.getByText("内存 token 打分").first()).toBeVisible();
   });
 });
