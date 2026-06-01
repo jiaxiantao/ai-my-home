@@ -1,9 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { Activity, Cpu, Gauge, Layers, Radio, Search, Workflow } from "lucide-react";
+import {
+  Activity,
+  Cpu,
+  Gauge,
+  Layers,
+  Radio,
+  Search,
+  ShieldAlert,
+  Workflow,
+} from "lucide-react";
 
 import { ApiLatencyDemo } from "@/components/demos/api-latency-demo";
+import { AuthRateLimitLabDemo } from "@/components/demos/auth-rate-limit-lab-demo";
 import { CheckoutFlowDemo } from "@/components/demos/checkout-flow-demo";
 import { DebounceThrottleDemo } from "@/components/demos/debounce-throttle-demo";
 import { SseInspectorDemo } from "@/components/demos/sse-inspector-demo";
@@ -20,7 +30,8 @@ type DemoId =
   | "sse"
   | "worker"
   | "search"
-  | "debounce";
+  | "debounce"
+  | "security";
 
 const demos: Array<{
   id: DemoId;
@@ -76,6 +87,12 @@ const demos: Array<{
     tech: "输入节奏控制",
     icon: Workflow,
   },
+  {
+    id: "security",
+    title: "登录攻防实验台",
+    tech: "rate-limit simulation",
+    icon: ShieldAlert,
+  },
 ];
 
 export function EngineeringShowcase() {
@@ -120,6 +137,7 @@ export function EngineeringShowcase() {
         {active === "worker" ? <WorkerComputeDemo /> : null}
         {active === "search" ? <SearchCompareDemo /> : null}
         {active === "debounce" ? <DebounceThrottleDemo /> : null}
+        {active === "security" ? <AuthRateLimitLabDemo /> : null}
       </div>
     </div>
   );
