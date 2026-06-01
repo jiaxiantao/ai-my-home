@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Menu } from "lucide-react";
+import { ChevronDown, Menu } from "lucide-react";
 import { useState } from "react";
 
 import { useAuth } from "@/components/auth-provider";
@@ -17,24 +17,43 @@ import {
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-const navItems = [
-  { href: "/#topology", label: "能力图" },
-  { href: "/#cross-platform", label: "大前端" },
-  { href: "/#dashboard", label: "看板" },
-  { href: "/#edge-ai", label: "端侧 AI" },
-  { href: "/#tech-demos", label: "工程 Demo" },
-  { href: "/#demo-lab", label: "判断台" },
-  { href: "/notes", label: "Notes" },
-  { href: "/assistant", label: "Assistant" },
-  { href: "/agents", label: "Agents" },
-  { href: "/release-center", label: "Release Center" },
-  { href: "/car-showroom", label: "3D看车" },
-  { href: "/cases", label: "Cases" },
-  { href: "/status", label: "Status" },
+const navGroups = [
+  {
+    id: "engineering",
+    label: "工程与能力",
+    items: [
+      { href: "/#topology", label: "能力图" },
+      { href: "/#dashboard", label: "看板" },
+      { href: "/#tech-demos", label: "工程 Demo" },
+      { href: "/#demo-lab", label: "判断台" },
+      { href: "/release-center", label: "Release Center" },
+      { href: "/status", label: "Status" },
+    ],
+  },
+  {
+    id: "ai",
+    label: "智能与内容",
+    items: [
+      { href: "/#edge-ai", label: "端侧 AI" },
+      { href: "/assistant", label: "Assistant" },
+      { href: "/agents", label: "Agents" },
+      { href: "/notes", label: "Notes" },
+      { href: "/cases", label: "Cases" },
+    ],
+  },
+  {
+    id: "platform",
+    label: "平台体验",
+    items: [
+      { href: "/#cross-platform", label: "大前端" },
+      { href: "/car-showroom", label: "3D看车" },
+    ],
+  },
 ] as const;
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -67,15 +86,45 @@ export function SiteHeader() {
         </Link>
 
         <nav className="hidden items-center gap-6 text-sm text-slate-300 lg:flex">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="transition-colors hover:text-white"
-            >
-              {item.label}
-            </Link>
-          ))}
+          {navGroups.map((group) => {
+            const expanded = activeDropdown === group.id;
+            return (
+              <div
+                key={group.id}
+                className="relative"
+                onMouseEnter={() => setActiveDropdown(group.id)}
+                onMouseLeave={() => setActiveDropdown((current) => (current === group.id ? null : current))}
+              >
+                <button
+                  type="button"
+                  onClick={() =>
+                    setActiveDropdown((current) =>
+                      current === group.id ? null : group.id,
+                    )
+                  }
+                  className="inline-flex items-center gap-1 text-sm text-slate-300 transition hover:text-white"
+                  aria-expanded={expanded}
+                >
+                  {group.label}
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </button>
+                {expanded ? (
+                  <div className="absolute left-0 top-full z-20 mt-2 min-w-44 rounded-xl border border-white/10 bg-slate-950/95 p-2 shadow-2xl">
+                    {group.items.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setActiveDropdown(null)}
+                        className="block rounded-lg px-3 py-2 text-xs text-slate-300 transition hover:bg-white/10 hover:text-white"
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
           <Link href="/resume" className="transition-colors hover:text-white">
             Resume
           </Link>
@@ -125,15 +174,23 @@ export function SiteHeader() {
       {open ? (
         <nav className="border-t border-white/10 bg-slate-950/95 px-6 py-4 lg:hidden">
           <ul className="grid gap-2">
-            {navItems.map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className="block rounded-xl border border-white/10 px-4 py-3 text-sm text-slate-200"
-                  onClick={() => setOpen(false)}
-                >
-                  {item.label}
-                </Link>
+            {navGroups.map((group) => (
+              <li key={group.id} className="rounded-xl border border-white/10 bg-white/5 p-3">
+                <p className="mb-2 text-xs uppercase tracking-[0.2em] text-slate-500">
+                  {group.label}
+                </p>
+                <div className="grid gap-2">
+                  {group.items.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="block rounded-lg border border-white/10 px-3 py-2 text-sm text-slate-200"
+                      onClick={() => setOpen(false)}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
               </li>
             ))}
             <li>
