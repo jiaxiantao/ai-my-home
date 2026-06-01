@@ -89,6 +89,7 @@ export default function CarShowroomPage() {
   const [speedKph, setSpeedKph] = useState(28);
   const [braking, setBraking] = useState(false);
   const [assetRigCaps, setAssetRigCaps] = useState<AssetRigCapabilities | null>(null);
+  const wheelReadyCategory = marketCategoryOptions.find((item) => item.key === "sedan");
 
   useEffect(() => {
     const category = marketCategoryOptions.find((item) => item.key === selectedCategory);
@@ -150,8 +151,13 @@ export default function CarShowroomPage() {
 
   const unsupportedInteractionNote =
     unsupportedInteractionLabels.length > 0
-      ? `当前 GLB 的「${unsupportedInteractionLabels.join("、")}」与车身合并，无法单独开合（对应按钮已禁用）。车灯、双闪、启动、${assetRigCaps?.wheelsSynthetic ? "轮拱辅助轮旋转" : "整车振动"} 仍可用。SUV 等带独立门饰板的模型支持点击 3D 车门/后备箱。`
+      ? `当前 GLB 的「${unsupportedInteractionLabels.join("、")}」与车身合并，无法单独开合（对应按钮已禁用）。车灯、双闪、启动与整车动态仍可用；若要看到“真实四轮转动”，建议切换到支持独立轮节点的车型。`
       : null;
+
+  const wheelSpinUnavailable = useAssetModel && assetRigCaps ? !assetRigCaps.wheels : false;
+  const wheelSpinHint = wheelSpinUnavailable
+    ? "当前模型未识别到可独立旋转的真实车轮，启动车辆仅表现为整车动态。"
+    : undefined;
 
   const sceneState = useMemo(
     () => ({
@@ -291,9 +297,19 @@ export default function CarShowroomPage() {
               {assetRigCaps.rightDoor ? "✓" : "—"} · 后备箱 {assetRigCaps.trunk ? "✓" : "—"} · 车灯{" "}
               {assetRigCaps.headLights ? "✓" : "—"} · 尾灯 {assetRigCaps.tailLights ? "✓" : "—"} ·
               天窗 {assetRigCaps.sunroof ? "✓" : "—"} · 车轮 {assetRigCaps.wheels ? "✓" : "—"}
-              {assetRigCaps.wheelsSynthetic ? "（轮拱辅助模型）" : ""}
               {assetRigCaps.leftDoor ? "" : "（未识别到的部件可在 docs/market-glb-rig.md 手动配置）"}
             </p>
+          ) : null}
+          {wheelSpinUnavailable && wheelReadyCategory ? (
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setSelectedCategory(wheelReadyCategory.key);
+                setUseAssetModel(true);
+              }}
+            >
+              切换到{wheelReadyCategory.label}（支持真实四轮转动）
+            </Button>
           ) : null}
         </div>
 
@@ -393,6 +409,7 @@ export default function CarShowroomPage() {
           </Button>
           <Button
             variant={engineOn ? "default" : "outline"}
+            title={wheelSpinHint}
             onClick={() => setEngineOn((value) => !value)}
           >
             {engineOn ? "熄火" : "启动车辆"}

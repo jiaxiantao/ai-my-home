@@ -137,10 +137,11 @@ function ShowroomAccentLights({
     }
     const center = assetBounds.getCenter(new THREE.Vector3());
     const size = assetBounds.getSize(new THREE.Vector3());
+    const interiorIntensity = lightsOn ? 0.45 : 0.14;
     return (
       <pointLight
         position={[center.x - 0.4, center.y + size.y * 0.35, center.z]}
-        intensity={0.45}
+        intensity={interiorIntensity}
         distance={4}
         color="#bae6fd"
       />
