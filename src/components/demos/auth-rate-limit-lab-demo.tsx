@@ -6,7 +6,9 @@ import {
   LOGIN_RATE_LIMIT_WINDOW_MS,
   assessLoginRisk,
   createLoginRateLimiter,
+  formatLoginRiskLevelLabel,
   getAdaptiveLoginLimitByRisk,
+  getLoginRiskContributions,
 } from "@/lib/auth-rate-limit";
 
 type AttackMode = "single-ip" | "distributed-ip";
@@ -122,6 +124,24 @@ export function AuthRateLimitLabDemo() {
   const passCount = logs.length - blockedCount;
   const blockedRatio = logs.length ? Math.round((blockedCount / logs.length) * 100) : 0;
   const latestRisk = logs[0];
+  const currentSignals = useMemo(
+    () => ({
+      ipSwitchCountLastMinute: ipSwitchCount,
+      usernameBurstLastMinute: usernameBurst,
+      failedStreak,
+      suspiciousUserAgent: suspiciousUa,
+    }),
+    [failedStreak, ipSwitchCount, suspiciousUa, usernameBurst],
+  );
+  const currentRisk = useMemo(() => assessLoginRisk(currentSignals), [currentSignals]);
+  const riskContributions = useMemo(
+    () => getLoginRiskContributions(currentSignals),
+    [currentSignals],
+  );
+  const maxContributionScore = useMemo(
+    () => Math.max(...riskContributions.map((item) => item.score), 1),
+    [riskContributions],
+  );
 
   const recommendation = useMemo(() => {
     if (!logs.length) {
@@ -214,6 +234,52 @@ export function AuthRateLimitLabDemo() {
           helper={`risk: ${latestRisk?.riskLevel ?? "low"} (${latestRisk?.riskScore ?? 10})`}
         />
       </div>
+
+      <article className="rounded-2xl border border-white/10 bg-slate-950/80 p-4">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-100">
+            风险评分拆解
+          </p>
+          <p className="text-xs text-slate-400">
+            实时风险：
+            <span
+              className={`ml-1 font-semibold ${
+                currentRisk.level === "high"
+                  ? "text-rose-200"
+                  : currentRisk.level === "medium"
+                    ? "text-amber-200"
+                    : "text-emerald-200"
+              }`}
+            >
+              {formatLoginRiskLevelLabel(currentRisk.level)} ({currentRisk.score})
+            </span>
+          </p>
+        </div>
+        <div className="mt-4 grid gap-3">
+          {riskContributions.map((item) => (
+            <div key={item.id} className="grid gap-1">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-300">{item.label}</span>
+                <span className="font-mono text-slate-400">+{item.score}</span>
+              </div>
+              <div className="h-2 rounded-full bg-white/5">
+                <div
+                  className={`h-full rounded-full ${
+                    item.score <= 0
+                      ? "bg-slate-700"
+                      : item.score >= 28
+                        ? "bg-rose-300/80"
+                        : item.score >= 15
+                          ? "bg-amber-300/80"
+                          : "bg-cyan-300/80"
+                  }`}
+                  style={{ width: `${(item.score / maxContributionScore) * 100}%` }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </article>
 
       <div className="rounded-2xl border border-cyan-300/20 bg-cyan-300/10 p-4">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-100">
