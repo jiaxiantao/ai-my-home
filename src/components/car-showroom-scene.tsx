@@ -101,6 +101,7 @@ const WHEEL_TOUCH_CLEARANCE = 0.01;
 const WHEEL_MOUNT_Y = -0.06 - BODY_GROUND_CLEARANCE;
 const CAR_BASE_Y =
   SHOWROOM_GROUND_Y + WHEEL_RADIUS - WHEEL_MOUNT_Y + WHEEL_TOUCH_CLEARANCE;
+const ENGINE_IGNITION_DURATION = 0.9;
 
 const interactivePointerHandlers = {
   onPointerOver: (event: ThreeEvent<PointerEvent>) => {
@@ -528,11 +529,15 @@ function AssetModel({
   const wheelSteerAngleRef = useRef(0);
   const velocityRef = useRef(0);
   const lastVelocityRef = useRef(0);
+  const prevEngineOnRef = useRef(state.engineOn);
+  const ignitionTimeRef = useRef(0);
   const sunroofBaseYRef = useRef<Map<string, number>>(new Map());
 
   useEffect(() => {
     wheelSpinAngleRef.current = 0;
     wheelSteerAngleRef.current = 0;
+    prevEngineOnRef.current = false;
+    ignitionTimeRef.current = 0;
     sunroofBaseYRef.current.clear();
     for (const node of rig.sunroofNodes) {
       sunroofBaseYRef.current.set(node.uuid, node.position.y);
@@ -652,6 +657,13 @@ function AssetModel({
     const t = renderState.clock.elapsedTime;
     const hazardPulse = state.hazardOn ? (Math.sin(t * 8) > 0 ? 1 : 0) : 0;
     const hazardActive = hazardPulse > 0;
+    if (state.engineOn && !prevEngineOnRef.current) {
+      ignitionTimeRef.current = ENGINE_IGNITION_DURATION;
+    }
+    prevEngineOnRef.current = state.engineOn;
+    ignitionTimeRef.current = Math.max(0, ignitionTimeRef.current - delta);
+    const ignitionProgress = ignitionTimeRef.current / ENGINE_IGNITION_DURATION;
+    const ignitionPulse = Math.sin(ignitionProgress * Math.PI);
 
     if (rig.leftDoorPivot) {
       const target = state.leftDoorOpen ? -ASSET_DOOR_MAX_OPEN_RADIANS : 0;
@@ -718,8 +730,15 @@ function AssetModel({
     if (rootRef.current) {
       const engineYOffset = state.engineOn ? Math.sin(t * 8) * 0.02 : 0;
       const acceleration = (velocityRef.current - lastVelocityRef.current) / Math.max(delta, 0.001);
-      const pitchTarget = THREE.MathUtils.clamp(-acceleration * 0.015, -0.06, 0.05);
-      rootRef.current.position.y = THREE.MathUtils.damp(rootRef.current.position.y, engineYOffset, 5, delta);
+      const ignitionLift = ignitionPulse * 0.022;
+      const ignitionPitch = ignitionPulse * 0.035;
+      const pitchTarget = THREE.MathUtils.clamp(-acceleration * 0.015 + ignitionPitch, -0.06, 0.06);
+      rootRef.current.position.y = THREE.MathUtils.damp(
+        rootRef.current.position.y,
+        engineYOffset + ignitionLift,
+        7,
+        delta,
+      );
       rootRef.current.rotation.z = THREE.MathUtils.damp(
         rootRef.current.rotation.z,
         pitchTarget,
@@ -735,12 +754,18 @@ function AssetModel({
         ? SHOWROOM_HEADLAMP_INTENSITY.engineOn
         : SHOWROOM_HEADLAMP_INTENSITY.on
       : 0;
+    const ignitionHeadlightBoost = headLit ? ignitionPulse * 2.2 : 0;
     const tailLit = state.lightsOn || hazardActive;
     const tailIntensity = state.lightsOn
       ? 1.1 + hazardPulse * SHOWROOM_HAZARD_INTENSITY.withHeadlights
       : hazardPulse * SHOWROOM_HAZARD_INTENSITY.on;
     const hazardMin = { minActiveIntensity: 0 };
-    boostShowroomMaterialEmissive(rig.headLightMaterials, headLit, headIntensity, delta);
+    boostShowroomMaterialEmissive(
+      rig.headLightMaterials,
+      headLit,
+      headIntensity + ignitionHeadlightBoost,
+      delta,
+    );
     boostShowroomMaterialEmissive(
       rig.tailLightMaterials,
       tailLit,
@@ -987,6 +1012,8 @@ function CarModel({
   const wheelSpinAnglesRef = useRef<number[]>([]);
   const velocityRef = useRef(0);
   const lastVelocityRef = useRef(0);
+  const prevEngineOnRef = useRef(state.engineOn);
+  const ignitionTimeRef = useRef(0);
 
   const hiddenHitboxMaterial = useMemo(
     () =>
@@ -1002,6 +1029,13 @@ function CarModel({
   useFrame((renderState, delta) => {
     const t = renderState.clock.elapsedTime;
     const hazardPulse = state.hazardOn ? (Math.sin(t * 8) > 0 ? 1 : 0) : 0;
+    if (state.engineOn && !prevEngineOnRef.current) {
+      ignitionTimeRef.current = ENGINE_IGNITION_DURATION;
+    }
+    prevEngineOnRef.current = state.engineOn;
+    ignitionTimeRef.current = Math.max(0, ignitionTimeRef.current - delta);
+    const ignitionProgress = ignitionTimeRef.current / ENGINE_IGNITION_DURATION;
+    const ignitionPulse = Math.sin(ignitionProgress * Math.PI);
 
     if (leftDoorRef.current) {
       const target = state.leftDoorOpen ? -DOOR_MAX_OPEN_RADIANS : 0;
@@ -1116,11 +1150,13 @@ function CarModel({
     if (rootRef.current) {
       const engineYOffset = state.engineOn ? Math.sin(t * 8) * 0.02 : 0;
       const acceleration = (velocityRef.current - lastVelocityRef.current) / Math.max(delta, 0.001);
-      const pitchTarget = THREE.MathUtils.clamp(-acceleration * 0.015, -0.06, 0.05);
+      const ignitionLift = ignitionPulse * 0.022;
+      const ignitionPitch = ignitionPulse * 0.035;
+      const pitchTarget = THREE.MathUtils.clamp(-acceleration * 0.015 + ignitionPitch, -0.06, 0.06);
       rootRef.current.position.y = THREE.MathUtils.damp(
         rootRef.current.position.y,
-        CAR_BASE_Y + engineYOffset,
-        5,
+        CAR_BASE_Y + engineYOffset + ignitionLift,
+        7,
         delta,
       );
       rootRef.current.rotation.z = THREE.MathUtils.damp(
@@ -1171,6 +1207,7 @@ function CarModel({
     cabinPaintMaterial.color.lerp(cabinTarget, colorLerp);
 
     const frontIntensity = state.lightsOn ? (state.engineOn ? 2.6 : 2.1) : 0.2;
+    const ignitionHeadlightBoost = state.lightsOn ? ignitionPulse * 1.9 : 0;
     const { tailMax, tailMin, withHeadlights, on } = SHOWROOM_HAZARD_INTENSITY;
     const rearIntensity = state.lightsOn
       ? THREE.MathUtils.clamp(0.4 + hazardPulse * withHeadlights, tailMin, tailMax)
@@ -1183,7 +1220,7 @@ function CarModel({
       const mat = lightRef.current.material as THREE.MeshStandardMaterial;
       mat.emissiveIntensity = THREE.MathUtils.damp(
         mat.emissiveIntensity,
-        frontIntensity,
+        frontIntensity + ignitionHeadlightBoost,
         9,
         delta,
       );
