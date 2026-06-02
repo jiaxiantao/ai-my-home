@@ -2,10 +2,13 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 import { CapabilityProfileRadar } from "@/components/charts/capability-profile-radar";
+import { listCapabilityDimensionScores } from "@/lib/capability-dimensions";
 import type { DashboardData } from "@/lib/dashboard-service";
+import { formatReleaseStoreMode } from "@/lib/release-store-labels";
 
 const capabilityLinks = [
   { href: "/#front-intelligence", label: "智能编排" },
+  { href: "/#demo-lab", label: "判断台" },
   { href: "/#tech-demos", label: "工程 Demo" },
   { href: "/release-center", label: "发布中心" },
   { href: "/#edge-ai", label: "端侧 AI" },
@@ -17,7 +20,8 @@ export function CapabilityProfileSection({
 }: {
   dashboard: DashboardData;
 }) {
-  const { capabilityProfile, release } = dashboard;
+  const { capabilityProfile, release, intelligence } = dashboard;
+  const dimensions = listCapabilityDimensionScores(capabilityProfile);
 
   return (
     <div className="grid gap-6 rounded-4xl border border-white/10 bg-slate-950/75 p-6 md:grid-cols-[1fr_1.1fr] md:p-8">
@@ -27,9 +31,46 @@ export function CapabilityProfileSection({
         </p>
         <h3 className="text-2xl font-semibold text-white">能力雷达总览</h3>
         <p className="text-sm leading-7 text-slate-400">
-          分数由 `/api/dashboard` 统一计算输出，随笔记规模、Demo 数量、发布单与案例数动态变化。
-          当前已登记 {release.appCount} 个应用、{release.orderCount} 张发布单。
+          分数由 Dashboard 聚合计算，随笔记规模、Demo 数量、发布单、LLM 配置与
+          PostgreSQL 持久化动态变化。当前 {release.appCount} 个应用、
+          {release.orderCount} 张发布单，存储{" "}
+          {formatReleaseStoreMode(release.storeMode)}。
         </p>
+
+        <div className="flex flex-wrap gap-2 text-xs">
+          <span
+            className={`rounded-full border px-3 py-1 ${
+              intelligence.llmConfigured
+                ? "border-emerald-300/25 bg-emerald-300/10 text-emerald-100"
+                : "border-white/10 bg-white/5 text-slate-400"
+            }`}
+          >
+            LLM {intelligence.llmConfigured ? intelligence.llmLabel : "未配置"}
+          </span>
+          <span className="rounded-full border border-violet-300/20 bg-violet-300/10 px-3 py-1 text-violet-100">
+            智能编排 {intelligence.features.length} 项能力
+          </span>
+        </div>
+
+        <ul className="grid gap-2">
+          {dimensions.map((dimension) => (
+            <li key={dimension.key}>
+              <Link
+                href={dimension.href}
+                className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 transition hover:border-cyan-300/25"
+              >
+                <div>
+                  <p className="text-sm font-medium text-white">{dimension.label}</p>
+                  <p className="text-[11px] text-slate-500">{dimension.hint}</p>
+                </div>
+                <span className="shrink-0 font-mono text-sm tabular-nums text-cyan-200">
+                  {dimension.score}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+
         <div className="flex flex-wrap gap-2">
           {capabilityLinks.map((item) => (
             <Link

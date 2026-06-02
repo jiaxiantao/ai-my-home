@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 import { ReleaseCenterPanel } from "@/components/release-center-panel";
 import { SectionHeading } from "@/components/section-heading";
+import { SectionSkeleton } from "@/components/section-skeleton";
 
 export const metadata: Metadata = {
   title: "Release Center | XJ / Frontend Systems",
@@ -31,7 +33,9 @@ export default function ReleaseCenterPage() {
 
       <section className="space-y-6">
         <SectionHeading eyebrow="Pipeline" title="应用管理 · 构建 · 分环境发布" />
-        <ReleaseCenterPanel />
+        <Suspense fallback={<SectionSkeleton lines={8} />}>
+          <ReleaseCenterPanel />
+        </Suspense>
       </section>
     </main>
   );

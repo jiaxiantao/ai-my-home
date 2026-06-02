@@ -39,4 +39,14 @@ test.describe("Release Center", () => {
       await expect(allApps).toBeVisible();
     }
   });
+
+  test("URL filter state syncs to query string", async ({ page }) => {
+    await page.goto("/release-center?status=draft&q=main");
+
+    await expect(page).toHaveURL(/status=draft/);
+    await expect(page.getByRole("button", { name: /草稿 \(\d+\)/ })).toHaveClass(
+      /cyan/,
+    );
+    await expect(page.locator('input[placeholder*="搜索"]')).toHaveValue("main");
+  });
 });

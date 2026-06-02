@@ -8,6 +8,7 @@ import {
 } from "@/components/assistant/chat-session-sidebar";
 import { ChatComposer } from "@/components/assistant/chat-composer";
 import { IntelligenceComposerPreview } from "@/components/intelligence-composer-preview";
+import { AssistantContextLinks } from "@/components/assistant-context-links";
 import { IntelligenceLearningPanel } from "@/components/intelligence-learning-panel";
 import { useAuth } from "@/components/auth-provider";
 import {
@@ -718,6 +719,7 @@ export function AssistantChat({
                 }
                 onSelectFollowUp={(follow) => setComposer(follow)}
               />
+              <AssistantContextLinks intelligence={intelligence} />
             </div>
           </div>
 

@@ -15,6 +15,8 @@ type CapabilityOverviewInput = {
   publishedNotesCount: number;
   demoCapabilitiesCount: number;
   releaseOrderCount?: number;
+  llmConfigured?: boolean;
+  releaseStorePostgres?: boolean;
 };
 
 function clampScore(value: number) {
@@ -27,13 +29,20 @@ export function buildCapabilityScores(
   const notesBoost = Math.min(overview.notesCount * 4, 24);
   const demoBoost = Math.min(overview.demoCapabilitiesCount * 3, 30);
   const releaseBoost = Math.min((overview.releaseOrderCount ?? 0) * 5, 15);
+  const llmBoost = overview.llmConfigured ? 6 : 0;
+  const postgresBoost = overview.releaseStorePostgres ? 5 : 0;
 
   return {
     fullstackApi: clampScore(72 + notesBoost),
     engineeringDemos: clampScore(68 + demoBoost),
-    cicdRelease: clampScore(78 + Math.min(overview.caseStudiesCount * 3, 18) + releaseBoost),
+    cicdRelease: clampScore(
+      78 + Math.min(overview.caseStudiesCount * 3, 18) + releaseBoost + postgresBoost,
+    ),
     edgeAi: clampScore(
-      82 + Math.min(overview.tracksCount * 4, 12) + Math.min(overview.demoCapabilitiesCount, 8),
+      82 +
+        Math.min(overview.tracksCount * 4, 12) +
+        Math.min(overview.demoCapabilitiesCount, 8) +
+        llmBoost,
     ),
     visualization: clampScore(74 + Math.min(overview.domainsCount * 3, 18)),
     security: clampScore(70 + Math.min(overview.publishedNotesCount, 20)),

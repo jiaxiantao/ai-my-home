@@ -189,6 +189,8 @@ export async function getDashboardData(
     capabilityProfile: buildCapabilityScores({
       ...overview,
       releaseOrderCount: release.orderCount,
+      llmConfigured: isLlmConfigured(),
+      releaseStorePostgres: release.storeMode === "postgresql",
     }),
     release,
     intelligence: {

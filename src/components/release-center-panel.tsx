@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
@@ -14,8 +15,14 @@ import {
   RELEASE_ORDER_STATUS_LABELS,
   formatReleaseOrderStatus,
 } from "@/lib/release-labels";
+import {
+  buildReleaseCenterQuery,
+  buildReleaseCenterShareUrl,
+  parseReleaseCenterState,
+  type ReleaseStatusFilter,
+} from "@/lib/release-center-url-state";
 
-type StatusFilter = ReleaseOrderStatus | "all";
+type StatusFilter = ReleaseStatusFilter;
 
 const STATUS_FILTERS: Array<{ key: StatusFilter; label: string }> = [
   { key: "all", label: "全部" },
@@ -41,6 +48,11 @@ const checkItems: Array<{ key: CheckKey; label: string }> = [
 ];
 
 export function ReleaseCenterPanel() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialFilters = parseReleaseCenterState(searchParams);
+  const [linkCopied, setLinkCopied] = useState(false);
+
   const { authenticated } = useAuth();
   const [apps, setApps] = useState<ReleaseApp[]>([]);
   const [orders, setOrders] = useState<ReleaseOrder[]>([]);
@@ -67,9 +79,32 @@ export function ReleaseCenterPanel() {
   const [approvalDraft, setApprovalDraft] = useState<
     Record<string, { approver: string; reason: string }>
   >({});
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [appFilter, setAppFilter] = useState<string>("all");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(
+    initialFilters.status,
+  );
+  const [appFilter, setAppFilter] = useState<string>(initialFilters.app);
+  const [searchQuery, setSearchQuery] = useState(initialFilters.q);
+
+  useEffect(() => {
+    const query = buildReleaseCenterQuery({
+      status: statusFilter,
+      app: appFilter,
+      q: searchQuery,
+    });
+    router.replace(query ? `/release-center?${query}` : "/release-center", {
+      scroll: false,
+    });
+  }, [statusFilter, appFilter, searchQuery, router]);
+
+  const filterShareUrl = useMemo(
+    () =>
+      buildReleaseCenterShareUrl({
+        status: statusFilter,
+        app: appFilter,
+        q: searchQuery,
+      }),
+    [statusFilter, appFilter, searchQuery],
+  );
 
   async function loadData() {
     setLoading(true);
@@ -373,6 +408,17 @@ export function ReleaseCenterPanel() {
               onClick={() => void loadData()}
             >
               刷新
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={async () => {
+                await navigator.clipboard.writeText(filterShareUrl);
+                setLinkCopied(true);
+                window.setTimeout(() => setLinkCopied(false), 1800);
+              }}
+            >
+              {linkCopied ? "已复制筛选链接" : "复制筛选链接"}
             </Button>
           </div>
         </div>

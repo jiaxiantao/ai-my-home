@@ -30,6 +30,13 @@ test.describe("Homepage", () => {
     await expect(page.locator("#dashboard")).toBeInViewport({ timeout: 15_000 });
   });
 
+  test("capability radar lists scored dimensions", async ({ page }) => {
+    await page.goto("/#capability-radar");
+
+    await expect(page.getByText("全栈 API")).toBeVisible();
+    await expect(page.getByText("CI/CD")).toBeVisible();
+  });
+
   test("demo lab URL state renders system map", async ({ page }) => {
     await page.goto(
       "/?lab=architecture&scenario=content-platform#demo-lab",
