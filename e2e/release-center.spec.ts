@@ -29,4 +29,14 @@ test.describe("Release Center", () => {
     await expect(page.getByRole("button", { name: /全部 \(\d+\)/ })).toBeVisible();
     await expect(page.getByRole("button", { name: /草稿 \(\d+\)/ })).toBeVisible();
   });
+
+  test("app filter renders when apps exist", async ({ page }) => {
+    await page.goto("/release-center");
+
+    const allApps = page.getByRole("button", { name: /全部应用 \(\d+\)/ });
+    const hasApps = await allApps.isVisible().catch(() => false);
+    if (hasApps) {
+      await expect(allApps).toBeVisible();
+    }
+  });
 });

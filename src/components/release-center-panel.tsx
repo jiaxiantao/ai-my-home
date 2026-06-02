@@ -68,6 +68,7 @@ export function ReleaseCenterPanel() {
     Record<string, { approver: string; reason: string }>
   >({});
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [appFilter, setAppFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
   async function loadData() {
@@ -132,6 +133,9 @@ export function ReleaseCenterPanel() {
       if (statusFilter !== "all" && order.status !== statusFilter) {
         return false;
       }
+      if (appFilter !== "all" && order.appId !== appFilter) {
+        return false;
+      }
       if (!query) {
         return true;
       }
@@ -142,7 +146,15 @@ export function ReleaseCenterPanel() {
         order.branch.toLowerCase().includes(query)
       );
     });
-  }, [orders, searchQuery, statusFilter]);
+  }, [orders, searchQuery, statusFilter, appFilter]);
+
+  const appOrderCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const order of orders) {
+      counts.set(order.appId, (counts.get(order.appId) ?? 0) + 1);
+    }
+    return counts;
+  }, [orders]);
 
   async function createApp() {
     setFeedback(null);
@@ -386,6 +398,40 @@ export function ReleaseCenterPanel() {
             );
           })}
         </div>
+
+        {apps.length ? (
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setAppFilter("all")}
+              className={`rounded-full border px-3 py-1.5 text-xs transition ${
+                appFilter === "all"
+                  ? "border-violet-300/35 bg-violet-300/10 text-violet-100"
+                  : "border-white/10 bg-white/5 text-slate-300 hover:border-white/20"
+              }`}
+            >
+              全部应用 ({orders.length})
+            </button>
+            {apps.map((app) => {
+              const count = appOrderCounts.get(app.id) ?? 0;
+              const active = appFilter === app.id;
+              return (
+                <button
+                  key={app.id}
+                  type="button"
+                  onClick={() => setAppFilter(app.id)}
+                  className={`rounded-full border px-3 py-1.5 text-xs transition ${
+                    active
+                      ? "border-violet-300/35 bg-violet-300/10 text-violet-100"
+                      : "border-white/10 bg-white/5 text-slate-300 hover:border-white/20"
+                  }`}
+                >
+                  {app.name} ({count})
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
 
         <Input
           placeholder="搜索版本 / 应用 / 分支 / 变更单"

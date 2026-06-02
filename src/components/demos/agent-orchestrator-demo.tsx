@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useAuth } from "@/components/auth-provider";
 import { IntelligenceLearningPanel } from "@/components/intelligence-learning-panel";
+import { agentQuickPrompts } from "@/lib/agent-quick-prompts";
 import { agentToolCatalog } from "@/lib/agent/tool-catalog";
 import type { AgentPlan, AgentToolName, AgentTraceEvent } from "@/lib/agent/types";
 import {
@@ -103,8 +104,14 @@ function parseSseBlock(block: string) {
   }
 }
 
-export function AgentOrchestratorDemo() {
-  const [message, setMessage] = useState("帮我搜索笔记里关于前端架构的内容");
+export function AgentOrchestratorDemo({
+  initialMessage,
+}: {
+  initialMessage?: string;
+}) {
+  const [message, setMessage] = useState(
+    initialMessage ?? "帮我搜索笔记里关于前端架构的内容",
+  );
   const [lines, setLines] = useState<TraceLine[]>([]);
   const [finalAnswer, setFinalAnswer] = useState("");
   const [running, setRunning] = useState(false);
@@ -118,6 +125,12 @@ export function AgentOrchestratorDemo() {
   const cloudHydrated = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
   const { authenticated } = useAuth();
+
+  useEffect(() => {
+    if (initialMessage?.trim()) {
+      setMessage(initialMessage);
+    }
+  }, [initialMessage]);
   const recommendedPromptSuffix = useMemo(
     () => getAgentPromptHint(preferences),
     [preferences],
@@ -187,11 +200,6 @@ export function AgentOrchestratorDemo() {
     }, 800);
     return () => window.clearTimeout(timer);
   }, [authenticated, historyEvents, learningProfile, preferences]);
-  const presets = [
-    "先检索前端架构笔记，再计算 (128 + 64) * 3，并告诉我现在时间",
-    "计算 (128 + 64) * 3",
-    "现在北京时间几点？",
-  ];
 
   async function runAgent() {
     abortRef.current?.abort();
@@ -501,17 +509,25 @@ export function AgentOrchestratorDemo() {
           }}
         />
 
-        <div className="flex flex-wrap gap-2">
-          {presets.map((preset) => (
-            <button
-              key={preset}
-              type="button"
-              onClick={() => setMessage(preset)}
-              className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300 hover:border-white/20"
-            >
-              {preset}
-            </button>
-          ))}
+        <div className="space-y-2">
+          <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">
+            工具快捷任务
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {agentQuickPrompts.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setMessage(item.prompt)}
+                className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300 transition hover:border-cyan-300/30 hover:text-white"
+              >
+                <span className="mr-1.5 font-mono text-[10px] text-cyan-300/70">
+                  {item.tool}
+                </span>
+                {item.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-2">

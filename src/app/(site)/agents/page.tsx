@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { AgentOrchestratorDemo } from "@/components/demos/agent-orchestrator-demo";
+import { AgentsOrchestratorSection } from "@/components/agents-orchestrator-section";
 import { agentToolCatalog } from "@/lib/agent/tool-catalog";
 
 export const metadata: Metadata = {
@@ -29,7 +29,7 @@ export default function AgentsPage() {
       </section>
 
       <section className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 md:p-8">
-        <AgentOrchestratorDemo />
+        <AgentsOrchestratorSection />
       </section>
 
       <section className="grid gap-4 md:grid-cols-3">

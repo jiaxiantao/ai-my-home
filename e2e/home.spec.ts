@@ -38,6 +38,7 @@ test.describe("Homepage", () => {
     await expect(page.getByText("System Map")).toBeVisible({
       timeout: 20_000,
     });
+    await expect(page.getByText("Demo Lab → 智能编排")).toBeVisible();
   });
 
   test("sitemap and robots are served", async ({ request }) => {

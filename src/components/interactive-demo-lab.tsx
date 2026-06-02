@@ -29,6 +29,7 @@ import {
   type PerformanceLaneId,
 } from "@/lib/demo-lab-content";
 import { SystemMapPanel } from "@/components/system-map-panel";
+import { DemoLabIntelligenceBridge } from "@/components/demo-lab-intelligence-bridge";
 import {
   buildDemoLabShareUrl,
   buildDemoLabQuery,
@@ -147,6 +148,27 @@ export function InteractiveDemoLab() {
     router,
   ]);
 
+  const labState = useMemo(
+    (): DemoLabUrlState => ({
+      tab: activeTab,
+      scenario: selectedScenarioId,
+      context: contextId,
+      signals: selectedSignalIds,
+      capabilities: enabledCapabilities,
+      constraints: selectedConstraintIds,
+      mode: modeId,
+    }),
+    [
+      activeTab,
+      selectedScenarioId,
+      contextId,
+      selectedSignalIds,
+      enabledCapabilities,
+      selectedConstraintIds,
+      modeId,
+    ],
+  );
+
   return (
     <div className="grid gap-6">
       <div className="grid gap-3 rounded-[2rem] border border-white/10 bg-slate-950/80 p-4 md:grid-cols-3">
@@ -253,6 +275,8 @@ export function InteractiveDemoLab() {
           }
         />
       ) : null}
+
+      <DemoLabIntelligenceBridge state={labState} />
     </div>
   );
 }
