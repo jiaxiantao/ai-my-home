@@ -1464,6 +1464,35 @@ function CarModel({
   );
 }
 
+function ShowroomModelLoadingOverlay({
+  visible,
+  label = "正在切换车型",
+}: {
+  visible: boolean;
+  label?: string;
+}) {
+  if (!visible) {
+    return null;
+  }
+
+  return (
+    <div
+      className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center"
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <div className="flex flex-col items-center gap-3 rounded-2xl border border-white/15 bg-slate-950/90 px-7 py-5 shadow-2xl shadow-black/40 backdrop-blur-md">
+        <div
+          className="h-9 w-9 animate-spin rounded-full border-2 border-cyan-300/25 border-t-cyan-300"
+          aria-hidden
+        />
+        <p className="text-sm font-medium tracking-wide text-white">{label}</p>
+      </div>
+    </div>
+  );
+}
+
 export function CarShowroomScene({
   state,
   cameraPreset,
@@ -1477,6 +1506,7 @@ export function CarShowroomScene({
 }: CarShowroomSceneProps) {
   const [assetScene, setAssetScene] = useState<THREE.Object3D | null>(null);
   const [assetRig, setAssetRig] = useState<AssetCarRig | null>(null);
+  const [resolvedModelUrl, setResolvedModelUrl] = useState<string | null>(null);
   const controlsRef = useRef(null);
 
   useEffect(() => {
@@ -1509,6 +1539,7 @@ export function CarShowroomScene({
 
         setAssetRig(rig);
         setAssetScene(loadedScene);
+        setResolvedModelUrl(modelUrl);
         onAssetRigCapabilities?.(rig.capabilities);
       },
       undefined,
@@ -1516,6 +1547,7 @@ export function CarShowroomScene({
         if (active) {
           setAssetScene(null);
           setAssetRig(null);
+          setResolvedModelUrl(modelUrl);
           onAssetRigCapabilities?.(null);
         }
       },
@@ -1543,8 +1575,12 @@ export function CarShowroomScene({
     };
   }, [modelUrl, onAssetRigCapabilities, useAssetModel]);
 
+  const showModelLoadingOverlay =
+    useAssetModel && resolvedModelUrl !== modelUrl;
+
   return (
-    <div className="h-[520px] overflow-hidden rounded-4xl border border-white/10 bg-slate-950/80">
+    <div className="relative h-[520px] overflow-hidden rounded-4xl border border-white/10 bg-slate-950/80">
+      <ShowroomModelLoadingOverlay visible={showModelLoadingOverlay} />
       <Canvas shadows={{ type: THREE.PCFShadowMap }}>
         <CameraRig preset={cameraPreset} autoTour={autoTour} controlsRef={controlsRef} />
         <color attach="background" args={["#070d18"]} />
@@ -1638,3 +1674,4 @@ export function CarShowroomScene({
     </div>
   );
 }
+
