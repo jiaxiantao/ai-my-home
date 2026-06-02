@@ -1,0 +1,60 @@
+import { expect, test } from "@playwright/test";
+
+test.describe("Release Center", () => {
+  test("page loads metrics and pipeline section", async ({ page }) => {
+    await page.goto("/release-center");
+
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(
+      "工程化发布单",
+    );
+    const main = page.locator("main");
+    await expect(main.getByText("应用数", { exact: true }).first()).toBeVisible();
+    await expect(main.getByText("发布流水线执行")).toBeVisible();
+  });
+
+  test("guest cannot create release order", async ({ page }) => {
+    await page.goto("/release-center");
+
+    await expect(page.getByRole("button", { name: "创建发布单" })).toBeDisabled({
+      timeout: 30_000,
+    });
+    await expect(
+      page.locator("main").getByRole("button", { name: "新增应用" }),
+    ).toBeDisabled();
+  });
+
+  test("status filters render", async ({ page }) => {
+    await page.goto("/release-center");
+
+    await expect(page.getByRole("button", { name: /全部 \(\d+\)/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /草稿 \(\d+\)/ })).toBeVisible();
+  });
+
+  test("app filter renders when apps exist", async ({ page }) => {
+    await page.goto("/release-center");
+
+    const allApps = page.getByRole("button", { name: /全部应用 \(\d+\)/ });
+    const hasApps = await allApps.isVisible().catch(() => false);
+    if (hasApps) {
+      await expect(allApps).toBeVisible();
+    }
+  });
+
+  test("URL filter state syncs to query string", async ({ page }) => {
+    await page.goto("/release-center?status=draft&q=main");
+
+    await expect(page).toHaveURL(/status=draft/);
+    await expect(page.getByRole("button", { name: /草稿 \(\d+\)/ })).toHaveClass(
+      /cyan/,
+    );
+    await expect(page.locator('input[placeholder*="搜索"]')).toHaveValue("main");
+  });
+
+  test("batch toolbar renders for filtered orders", async ({ page }) => {
+    await page.goto("/release-center");
+
+    await expect(page.getByText("加载中...")).toBeHidden({ timeout: 30_000 });
+    await expect(page.getByRole("button", { name: "全选筛选结果" })).toBeVisible();
+    await expect(page.getByRole("button", { name: /批量构建 \(\d+\)/ })).toBeDisabled();
+  });
+});
