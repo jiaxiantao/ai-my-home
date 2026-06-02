@@ -53,6 +53,7 @@ test.describe("Release Center", () => {
   test("batch toolbar renders for filtered orders", async ({ page }) => {
     await page.goto("/release-center");
 
+    await expect(page.getByText("加载中...")).toBeHidden({ timeout: 30_000 });
     await expect(page.getByRole("button", { name: "全选筛选结果" })).toBeVisible();
     await expect(page.getByRole("button", { name: /批量构建 \(\d+\)/ })).toBeDisabled();
   });

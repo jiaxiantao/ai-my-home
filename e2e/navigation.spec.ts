@@ -31,10 +31,10 @@ test.describe("Site navigation", () => {
 
   test("engineering demo tabs switch", async ({ page }) => {
     await page.goto("/");
-    await page.locator("#tech-demos").scrollIntoViewIfNeeded();
 
     const workerTab = page.getByRole("button", { name: /Web Worker/i });
     await expect(workerTab).toBeVisible({ timeout: 30_000 });
+    await workerTab.scrollIntoViewIfNeeded();
     await workerTab.click();
 
     await expect(

@@ -602,48 +602,68 @@ export function ReleaseCenterPanel() {
           onChange={(event) => setSearchQuery(event.target.value)}
         />
 
-        {filteredOrders.length ? (
-          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-white/5 p-3">
-            <p className="text-xs text-slate-500">
-              已选 {selectedOrderIds.size} / {filteredOrders.length}
-            </p>
-            <Button size="sm" variant="outline" onClick={selectAllFiltered}>
-              全选筛选结果
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setSelectedOrderIds(new Set())}
-            >
-              清除选择
-            </Button>
-            <Button
-              size="sm"
-              disabled={!authenticated || batchBusy || batchBuildCount === 0}
-              onClick={() => void runBatchBuild()}
-            >
-              批量构建 ({batchBuildCount})
-            </Button>
-            <Button
-              size="sm"
-              variant="secondary"
-              disabled={!authenticated || batchBusy || batchTestDeployCount === 0}
-              onClick={() => void runBatchDeployTest()}
-            >
-              批量部署测试 ({batchTestDeployCount})
-            </Button>
-            <Button size="sm" variant="outline" onClick={expandAllFiltered}>
-              展开全部
-            </Button>
-            <Button size="sm" variant="outline" onClick={collapseAllOrders}>
-              折叠全部
-            </Button>
-          </div>
-        ) : null}
-
         {loading ? (
           <p className="text-sm text-slate-400">加载中...</p>
-        ) : filteredOrders.length ? (
+        ) : (
+          <>
+            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-white/5 p-3">
+              <p className="text-xs text-slate-500">
+                已选 {selectedOrderIds.size} / {filteredOrders.length}
+              </p>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={filteredOrders.length === 0}
+                onClick={selectAllFiltered}
+              >
+                全选筛选结果
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={selectedOrderIds.size === 0}
+                onClick={() => setSelectedOrderIds(new Set())}
+              >
+                清除选择
+              </Button>
+              <Button
+                size="sm"
+                disabled={
+                  !authenticated || batchBusy || batchBuildCount === 0
+                }
+                onClick={() => void runBatchBuild()}
+              >
+                批量构建 ({batchBuildCount})
+              </Button>
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={
+                  !authenticated || batchBusy || batchTestDeployCount === 0
+                }
+                onClick={() => void runBatchDeployTest()}
+              >
+                批量部署测试 ({batchTestDeployCount})
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={filteredOrders.length === 0}
+                onClick={expandAllFiltered}
+              >
+                展开全部
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={openOrderIds.size === 0}
+                onClick={collapseAllOrders}
+              >
+                折叠全部
+              </Button>
+            </div>
+
+            {filteredOrders.length ? (
           filteredOrders.map((order) => (
             <details
               key={order.id}
@@ -878,6 +898,8 @@ export function ReleaseCenterPanel() {
           <p className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-400">
             暂无发布单，先创建一个应用和发布单。
           </p>
+        )}
+          </>
         )}
       </section>
     </div>
