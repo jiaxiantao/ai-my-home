@@ -60,7 +60,7 @@ const CarShowroomScene = dynamic(
   },
 );
 
-export default function CarShowroomPage() {
+export default function HomePage() {
   const [leftDoorOpen, setLeftDoorOpen] = useState(false);
   const [rightDoorOpen, setRightDoorOpen] = useState(false);
   const [trunkOpen, setTrunkOpen] = useState(false);
@@ -242,9 +242,9 @@ export default function CarShowroomPage() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-6 py-10 lg:px-8 lg:py-14">
+    <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-1 flex-col gap-6 px-6 py-10 lg:px-8 lg:py-14">
       <section className="space-y-3">
-        <p className="text-xs uppercase tracking-[0.28em] text-cyan-200/70">Three.js Demo</p>
+        <p className="text-xs uppercase tracking-[0.28em] text-cyan-200/70">3D Car Showroom</p>
         <h1 className="text-3xl font-semibold tracking-tight text-white md:text-4xl">
           3D 看车交互舱
         </h1>
@@ -287,9 +287,8 @@ export default function CarShowroomPage() {
             </Button>
           ))}
           <p className="text-xs text-slate-400">
-            当前模型：{selectedModelLabel || "加载中..."}。你可将主流车型放到
-            `public/models/market/suv-mainstream.glb` / `2023_bmw_m2_coupe.glb` /
-            `offroad-mainstream.glb`，页面会自动优先加载。
+            当前模型：{selectedModelLabel || "加载中..."}。可将 GLB 放到
+            `public/models/market/`，页面会自动优先加载。
           </p>
           {useAssetModel && assetRigCaps ? (
             <p className="w-full text-xs text-slate-500">
@@ -297,7 +296,7 @@ export default function CarShowroomPage() {
               {assetRigCaps.rightDoor ? "✓" : "—"} · 后备箱 {assetRigCaps.trunk ? "✓" : "—"} · 车灯{" "}
               {assetRigCaps.headLights ? "✓" : "—"} · 尾灯 {assetRigCaps.tailLights ? "✓" : "—"} ·
               天窗 {assetRigCaps.sunroof ? "✓" : "—"} · 车轮 {assetRigCaps.wheels ? "✓" : "—"}
-              {assetRigCaps.leftDoor ? "" : "（未识别到的部件可在 docs/market-glb-rig.md 手动配置）"}
+              {assetRigCaps.leftDoor ? "" : "（未识别到的部件见 docs/market-glb-rig.md）"}
             </p>
           ) : null}
           {wheelSpinUnavailable && wheelReadyCategory ? (

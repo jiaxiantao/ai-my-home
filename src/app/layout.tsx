@@ -1,38 +1,10 @@
 import type { Metadata } from "next";
 
-import { AuthProvider } from "@/components/auth-provider";
-import { JsonLd } from "@/components/json-ld";
-import { SiteShell } from "@/components/site-shell";
-import { siteProfile } from "@/lib/site-content";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
-  ),
-  title: {
-    default: "XJ / Frontend Systems",
-    template: "%s",
-  },
-  description:
-    "A calm and professional technical portfolio built with Next.js, Prisma, PostgreSQL and Docker.",
-  keywords: [
-    "Frontend Engineer",
-    "Next.js",
-    "Prisma",
-    "PostgreSQL",
-    "Technical Portfolio",
-    "Engineering",
-  ],
-  openGraph: {
-    title: "XJ / Frontend Systems",
-    description:
-      "A professional personal site for showcasing architecture thinking, engineering depth and technical storytelling.",
-    url: "/",
-    siteName: "XJ / Frontend Systems",
-    locale: "zh_CN",
-    type: "website",
-  },
+  title: "3D 看车",
+  description: "基于 Three.js 的 3D 看车交互演示：车门、灯光、车漆、环车巡检与 GLB 车型切换。",
 };
 
 export default function RootLayout({
@@ -40,34 +12,14 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-
   return (
-    <html lang="zh-CN" className="h-full antialiased" data-scroll-behavior="smooth">
-      <body className="relative min-h-full flex flex-col bg-transparent">
-        <JsonLd
-          data={[
-            {
-              "@context": "https://schema.org",
-              "@type": "WebSite",
-              name: "XJ / Frontend Systems",
-              url: siteUrl,
-              description: metadata.description,
-            },
-            {
-              "@context": "https://schema.org",
-              "@type": "Person",
-              name: siteProfile.name,
-              jobTitle: siteProfile.title,
-              description: siteProfile.summary,
-              url: siteUrl,
-              knowsAbout: siteProfile.focus,
-            },
-          ]}
+    <html lang="zh-CN" className="h-full antialiased">
+      <body className="relative min-h-full flex flex-col bg-[#020617] text-foreground">
+        <div
+          aria-hidden
+          className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.16),transparent_32%),radial-gradient(circle_at_80%_20%,rgba(59,130,246,0.1),transparent_28%),linear-gradient(180deg,#020617_0%,#020817_55%,#020617_100%)]"
         />
-        <AuthProvider>
-          <SiteShell>{children}</SiteShell>
-        </AuthProvider>
+        <div className="relative z-10 flex min-h-full flex-1 flex-col">{children}</div>
       </body>
     </html>
   );
