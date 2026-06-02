@@ -44,6 +44,10 @@ import {
   saveSessions,
   updateSessionBranch,
 } from "@/lib/chat-sessions";
+import {
+  buildAssistantSessionExport,
+  downloadAssistantSessionExport,
+} from "@/lib/assistant-session-export";
 
 const starterPrompts = [
   "我在前端架构评审时最先确认什么？",
@@ -542,6 +546,24 @@ export function AssistantChat({
               <span className="rounded-full border border-cyan-300/25 bg-cyan-300/10 px-3 py-1 font-mono text-[10px] text-cyan-100">
                 SSE · Markdown · 会话
               </span>
+              {activeSession ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    downloadAssistantSessionExport(
+                      buildAssistantSessionExport({
+                        session: activeSession,
+                        composer,
+                        preferences: intelligencePreferences,
+                        metrics,
+                      }),
+                    );
+                  }}
+                  className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-slate-300 transition hover:border-cyan-300/30 hover:text-white"
+                >
+                  导出会话 JSON
+                </button>
+              ) : null}
               {llmLabel ? (
                 <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 font-mono text-[10px] text-slate-300">
                   {llmLabel}

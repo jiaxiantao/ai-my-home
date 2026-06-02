@@ -26,4 +26,13 @@ test.describe("Assistant", () => {
     await expect(page.getByText("相关工程能力")).toBeVisible();
     await expect(page.getByRole("link", { name: /性能治理台/ })).toBeVisible();
   });
+
+  test("can export active session json", async ({ page }) => {
+    await page.goto("/assistant");
+    await expect(page.getByText("正在加载对话工作台…")).toBeHidden({
+      timeout: 30_000,
+    });
+
+    await expect(page.getByRole("button", { name: "导出会话 JSON" })).toBeVisible();
+  });
 });

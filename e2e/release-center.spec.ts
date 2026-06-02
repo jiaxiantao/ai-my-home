@@ -49,4 +49,11 @@ test.describe("Release Center", () => {
     );
     await expect(page.locator('input[placeholder*="搜索"]')).toHaveValue("main");
   });
+
+  test("batch toolbar renders for filtered orders", async ({ page }) => {
+    await page.goto("/release-center");
+
+    await expect(page.getByRole("button", { name: "全选筛选结果" })).toBeVisible();
+    await expect(page.getByRole("button", { name: /批量构建 \(\d+\)/ })).toBeDisabled();
+  });
 });

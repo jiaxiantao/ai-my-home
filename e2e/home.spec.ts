@@ -35,6 +35,7 @@ test.describe("Homepage", () => {
 
     await expect(page.getByText("全栈 API")).toBeVisible();
     await expect(page.getByText("CI/CD")).toBeVisible();
+    await expect(page.getByText(/当前高亮：/)).toBeVisible();
   });
 
   test("demo lab URL state renders system map", async ({ page }) => {

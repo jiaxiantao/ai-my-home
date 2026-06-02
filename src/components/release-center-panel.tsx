@@ -84,6 +84,9 @@ export function ReleaseCenterPanel() {
   );
   const [appFilter, setAppFilter] = useState<string>(initialFilters.app);
   const [searchQuery, setSearchQuery] = useState(initialFilters.q);
+  const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
+  const [openOrderIds, setOpenOrderIds] = useState<Set<string>>(new Set());
+  const [batchBusy, setBatchBusy] = useState(false);
 
   useEffect(() => {
     const query = buildReleaseCenterQuery({
@@ -190,6 +193,120 @@ export function ReleaseCenterPanel() {
     }
     return counts;
   }, [orders]);
+
+  const selectedOrders = useMemo(
+    () => orders.filter((order) => selectedOrderIds.has(order.id)),
+    [orders, selectedOrderIds],
+  );
+
+  const batchBuildCount = selectedOrders.filter((order) => order.status === "draft").length;
+  const batchTestDeployCount = selectedOrders.filter(
+    (order) => order.status === "built",
+  ).length;
+
+  function toggleOrderSelection(orderId: string, selected: boolean) {
+    setSelectedOrderIds((current) => {
+      const next = new Set(current);
+      if (selected) {
+        next.add(orderId);
+      } else {
+        next.delete(orderId);
+      }
+      return next;
+    });
+  }
+
+  function selectAllFiltered() {
+    setSelectedOrderIds(new Set(filteredOrders.map((order) => order.id)));
+  }
+
+  function expandAllFiltered() {
+    setOpenOrderIds(new Set(filteredOrders.map((order) => order.id)));
+  }
+
+  function collapseAllOrders() {
+    setOpenOrderIds(new Set());
+  }
+
+  async function runBatchBuild() {
+    if (!authenticated || batchBuildCount === 0) {
+      return;
+    }
+
+    setBatchBusy(true);
+    setFeedback(null);
+    let success = 0;
+
+    for (const order of selectedOrders) {
+      if (order.status !== "draft") {
+        continue;
+      }
+      setBusyOrderId(order.id);
+      try {
+        const response = await fetch(`/api/release/orders/${order.id}/action`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "run_build" }),
+        });
+        if (response.ok) {
+          success += 1;
+        }
+      } catch {
+        // continue with remaining orders
+      }
+    }
+
+    setBusyOrderId(null);
+    setBatchBusy(false);
+    setFeedback({
+      kind: success === batchBuildCount ? "success" : "error",
+      text:
+        success === batchBuildCount
+          ? `已批量构建 ${success} 张发布单。`
+          : `批量构建完成 ${success}/${batchBuildCount}，部分失败。`,
+    });
+    await loadData();
+  }
+
+  async function runBatchDeployTest() {
+    if (!authenticated || batchTestDeployCount === 0) {
+      return;
+    }
+
+    setBatchBusy(true);
+    setFeedback(null);
+    let success = 0;
+
+    for (const order of selectedOrders) {
+      if (order.status !== "built") {
+        continue;
+      }
+      setBusyOrderId(order.id);
+      try {
+        const response = await fetch(`/api/release/orders/${order.id}/action`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "deploy", environment: "test" }),
+        });
+        if (response.ok) {
+          success += 1;
+        }
+      } catch {
+        // continue with remaining orders
+      }
+    }
+
+    setBusyOrderId(null);
+    setBatchBusy(false);
+    setFeedback({
+      kind: success === batchTestDeployCount ? "success" : "error",
+      text:
+        success === batchTestDeployCount
+          ? `已批量部署测试环境 ${success} 张发布单。`
+          : `批量部署完成 ${success}/${batchTestDeployCount}，部分失败。`,
+    });
+    await loadData();
+  }
 
   async function createApp() {
     setFeedback(null);
@@ -485,23 +602,88 @@ export function ReleaseCenterPanel() {
           onChange={(event) => setSearchQuery(event.target.value)}
         />
 
+        {filteredOrders.length ? (
+          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-white/5 p-3">
+            <p className="text-xs text-slate-500">
+              已选 {selectedOrderIds.size} / {filteredOrders.length}
+            </p>
+            <Button size="sm" variant="outline" onClick={selectAllFiltered}>
+              全选筛选结果
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setSelectedOrderIds(new Set())}
+            >
+              清除选择
+            </Button>
+            <Button
+              size="sm"
+              disabled={!authenticated || batchBusy || batchBuildCount === 0}
+              onClick={() => void runBatchBuild()}
+            >
+              批量构建 ({batchBuildCount})
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={!authenticated || batchBusy || batchTestDeployCount === 0}
+              onClick={() => void runBatchDeployTest()}
+            >
+              批量部署测试 ({batchTestDeployCount})
+            </Button>
+            <Button size="sm" variant="outline" onClick={expandAllFiltered}>
+              展开全部
+            </Button>
+            <Button size="sm" variant="outline" onClick={collapseAllOrders}>
+              折叠全部
+            </Button>
+          </div>
+        ) : null}
+
         {loading ? (
           <p className="text-sm text-slate-400">加载中...</p>
         ) : filteredOrders.length ? (
           filteredOrders.map((order) => (
             <details
               key={order.id}
+              open={openOrderIds.has(order.id)}
+              onToggle={(event) => {
+                const details = event.currentTarget;
+                setOpenOrderIds((current) => {
+                  const next = new Set(current);
+                  if (details.open) {
+                    next.add(order.id);
+                  } else {
+                    next.delete(order.id);
+                  }
+                  return next;
+                });
+              }}
               className="group rounded-[1.5rem] border border-white/10 bg-slate-950/75 open:border-cyan-300/20"
             >
               <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3 p-5 marker:content-none [&::-webkit-details-marker]:hidden">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                    {order.appName}
-                  </p>
-                  <h3 className="text-lg font-semibold text-white">
-                    {order.version} · {order.branch}
-                  </h3>
-                  <p className="mt-1 text-xs text-slate-400">{order.changeTicket}</p>
+                <div className="flex min-w-0 flex-1 items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedOrderIds.has(order.id)}
+                    disabled={!authenticated || batchBusy}
+                    onChange={(event) =>
+                      toggleOrderSelection(order.id, event.target.checked)
+                    }
+                    onClick={(event) => event.stopPropagation()}
+                    className="mt-1 h-4 w-4 rounded border-white/20 bg-slate-950 accent-cyan-300"
+                    aria-label={`选择发布单 ${order.version}`}
+                  />
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                      {order.appName}
+                    </p>
+                    <h3 className="text-lg font-semibold text-white">
+                      {order.version} · {order.branch}
+                    </h3>
+                    <p className="mt-1 text-xs text-slate-400">{order.changeTicket}</p>
+                  </div>
                 </div>
                 <span className="rounded-full border border-cyan-300/25 bg-cyan-300/10 px-3 py-1 text-xs text-cyan-100">
                   {formatReleaseOrderStatus(order.status)}
