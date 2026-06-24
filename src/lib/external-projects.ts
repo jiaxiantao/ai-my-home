@@ -6,8 +6,7 @@ export const EXTERNAL_PROJECTS = {
   },
   homeAgent: {
     label: "Agents",
-    // 独立仓库暂未部署 GitHub Pages；部署后可将 previewUrl 改为 Pages 根地址
-    previewUrl: "https://github.com/jiaxiantao/home-agent",
+    previewUrl: "https://jiaxiantao.github.io/home-agent/",
     repoUrl: "https://github.com/jiaxiantao/home-agent",
     agentsPath: "/agents",
   },
@@ -17,14 +16,17 @@ export function buildExternalAgentUrl(query?: string) {
   const trimmed = query?.trim();
   const base = EXTERNAL_PROJECTS.homeAgent.previewUrl;
 
-  if (!trimmed || base.startsWith("https://github.com/")) {
-    return base;
-  }
-
   const url = new URL(
     EXTERNAL_PROJECTS.homeAgent.agentsPath,
     base.endsWith("/") ? base : `${base}/`,
   );
-  url.searchParams.set("q", trimmed);
+
+  if (trimmed) {
+    url.searchParams.set("q", trimmed);
+  }
+
   return url.toString();
 }
+
+/** 直达 Agent 编排页（无 query） */
+export const HOME_AGENT_AGENTS_URL = buildExternalAgentUrl();

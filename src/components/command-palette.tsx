@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Command, MessageCircle, Search } from "lucide-react";
 
-import { EXTERNAL_PROJECTS } from "@/lib/external-projects";
+import { EXTERNAL_PROJECTS, HOME_AGENT_AGENTS_URL } from "@/lib/external-projects";
 
 type CommandItem = {
   label: string;
@@ -25,7 +25,7 @@ const commands: CommandItem[] = [
   { label: "Assistant", href: "/assistant", group: "AI", keywords: ["chat", "llm"] },
   {
     label: "Agents",
-    href: EXTERNAL_PROJECTS.homeAgent.previewUrl,
+    href: HOME_AGENT_AGENTS_URL,
     group: "AI",
     keywords: ["agent", "tools"],
     external: true,

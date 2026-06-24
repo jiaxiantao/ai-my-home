@@ -6,7 +6,7 @@ import { ArrowRight, Sparkles } from "lucide-react";
 
 import { IntelligenceComposerPreview } from "@/components/intelligence-composer-preview";
 import { Input } from "@/components/ui/input";
-import { EXTERNAL_PROJECTS } from "@/lib/external-projects";
+import { HOME_AGENT_AGENTS_URL } from "@/lib/external-projects";
 import { analyzeComposer, getPreferenceTemplate } from "@/lib/front-intelligence";
 import {
   defaultIntelligencePreferences,
@@ -181,7 +181,7 @@ export function FrontIntelligenceComposerDemo({
           用改写结果开聊
         </Link>
         <a
-          href={EXTERNAL_PROJECTS.homeAgent.previewUrl}
+          href={HOME_AGENT_AGENTS_URL}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex h-8 items-center justify-center rounded-full border border-white/20 px-3 text-xs font-semibold text-slate-100 transition hover:bg-white/10"

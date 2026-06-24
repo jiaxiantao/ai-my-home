@@ -13,7 +13,7 @@ import { ReleaseCenterSpotlight } from "@/components/release-center-spotlight";
 import { SystemsVisualization } from "@/components/systems-visualization";
 import { getHomepageContent } from "@/lib/content-service";
 import { getDashboardData } from "@/lib/dashboard-service";
-import { EXTERNAL_PROJECTS } from "@/lib/external-projects";
+import { EXTERNAL_PROJECTS, HOME_AGENT_AGENTS_URL } from "@/lib/external-projects";
 import { getLlmLabel } from "@/lib/llm-config";
 
 const FullstackDashboard = dynamic(
@@ -61,7 +61,7 @@ const exploreLinks = [
   { href: "/insights", label: "Insights" },
   { href: "/notes", label: "Notes" },
   { href: "/assistant", label: "Assistant" },
-  { href: EXTERNAL_PROJECTS.homeAgent.previewUrl, label: "Agents", external: true },
+  { href: HOME_AGENT_AGENTS_URL, label: "Agents", external: true },
   { href: "/release-center", label: "Release Center" },
   { href: EXTERNAL_PROJECTS.carShowroom.previewUrl, label: "3D看车", external: true },
   { href: "/experience", label: "Experience" },

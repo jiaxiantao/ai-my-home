@@ -73,14 +73,14 @@ ollama pull llama3.2
 ollama serve
 ```
 
-Assistant（`/assistant`）与 `/api/chat` 使用同一套 LLM 配置。Agent 工具循环已拆至独立仓库 [home-agent](https://github.com/jiaxiantao/home-agent)。
+Assistant（`/assistant`）与 `/api/chat` 使用同一套 LLM 配置。Agent 工具循环已拆至独立项目 [home-agent](https://jiaxiantao.github.io/home-agent/)。
 
 ### 独立演示项目
 
 | 项目 | 预览 | 仓库 |
 |------|------|------|
 | 3D 看车 | [jiaxiantao.github.io/3d-car-viewing](https://jiaxiantao.github.io/3d-car-viewing/) | [3d-car-viewing](https://github.com/jiaxiantao/3d-car-viewing) |
-| Agent 编排 | [home-agent](https://github.com/jiaxiantao/home-agent) | [home-agent](https://github.com/jiaxiantao/home-agent) |
+| Agent 编排 | [jiaxiantao.github.io/home-agent](https://jiaxiantao.github.io/home-agent/) | [home-agent](https://github.com/jiaxiantao/home-agent) |
 
 本站导航与 `/car-showroom`、`/agents` 会跳转到对应外部地址。
 
@@ -94,7 +94,7 @@ Assistant（`/assistant`）与 `/api/chat` 使用同一套 LLM 配置。Agent �
 ### 端侧 AI
 
 - 首页 `#edge-ai`：按需加载 `@xenova/transformers`、`@mediapipe/tasks-vision`（首次会下载模型）
-- Agent 编排见上方 [home-agent](https://github.com/jiaxiantao/home-agent) 独立项目
+- Agent 编排见 [home-agent 在线演示](https://jiaxiantao.github.io/home-agent/)
 
 ### VS Code 插件（演示）
 

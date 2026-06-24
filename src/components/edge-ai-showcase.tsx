@@ -6,7 +6,7 @@ import { BrainCircuit, Cpu, Scan, Sparkles } from "lucide-react";
 
 import { ExternalProjectLink } from "@/components/external-project-link";
 import { FrontIntelligenceComposerDemo } from "@/components/demos/front-intelligence-composer-demo";
-import { EXTERNAL_PROJECTS } from "@/lib/external-projects";
+import { EXTERNAL_PROJECTS, HOME_AGENT_AGENTS_URL } from "@/lib/external-projects";
 
 const BrowserMlDemo = dynamic(
   () =>
@@ -112,7 +112,7 @@ export function EdgeAiShowcase() {
         <p className="text-sm text-slate-300">
           Agent 工具循环已拆分为独立项目{" "}
           <ExternalProjectLink
-            href={EXTERNAL_PROJECTS.homeAgent.repoUrl}
+            href={HOME_AGENT_AGENTS_URL}
             label={EXTERNAL_PROJECTS.homeAgent.label}
             className="font-semibold text-cyan-100"
           />

@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { EXTERNAL_PROJECTS } from "@/lib/external-projects";
+import { EXTERNAL_PROJECTS, HOME_AGENT_AGENTS_URL } from "@/lib/external-projects";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
@@ -45,7 +45,7 @@ const navGroups: Array<{ id: string; label: string; items: NavItem[] }> = [
       { href: "/#edge-ai", label: "端侧 AI" },
       { href: "/assistant", label: "Assistant" },
       {
-        href: EXTERNAL_PROJECTS.homeAgent.previewUrl,
+        href: HOME_AGENT_AGENTS_URL,
         label: "Agents",
         external: true,
       },

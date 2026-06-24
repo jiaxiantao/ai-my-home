@@ -2,7 +2,7 @@
 
 智能 IDE 插件雏形：通过本站 `/api/chat` 为选中代码提供**解释、补全、重构**。
 
-> Agent 多步工具链已拆至 [home-agent](https://github.com/jiaxiantao/home-agent) 独立仓库。
+> Agent 多步工具链已拆至 [home-agent](https://jiaxiantao.github.io/home-agent/) 独立项目。
 
 ## 架构
 

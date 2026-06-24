@@ -1,4 +1,4 @@
-import { EXTERNAL_PROJECTS } from "@/lib/external-projects";
+import { EXTERNAL_PROJECTS, HOME_AGENT_AGENTS_URL } from "@/lib/external-projects";
 
 export type SystemArtifact = {
   label: string;
@@ -70,9 +70,9 @@ export const architectureSystemMap: Record<string, SystemArtifact[]> = {
     },
     {
       label: "Home Agent（独立项目）",
-      href: EXTERNAL_PROJECTS.homeAgent.repoUrl,
+      href: HOME_AGENT_AGENTS_URL,
       kind: "route",
-      summary: "规划 → 工具调用 → SSE trace（见 home-agent 仓库）",
+      summary: "规划 → 工具调用 → SSE trace（GitHub Pages 在线演示）",
     },
     {
       label: "端侧 AI",
