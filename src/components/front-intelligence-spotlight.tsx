@@ -63,15 +63,27 @@ export function FrontIntelligenceSpotlight({
           </div>
 
           <div className="flex flex-wrap gap-2 text-xs">
-            {intelligence.features.map((feature) => (
-              <Link
-                key={feature.id}
-                href={feature.href}
-                className="rounded-full border border-white/10 bg-slate-950/60 px-3 py-1 text-slate-300 transition hover:border-violet-300/30 hover:text-white"
-              >
-                {feature.label}
-              </Link>
-            ))}
+            {intelligence.features.map((feature) =>
+              feature.href.startsWith("http") ? (
+                <a
+                  key={feature.id}
+                  href={feature.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-full border border-white/10 bg-slate-950/60 px-3 py-1 text-slate-300 transition hover:border-violet-300/30 hover:text-white"
+                >
+                  {feature.label}
+                </a>
+              ) : (
+                <Link
+                  key={feature.id}
+                  href={feature.href}
+                  className="rounded-full border border-white/10 bg-slate-950/60 px-3 py-1 text-slate-300 transition hover:border-violet-300/30 hover:text-white"
+                >
+                  {feature.label}
+                </Link>
+              ),
+            )}
           </div>
 
           <p className="text-xs text-slate-500">

@@ -3,8 +3,6 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { useAuth } from "@/components/auth-provider";
-
 type HealthData = {
   ok?: boolean;
   ready?: boolean;
@@ -25,63 +23,7 @@ type ProbeRow = {
   status?: number;
   ok?: boolean;
   detail?: string;
-  agentMetrics?: AgentProbeMetrics;
 };
-
-type AgentProbeMetrics = {
-  rounds: number;
-  p50Ms: number;
-  p95Ms: number;
-  avgSteps: number;
-  avgToolCalls: number;
-};
-
-type AgentProbeHistory = {
-  at: string;
-  environment: string;
-  p50Ms: number;
-  p95Ms: number;
-  avgSteps: number;
-  avgToolCalls: number;
-  errorRate: number;
-};
-const AGENT_HISTORY_LIMIT = 20;
-const WINDOW_OPTIONS = [
-  { label: "最近 1 小时", value: 1 },
-  { label: "最近 24 小时", value: 24 },
-  { label: "最近 7 天", value: 24 * 7 },
-] as const;
-const ENV_OPTIONS = [
-  { label: "全部环境", value: "all" },
-  { label: "local", value: "local" },
-  { label: "preview", value: "preview" },
-  { label: "prod", value: "prod" },
-] as const;
-
-function getRuntimeEnvironment() {
-  if (typeof window === "undefined") {
-    return "local";
-  }
-
-  const host = window.location.hostname;
-  if (host === "localhost" || host === "127.0.0.1") {
-    return "local";
-  }
-  if (host.includes("preview") || host.includes("vercel.app")) {
-    return "preview";
-  }
-  return "prod";
-}
-
-function getErrorLevel(rate: number) {
-  if (rate <= 0.05) {
-    return { label: "GREEN", ok: true, threshold: "≤ 5%" };
-  }
-  if (rate <= 0.2) {
-    return { label: "YELLOW", ok: false, threshold: "5% - 20%" };
-  }
-  return { label: "RED", ok: false, threshold: "> 20%" };
-}
 
 const PROBES: Array<{ key: string; label: string; href: string }> = [
   { key: "health", label: "GET /api/health", href: "/api/health" },
@@ -89,7 +31,6 @@ const PROBES: Array<{ key: string; label: string; href: string }> = [
   { key: "dashboard", label: "GET /api/dashboard", href: "/api/dashboard" },
   { key: "chat", label: "POST /api/chat", href: "/api/chat" },
   { key: "chat-sse", label: "SSE /api/chat (references→chunk→done)", href: "/api/chat" },
-  { key: "agent-sse", label: "SSE /api/agent (plan→tool→answer)", href: "/api/agent" },
   {
     key: "search",
     label: "GET /api/notes/search?q=架构",
@@ -107,12 +48,6 @@ export function StatusProbe() {
   const [probes, setProbes] = useState<ProbeRow[]>([]);
   const [running, setRunning] = useState(false);
   const [lastRun, setLastRun] = useState<string | null>(null);
-  const [agentMetrics, setAgentMetrics] = useState<AgentProbeMetrics | null>(null);
-  const [agentHistory, setAgentHistory] = useState<AgentProbeHistory[]>([]);
-  const [windowHours, setWindowHours] = useState<number>(24);
-  const [environment, setEnvironment] = useState<string>(() => getRuntimeEnvironment());
-  const [authHint, setAuthHint] = useState<string | null>(null);
-  const { authenticated: adminAuthenticated } = useAuth();
 
   useEffect(() => {
     const controller = new AbortController();
@@ -129,61 +64,9 @@ export function StatusProbe() {
     return () => controller.abort();
   }, []);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const query = new URLSearchParams({
-      probeKey: "agent-sse",
-      limit: String(AGENT_HISTORY_LIMIT),
-      sinceHours: String(windowHours),
-    });
-    if (environment !== "all") {
-      query.set("environment", environment);
-    }
-
-    fetch(`/api/status/probes?${query.toString()}`, {
-      cache: "no-store",
-      signal: controller.signal,
-    })
-      .then((res) => res.json())
-      .then(
-        (data: {
-          records?: Array<{
-            createdAt: string;
-            environment: string | null;
-            p50Ms: number | null;
-            p95Ms: number | null;
-            avgSteps: number | null;
-            avgToolCalls: number | null;
-            errorRate: number | null;
-          }>;
-        }) => {
-          const history = (data.records ?? [])
-            .filter((item) => item.p50Ms != null && item.p95Ms != null)
-            .map((item) => ({
-              at: new Date(item.createdAt).toLocaleTimeString("zh-CN", {
-                hour12: false,
-              }),
-              environment: item.environment ?? "unknown",
-              p50Ms: item.p50Ms ?? 0,
-              p95Ms: item.p95Ms ?? 0,
-              avgSteps: item.avgSteps ?? 0,
-              avgToolCalls: item.avgToolCalls ?? 0,
-              errorRate: item.errorRate ?? 0,
-            }));
-          setAgentHistory(history);
-        },
-      )
-      .catch(() => {
-        setAgentHistory([]);
-      });
-
-    return () => controller.abort();
-  }, [windowHours, environment]);
-
   async function runProbes() {
     setRunning(true);
     setProbes([]);
-    setAgentMetrics(null);
 
     const results = await Promise.all(
       PROBES.map(async (probe) => {
@@ -200,19 +83,6 @@ export function StatusProbe() {
               status: sse.status,
               ok: sse.ok,
               detail: sse.detail,
-            };
-          }
-          if (probe.key === "agent-sse") {
-            const sse = await runAgentSseProbe(probe.href);
-            return {
-              key: probe.key,
-              label: probe.label,
-              href: probe.href,
-              ms: Math.round(performance.now() - started),
-              status: sse.status,
-              ok: sse.ok,
-              detail: sse.detail,
-              agentMetrics: sse.metrics,
             };
           }
 
@@ -251,44 +121,8 @@ export function StatusProbe() {
       }),
     );
 
-    const latestAgentMetrics =
-      results.find((row) => row.key === "agent-sse")?.agentMetrics ?? null;
-
     setProbes(results);
     setLastRun(new Date().toLocaleTimeString("zh-CN", { hour12: false }));
-    setAgentMetrics(latestAgentMetrics);
-
-    if (latestAgentMetrics) {
-      const errorCount = results.filter((row) => row.key === "agent-sse" && !row.ok).length;
-      const entry = {
-        at: new Date().toLocaleTimeString("zh-CN", { hour12: false }),
-        environment,
-        p50Ms: latestAgentMetrics.p50Ms,
-        p95Ms: latestAgentMetrics.p95Ms,
-        avgSteps: latestAgentMetrics.avgSteps,
-        avgToolCalls: latestAgentMetrics.avgToolCalls,
-        errorRate: Number((errorCount / 1).toFixed(2)),
-      };
-
-      setAgentHistory((current) => [...current, entry].slice(-AGENT_HISTORY_LIMIT));
-      if (adminAuthenticated) {
-        void fetch("/api/status/probes", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            probeKey: "agent-sse",
-            environment,
-            p50Ms: entry.p50Ms,
-            p95Ms: entry.p95Ms,
-            avgSteps: entry.avgSteps,
-            avgToolCalls: entry.avgToolCalls,
-            errorRate: entry.errorRate,
-            ok: errorCount === 0,
-            detail: "status-probe",
-          }),
-        });
-      }
-    }
 
     setRunning(false);
   }
@@ -337,138 +171,6 @@ export function StatusProbe() {
           }
         />
       </div>
-
-      {agentMetrics ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatusCard
-            label="Agent p50"
-            ok={true}
-            detail={`${agentMetrics.p50Ms} ms`}
-          />
-          <StatusCard
-            label="Agent p95"
-            ok={agentMetrics.p95Ms < 5000}
-            detail={`${agentMetrics.p95Ms} ms`}
-          />
-          <StatusCard
-            label="Avg Steps"
-            ok={agentMetrics.avgSteps <= 4}
-            detail={`${agentMetrics.avgSteps.toFixed(1)} steps`}
-          />
-          <StatusCard
-            label="Avg Tools"
-            ok={agentMetrics.avgToolCalls <= 4}
-            detail={`${agentMetrics.avgToolCalls.toFixed(1)} calls`}
-          />
-        </div>
-      ) : null}
-
-      {agentHistory.length ? (
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200/75">
-              Agent 趋势（最近 {agentHistory.length} 次）
-            </p>
-            <div className="flex flex-wrap items-center gap-2">
-              <select
-                value={windowHours}
-                onChange={(event) => setWindowHours(Number(event.target.value))}
-                className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[10px] text-slate-300"
-              >
-                {WINDOW_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={environment}
-                onChange={(event) => setEnvironment(event.target.value)}
-                className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[10px] text-slate-300"
-              >
-                {ENV_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={() => {
-                  if (!adminAuthenticated) {
-                    setAuthHint("清空历史需要管理员登录");
-                    return;
-                  }
-                  setAuthHint(null);
-                  setAgentHistory([]);
-                  const query = new URLSearchParams({ probeKey: "agent-sse" });
-                  if (environment !== "all") {
-                    query.set("environment", environment);
-                  }
-                  void fetch(`/api/status/probes?${query.toString()}`, {
-                    method: "DELETE",
-                  });
-                }}
-                className="rounded-full border border-white/10 px-3 py-1 text-[10px] text-slate-400 hover:border-white/20 hover:text-slate-200"
-              >
-                清空历史
-              </button>
-            </div>
-          </div>
-          {authHint ? (
-            <p className="mt-3 text-xs text-amber-200/80">{authHint}</p>
-          ) : !adminAuthenticated ? (
-            <p className="mt-3 text-xs text-slate-500">
-              当前为游客模式，仅本地显示探测结果；登录管理员后会写入/清理数据库历史。
-            </p>
-          ) : null}
-
-          <div className="mt-4 space-y-2">
-            {agentHistory.map((item, index) => {
-              const maxMs = Math.max(item.p95Ms, 1);
-              const p50Width = Math.max((item.p50Ms / maxMs) * 100, 5);
-              const p95Width = 100;
-
-              return (
-                <div key={`${item.at}-${index}`} className="space-y-1">
-                  <p className="font-mono text-[10px] text-slate-500">
-                    {item.at} · {item.environment} · p50 {item.p50Ms}ms · p95{" "}
-                    {item.p95Ms}ms · steps{" "}
-                    {item.avgSteps.toFixed(1)} · tools {item.avgToolCalls.toFixed(1)}
-                  </p>
-                  <div className="relative h-2 rounded bg-white/10">
-                    <div
-                      className="absolute inset-y-0 left-0 rounded bg-violet-300/50"
-                      style={{ width: `${p95Width}%` }}
-                      title={`p95 ${item.p95Ms}ms`}
-                    />
-                    <div
-                      className="absolute inset-y-0 left-0 rounded bg-cyan-300/90"
-                      style={{ width: `${p50Width}%` }}
-                      title={`p50 ${item.p50Ms}ms`}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      ) : null}
-
-      {agentHistory.length ? (
-        (() => {
-          const latest = agentHistory[agentHistory.length - 1];
-          const level = getErrorLevel(latest.errorRate);
-
-          return (
-            <StatusCard
-              label={`Agent Error Rate · ${level.label}`}
-              ok={level.ok}
-              detail={`${Math.round(latest.errorRate * 100)}%（${level.threshold}）`}
-            />
-          );
-        })()
-      ) : null}
 
       {/* API probes */}
       <div className="grid gap-4">
@@ -652,164 +354,6 @@ async function runChatSseProbe(url: string): Promise<{
   } catch (error) {
     const aborted = (error as { name?: string }).name === "AbortError";
     return { ok: false, status, ttftMs, detail: aborted ? "timeout" : "error" };
-  } finally {
-    window.clearTimeout(timeout);
-  }
-}
-
-async function runAgentSseProbe(url: string): Promise<{
-  ok: boolean;
-  status: number;
-  detail: string;
-  metrics?: AgentProbeMetrics;
-}> {
-  const rounds = 3;
-  const totals: number[] = [];
-  const steps: number[] = [];
-  const toolCalls: number[] = [];
-
-  for (let index = 0; index < rounds; index += 1) {
-    const result = await runSingleAgentProbe(url, index + 1);
-    if (!result.ok) {
-      return {
-        ok: false,
-        status: result.status,
-        detail: result.detail,
-      };
-    }
-
-    totals.push(result.totalMs);
-    steps.push(result.steps);
-    toolCalls.push(result.toolCalls);
-  }
-
-  const sorted = [...totals].sort((a, b) => a - b);
-  const p50 = sorted[Math.floor((sorted.length - 1) * 0.5)];
-  const p95 = sorted[Math.floor((sorted.length - 1) * 0.95)];
-  const avgSteps = steps.reduce((sum, value) => sum + value, 0) / steps.length;
-  const avgToolCalls =
-    toolCalls.reduce((sum, value) => sum + value, 0) / toolCalls.length;
-
-  return {
-    ok: true,
-    status: 200,
-    detail: `p50 ${p50}ms · p95 ${p95}ms`,
-    metrics: {
-      rounds,
-      p50Ms: p50,
-      p95Ms: p95,
-      avgSteps,
-      avgToolCalls,
-    },
-  };
-}
-
-async function runSingleAgentProbe(
-  url: string,
-  round: number,
-): Promise<{
-  ok: boolean;
-  status: number;
-  detail: string;
-  totalMs: number;
-  steps: number;
-  toolCalls: number;
-}> {
-  const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), 12_000);
-
-  let status = 0;
-  let sawPlan = false;
-  let sawToolCall = false;
-  let sawStepMetric = false;
-  let donePayload: { steps: number; toolCalls: number; totalMs: number } | null = null;
-
-  try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      cache: "no-store",
-      signal: controller.signal,
-      body: JSON.stringify({
-        message:
-          round % 2
-            ? "先检索前端架构笔记，再计算 (128 + 64) * 3，并告诉我现在时间"
-            : "帮我检索性能治理笔记并给出时间",
-      }),
-    });
-
-    status = res.status;
-    if (!res.ok) {
-      return { ok: false, status, detail: "non-200", totalMs: 0, steps: 0, toolCalls: 0 };
-    }
-
-    const reader = res.body?.getReader();
-    if (!reader) {
-      return { ok: false, status, detail: "no reader", totalMs: 0, steps: 0, toolCalls: 0 };
-    }
-
-    const decoder = new TextDecoder();
-    let buffer = "";
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-
-      let boundary = buffer.indexOf("\n\n");
-      while (boundary !== -1) {
-        const block = buffer.slice(0, boundary).trim();
-        buffer = buffer.slice(boundary + 2);
-
-        const event = parseSseEventName(block);
-        const payload = parseSseData(block) as
-          | { type?: string; steps?: number; toolCalls?: number; totalMs?: number }
-          | null;
-
-        if (event === "plan") sawPlan = true;
-        if (event === "tool_call") sawToolCall = true;
-        if (event === "step_metric") sawStepMetric = true;
-        if (event === "done" && payload?.steps != null && payload.toolCalls != null && payload.totalMs != null) {
-          donePayload = {
-            steps: payload.steps,
-            toolCalls: payload.toolCalls,
-            totalMs: payload.totalMs,
-          };
-          return {
-            ok: sawPlan && sawToolCall && sawStepMetric,
-            status,
-            detail:
-              sawPlan && sawToolCall && sawStepMetric
-                ? "ok"
-                : "missing plan/tool_call/step_metric",
-            totalMs: donePayload.totalMs,
-            steps: donePayload.steps,
-            toolCalls: donePayload.toolCalls,
-          };
-        }
-
-        boundary = buffer.indexOf("\n\n");
-      }
-    }
-
-    return {
-      ok: false,
-      status,
-      detail: "stream ended early",
-      totalMs: 0,
-      steps: 0,
-      toolCalls: 0,
-    };
-  } catch (error) {
-    const aborted = (error as { name?: string }).name === "AbortError";
-    return {
-      ok: false,
-      status,
-      detail: aborted ? "timeout" : "error",
-      totalMs: 0,
-      steps: 0,
-      toolCalls: 0,
-    };
   } finally {
     window.clearTimeout(timeout);
   }

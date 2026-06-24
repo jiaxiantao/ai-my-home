@@ -7,6 +7,7 @@ import { Bot, MessageCircle, Sparkles } from "lucide-react";
 import { IntelligenceComposerPreview } from "@/components/intelligence-composer-preview";
 import { buildDemoLabAnalyzeInput } from "@/lib/demo-lab-intelligence";
 import type { DemoLabUrlState } from "@/lib/demo-lab-url-state";
+import { buildExternalAgentUrl } from "@/lib/external-projects";
 import { analyzeComposer } from "@/lib/front-intelligence";
 import { defaultIntelligencePreferences } from "@/lib/front-intelligence-preferences";
 
@@ -18,7 +19,7 @@ export function DemoLabIntelligenceBridge({ state }: { state: DemoLabUrlState })
   );
 
   const assistantHref = `/assistant?q=${encodeURIComponent(input)}`;
-  const agentsHref = `/agents?q=${encodeURIComponent(input)}`;
+  const agentsHref = buildExternalAgentUrl(input);
   const rewrittenHref = intelligence.rewrittenPrompt
     ? `/assistant?q=${encodeURIComponent(intelligence.rewrittenPrompt)}`
     : assistantHref;
@@ -30,7 +31,7 @@ export function DemoLabIntelligenceBridge({ state }: { state: DemoLabUrlState })
         Demo Lab → 智能编排
       </p>
       <p className="mt-2 text-xs leading-6 text-slate-400">
-        根据当前 tab 与选项生成 Prompt，可带入 Assistant 或 Agent 工具循环继续追问。
+        根据当前 tab 与选项生成 Prompt，可带入 Assistant 或独立 Agent 项目继续追问。
       </p>
 
       <div className="mt-3 rounded-xl border border-white/10 bg-slate-950/50 p-3">
@@ -52,13 +53,15 @@ export function DemoLabIntelligenceBridge({ state }: { state: DemoLabUrlState })
           <MessageCircle className="h-3.5 w-3.5" />
           追问 Assistant
         </Link>
-        <Link
+        <a
           href={agentsHref}
+          target="_blank"
+          rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 rounded-full border border-cyan-300/25 bg-cyan-300/10 px-3 py-1.5 text-xs text-cyan-100 transition hover:border-cyan-200/40"
         >
           <Bot className="h-3.5 w-3.5" />
           用 Agent 执行
-        </Link>
+        </a>
         {intelligence.rewrittenPrompt ? (
           <Link
             href={rewrittenHref}

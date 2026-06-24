@@ -12,11 +12,13 @@ test.describe("Edge AI showcase", () => {
       timeout: 30_000,
     });
 
-    const agentTab = section.getByRole("button", { name: "Agent 编排" });
-    await agentTab.click();
+    const composerTab = section.getByRole("button", { name: "Prompt 编排" });
+    await composerTab.click();
 
-    await expect(section.getByText(/简化 Agent 循环/)).toBeVisible({
+    await expect(section.getByText(/意图识别/)).toBeVisible({
       timeout: 30_000,
     });
+
+    await expect(section.getByRole("link", { name: /Agents/i })).toBeVisible();
   });
 });

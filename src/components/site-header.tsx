@@ -15,9 +15,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { EXTERNAL_PROJECTS } from "@/lib/external-projects";
 import { cn } from "@/lib/utils";
 
-const navGroups = [
+type NavItem = {
+  href: string;
+  label: string;
+  external?: boolean;
+};
+
+const navGroups: Array<{ id: string; label: string; items: NavItem[] }> = [
   {
     id: "engineering",
     label: "工程与能力",
@@ -37,7 +44,11 @@ const navGroups = [
       { href: "/#front-intelligence", label: "智能编排" },
       { href: "/#edge-ai", label: "端侧 AI" },
       { href: "/assistant", label: "Assistant" },
-      { href: "/agents", label: "Agents" },
+      {
+        href: EXTERNAL_PROJECTS.homeAgent.previewUrl,
+        label: "Agents",
+        external: true,
+      },
       { href: "/notes", label: "Notes" },
       { href: "/cases", label: "Cases" },
     ],
@@ -47,10 +58,56 @@ const navGroups = [
     label: "平台体验",
     items: [
       { href: "/#cross-platform", label: "大前端" },
-      { href: "/car-showroom", label: "3D看车" },
+      {
+        href: EXTERNAL_PROJECTS.carShowroom.previewUrl,
+        label: "3D看车",
+        external: true,
+      },
     ],
   },
-] as const;
+];
+
+function NavLink({
+  item,
+  className,
+  onClick,
+  tabIndex,
+  "data-testid": dataTestId,
+}: {
+  item: NavItem;
+  className: string;
+  onClick?: () => void;
+  tabIndex?: number;
+  "data-testid"?: string;
+}) {
+  if (item.external) {
+    return (
+      <a
+        href={item.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={className}
+        onClick={onClick}
+        tabIndex={tabIndex}
+        data-testid={dataTestId}
+      >
+        {item.label}
+      </a>
+    );
+  }
+
+  return (
+    <Link
+      href={item.href}
+      className={className}
+      onClick={onClick}
+      tabIndex={tabIndex}
+      data-testid={dataTestId}
+    >
+      {item.label}
+    </Link>
+  );
+}
 
 export function SiteHeader() {
   const desktopNavRef = useRef<HTMLElement | null>(null);
@@ -187,16 +244,14 @@ export function SiteHeader() {
                 >
                   <div className="rounded-xl border border-white/10 bg-slate-950/95 p-2 shadow-2xl">
                     {group.items.map((item) => (
-                      <Link
+                      <NavLink
                         key={item.href}
-                        href={item.href}
+                        item={item}
                         data-testid={`nav-${group.id}-${item.label.replace(/\s+/g, "-").toLowerCase()}`}
                         onClick={() => setActiveDropdown(null)}
                         tabIndex={expanded ? 0 : -1}
                         className="block rounded-lg px-3 py-2 text-xs text-slate-300 transition hover:bg-white/10 hover:text-white"
-                      >
-                        {item.label}
-                      </Link>
+                      />
                     ))}
                   </div>
                 </div>
@@ -259,14 +314,12 @@ export function SiteHeader() {
                 </p>
                 <div className="grid gap-2">
                   {group.items.map((item) => (
-                    <Link
+                    <NavLink
                       key={item.href}
-                      href={item.href}
-                      className="block rounded-lg border border-white/10 px-3 py-2 text-sm text-slate-200"
+                      item={item}
                       onClick={() => setOpen(false)}
-                    >
-                      {item.label}
-                    </Link>
+                      className="block rounded-lg border border-white/10 px-3 py-2 text-sm text-slate-200"
+                    />
                   ))}
                 </div>
               </li>

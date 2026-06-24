@@ -32,11 +32,6 @@
           "type": "string",
           "default": "http://localhost:3000",
           "description": "Site base URL for /api/chat"
-        },
-        "aiMyHome.useAgentApi": {
-          "type": "boolean",
-          "default": false,
-          "description": "Use /api/agent for multi-step flows"
         }
       }
     }

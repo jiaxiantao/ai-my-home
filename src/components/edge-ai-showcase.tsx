@@ -2,10 +2,11 @@
 
 import dynamic from "next/dynamic";
 import { useState } from "react";
-import { Bot, BrainCircuit, Cpu, Scan, Sparkles } from "lucide-react";
+import { BrainCircuit, Cpu, Scan, Sparkles } from "lucide-react";
 
-import { AgentOrchestratorDemo } from "@/components/demos/agent-orchestrator-demo";
+import { ExternalProjectLink } from "@/components/external-project-link";
 import { FrontIntelligenceComposerDemo } from "@/components/demos/front-intelligence-composer-demo";
+import { EXTERNAL_PROJECTS } from "@/lib/external-projects";
 
 const BrowserMlDemo = dynamic(
   () =>
@@ -27,7 +28,7 @@ const MediapipePoseDemo = dynamic(
   { ssr: false, loading: () => <DemoSkeleton label="MediaPipe Pose" /> },
 );
 
-type EdgeTabId = "transformers" | "wasm" | "pose" | "composer" | "agent";
+type EdgeTabId = "transformers" | "wasm" | "pose" | "composer";
 
 const tabs: Array<{
   id: EdgeTabId;
@@ -58,12 +59,6 @@ const tabs: Array<{
     title: "Prompt 编排",
     tech: "意图识别 · 改写",
     icon: BrainCircuit,
-  },
-  {
-    id: "agent",
-    title: "Agent 编排",
-    tech: "工具循环 · SSE",
-    icon: Bot,
   },
 ];
 
@@ -111,7 +106,18 @@ export function EdgeAiShowcase() {
         {active === "wasm" ? <WasmAccelerationDemo /> : null}
         {active === "pose" ? <MediapipePoseDemo /> : null}
         {active === "composer" ? <FrontIntelligenceComposerDemo compact /> : null}
-        {active === "agent" ? <AgentOrchestratorDemo /> : null}
+      </div>
+
+      <div className="rounded-2xl border border-cyan-300/15 bg-cyan-300/5 px-5 py-4">
+        <p className="text-sm text-slate-300">
+          Agent 工具循环已拆分为独立项目{" "}
+          <ExternalProjectLink
+            href={EXTERNAL_PROJECTS.homeAgent.repoUrl}
+            label={EXTERNAL_PROJECTS.homeAgent.label}
+            className="font-semibold text-cyan-100"
+          />
+          ，可在仓库中体验规划 → 工具调用 → SSE trace 完整链路。
+        </p>
       </div>
     </div>
   );

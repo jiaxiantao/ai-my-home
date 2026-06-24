@@ -176,28 +176,6 @@ const checks: Array<Check & CheckRequest> = [
     },
   },
   {
-    name: "agent",
-    path: "/api/agent",
-    method: "POST",
-    body: { message: "smoke: what time is it" },
-    assert: (status, body) => {
-      if (status !== 200) {
-        throw new Error(`expected 200, got ${status}`);
-      }
-
-      const data = body as { stream?: boolean; text?: string };
-      if (!data.stream) {
-        throw new Error("agent response should be SSE stream");
-      }
-      if (!data.text?.includes("event: done")) {
-        throw new Error("agent stream missing done event");
-      }
-      if (!data.text?.includes("event: step_metric")) {
-        throw new Error("agent stream missing step_metric event");
-      }
-    },
-  },
-  {
     name: "analytics",
     path: "/api/analytics/notes",
     assert: (status, body) => {
@@ -237,20 +215,6 @@ const checks: Array<Check & CheckRequest> = [
       const data = body as { orders?: unknown[] };
       if (!Array.isArray(data.orders)) {
         throw new Error("missing orders array");
-      }
-    },
-  },
-  {
-    name: "status-probes",
-    path: "/api/status/probes?probeKey=agent-sse&limit=5",
-    assert: (status, body) => {
-      if (status !== 200) {
-        throw new Error(`expected 200, got ${status}`);
-      }
-
-      const data = body as { records?: unknown[] };
-      if (!Array.isArray(data.records)) {
-        throw new Error("missing records array");
       }
     },
   },

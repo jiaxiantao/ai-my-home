@@ -5,7 +5,17 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Command, MessageCircle, Search } from "lucide-react";
 
-const commands = [
+import { EXTERNAL_PROJECTS } from "@/lib/external-projects";
+
+type CommandItem = {
+  label: string;
+  href: string;
+  group: string;
+  keywords: readonly string[];
+  external?: boolean;
+};
+
+const commands: CommandItem[] = [
   { label: "首页", href: "/", group: "导航", keywords: ["home", "index"] },
   { label: "智能编排", href: "/#front-intelligence", group: "AI", keywords: ["intelligence", "prompt"] },
   { label: "端侧 AI", href: "/#edge-ai", group: "AI", keywords: ["transformers", "wasm", "mediapipe"] },
@@ -13,11 +23,23 @@ const commands = [
   { label: "发布中心", href: "/release-center", group: "工程", keywords: ["release", "cicd"] },
   { label: "笔记库", href: "/notes", group: "内容", keywords: ["notes", "pg_trgm"] },
   { label: "Assistant", href: "/assistant", group: "AI", keywords: ["chat", "llm"] },
-  { label: "Agents", href: "/agents", group: "AI", keywords: ["agent", "tools"] },
+  {
+    label: "Agents",
+    href: EXTERNAL_PROJECTS.homeAgent.previewUrl,
+    group: "AI",
+    keywords: ["agent", "tools"],
+    external: true,
+  },
   { label: "运行时诊断", href: "/status", group: "工程", keywords: ["health", "status"] },
-  { label: "3D 看车", href: "/car-showroom", group: "体验", keywords: ["three", "3d"] },
+  {
+    label: "3D 看车",
+    href: EXTERNAL_PROJECTS.carShowroom.previewUrl,
+    group: "体验",
+    keywords: ["three", "3d"],
+    external: true,
+  },
   { label: "Resume", href: "/resume", group: "内容", keywords: ["cv", "profile"] },
-] as const;
+];
 
 export function CommandPalette() {
   const router = useRouter();
@@ -120,19 +142,37 @@ export function CommandPalette() {
           {filtered.length ? (
             filtered.map((item) => (
               <li key={item.href}>
-                <Link
-                  href={item.href}
-                  onClick={() => setOpen(false)}
-                  className="flex items-center justify-between rounded-xl px-3 py-2.5 text-sm text-slate-200 transition hover:bg-white/10"
-                >
-                  <span className="inline-flex items-center gap-2">
-                    <Command className="h-3.5 w-3.5 text-cyan-300/80" />
-                    {item.label}
-                  </span>
-                  <span className="text-[10px] uppercase tracking-wider text-slate-500">
-                    {item.group}
-                  </span>
-                </Link>
+                {item.external ? (
+                  <a
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setOpen(false)}
+                    className="flex items-center justify-between rounded-xl px-3 py-2.5 text-sm text-slate-200 transition hover:bg-white/10"
+                  >
+                    <span className="inline-flex items-center gap-2">
+                      <Command className="h-3.5 w-3.5 text-cyan-300/80" />
+                      {item.label}
+                    </span>
+                    <span className="text-[10px] uppercase tracking-wider text-slate-500">
+                      {item.group}
+                    </span>
+                  </a>
+                ) : (
+                  <Link
+                    href={item.href}
+                    onClick={() => setOpen(false)}
+                    className="flex items-center justify-between rounded-xl px-3 py-2.5 text-sm text-slate-200 transition hover:bg-white/10"
+                  >
+                    <span className="inline-flex items-center gap-2">
+                      <Command className="h-3.5 w-3.5 text-cyan-300/80" />
+                      {item.label}
+                    </span>
+                    <span className="text-[10px] uppercase tracking-wider text-slate-500">
+                      {item.group}
+                    </span>
+                  </Link>
+                )}
               </li>
             ))
           ) : (

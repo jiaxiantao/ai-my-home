@@ -98,13 +98,25 @@ export function CapabilityProfileInteractive({
                       {dimension.score}
                     </span>
                   </button>
-                  <Link
-                    href={dimension.href}
-                    aria-label={`前往 ${dimension.label}`}
-                    className="rounded-lg border border-white/10 p-1.5 text-slate-400 transition hover:border-cyan-300/30 hover:text-white"
-                  >
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </Link>
+                  {dimension.href.startsWith("http") ? (
+                    <a
+                      href={dimension.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`前往 ${dimension.label}`}
+                      className="rounded-lg border border-white/10 p-1.5 text-slate-400 transition hover:border-cyan-300/30 hover:text-white"
+                    >
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </a>
+                  ) : (
+                    <Link
+                      href={dimension.href}
+                      aria-label={`前往 ${dimension.label}`}
+                      className="rounded-lg border border-white/10 p-1.5 text-slate-400 transition hover:border-cyan-300/30 hover:text-white"
+                    >
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+                  )}
                 </div>
               </li>
             );

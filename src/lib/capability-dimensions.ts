@@ -1,4 +1,5 @@
 import type { CapabilityProfileScores } from "@/lib/capability-scores";
+import { EXTERNAL_PROJECTS } from "@/lib/external-projects";
 
 export type CapabilityDimensionKey = keyof CapabilityProfileScores;
 
@@ -32,13 +33,13 @@ export const CAPABILITY_DIMENSIONS: CapabilityDimensionMeta[] = [
     key: "edgeAi",
     label: "端侧 AI",
     href: "/#edge-ai",
-    hint: "Transformers.js · WASM · Agent",
+    hint: "Transformers.js · WASM",
   },
   {
     key: "visualization",
     label: "3D 可视化",
-    href: "/car-showroom",
-    hint: "Three.js 看车与 ECharts 看板",
+    href: EXTERNAL_PROJECTS.carShowroom.previewUrl,
+    hint: "Three.js 看车（独立项目）与 ECharts 看板",
   },
   {
     key: "security",

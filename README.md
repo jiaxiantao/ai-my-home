@@ -19,7 +19,7 @@
 | `#dashboard` | 全栈看板：Profile / Notes / Chat / Demo Lab 聚合 |
 | `#cross-platform` | **大前端**：移动端 H5 视口、小程序分层、桌面运行时选型（可切换交互 Demo） |
 | `#front-intelligence` | **前端智能化**：浏览器内意图识别、Prompt 改写、偏好模板，一键带入 Assistant |
-| `#edge-ai` | **端侧智能**：Transformers.js 情感分类、WASM/Worker 基准、MediaPipe 姿势、Prompt 编排、Agent 工具循环 |
+| `#edge-ai` | **端侧智能**：Transformers.js 情感分类、WASM/Worker 基准、MediaPipe 姿势、Prompt 编排 |
 | `#tech-demos` | 工程 Demo：Web Vitals、API 延迟、虚拟列表、状态机、SSE、**Worker 计算**、**pg_trgm vs 内存检索** |
 | `#demo-lab` | 架构 / 性能 / 工作流判断台 |
 | `#release-center` | **工程化发布单**：应用注册、构建、测试/预发/生产门禁、审计与回滚 |
@@ -73,20 +73,28 @@ ollama pull llama3.2
 ollama serve
 ```
 
-Assistant（`/assistant`）与 `/api/chat` 使用同一套 LLM 配置。`/agents` 提供工具编排循环（`/api/agent` SSE）。
+Assistant（`/assistant`）与 `/api/chat` 使用同一套 LLM 配置。Agent 工具循环已拆至独立仓库 [home-agent](https://github.com/jiaxiantao/home-agent)。
+
+### 独立演示项目
+
+| 项目 | 预览 | 仓库 |
+|------|------|------|
+| 3D 看车 | [jiaxiantao.github.io/3d-car-viewing](https://jiaxiantao.github.io/3d-car-viewing/) | [3d-car-viewing](https://github.com/jiaxiantao/3d-car-viewing) |
+| Agent 编排 | [home-agent](https://github.com/jiaxiantao/home-agent) | [home-agent](https://github.com/jiaxiantao/home-agent) |
+
+本站导航与 `/car-showroom`、`/agents` 会跳转到对应外部地址。
 
 ### 前端智能化（Front Intelligence）
 
 - 首页 `#front-intelligence`：纯前端规则引擎 `analyzeComposer()`，识别架构/性能/排查等意图并改写 Prompt
 - `POST /api/intelligence/analyze`：同上能力的 HTTP 接口（冒烟测试覆盖）
 - `/assistant`：编排结果 + 笔记检索 + LLM 对话；偏好与学习画像可经 `PUT /api/intelligence/profile` 持久化（admin）
-- 登录 admin 后，Assistant / Agent Demo 的偏好会自动与云端画像同步
+- 登录 admin 后，Assistant 的偏好会自动与云端画像同步
 
-### 端侧 AI 与 Agent
+### 端侧 AI
 
 - 首页 `#edge-ai`：按需加载 `@xenova/transformers`、`@mediapipe/tasks-vision`（首次会下载模型）
-- `/agents`：规划 → `search_notes` / `calculate` / `current_time` → 最终回答
-- CI 设置 `LLM_DISABLED=1` 时使用规则规划器，不依赖 Ollama
+- Agent 编排见上方 [home-agent](https://github.com/jiaxiantao/home-agent) 独立项目
 
 ### VS Code 插件（演示）
 
@@ -106,7 +114,6 @@ F5 启动扩展开发宿主；命令：解释 / 补全 / 重构选中代码（�
 - `GET /api/notes/search?q=&limit=&engine=memory` — 笔记检索（默认 pg_trgm，可强制 memory）
 - `GET /api/analytics/notes` — 图表数据
 - `POST /api/chat` — SSE / JSON 对话
-- `POST /api/agent` — Agent 工具循环（SSE trace）
 - `GET /api/health` — DB / LLM / pg_trgm 状态（首页实时探测）
 - `GET /api/release/apps` — 发布中心应用列表
 - `GET /api/release/orders` — 发布单列表

@@ -22,13 +22,8 @@ export async function requestAiAssist(
     /\/$/,
     "",
   );
-  const useAgent = config.get<boolean>("useAgentApi") ?? false;
 
   const question = buildPrompt(intent, code, languageId);
-
-  if (useAgent) {
-    return requestAgent(baseUrl, question);
-  }
 
   const response = await fetch(`${baseUrl}/api/chat`, {
     method: "POST",
@@ -42,56 +37,4 @@ export async function requestAiAssist(
 
   const data = (await response.json()) as { answer?: string };
   return data.answer ?? "无回答";
-}
-
-async function requestAgent(baseUrl: string, message: string) {
-  const response = await fetch(`${baseUrl}/api/agent`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message }),
-  });
-
-  if (!response.ok || !response.body) {
-    throw new Error(`Agent API ${response.status}`);
-  }
-
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-  let answer = "";
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-
-    buffer += decoder.decode(value, { stream: true });
-
-    let boundary = buffer.indexOf("\n\n");
-
-    while (boundary !== -1) {
-      const block = buffer.slice(0, boundary).trim();
-      buffer = buffer.slice(boundary + 2);
-
-      const dataLine = block
-        .split("\n")
-        .find((line) => line.startsWith("data:"))
-        ?.slice(5)
-        .trim();
-
-      if (dataLine) {
-        try {
-          const payload = JSON.parse(dataLine) as { type?: string; text?: string };
-          if (payload.type === "answer" && payload.text) {
-            answer = payload.text;
-          }
-        } catch {
-          // ignore partial JSON
-        }
-      }
-
-      boundary = buffer.indexOf("\n\n");
-    }
-  }
-
-  return answer || "Agent 未返回最终回答";
 }

@@ -2,6 +2,7 @@ import {
   buildCapabilityScores,
   type CapabilityProfileScores,
 } from "@/lib/capability-scores";
+import { EXTERNAL_PROJECTS } from "@/lib/external-projects";
 import { getHomepageContent } from "@/lib/content-service";
 import { insightArticles } from "@/lib/editorial-content";
 import { currentTracks, workLogs } from "@/lib/ongoing-content";
@@ -200,7 +201,7 @@ export async function getDashboardData(
         { id: "composer", label: "Prompt 编排台", href: "/#front-intelligence" },
         { id: "edge-ai", label: "端侧推理", href: "/#edge-ai" },
         { id: "assistant", label: "笔记增强对话", href: "/assistant" },
-        { id: "agents", label: "Agent 工具循环", href: "/agents" },
+        { id: "agents", label: "Agent 工具循环", href: EXTERNAL_PROJECTS.homeAgent.previewUrl },
       ],
       samplePrompts: buildIntelligenceSamplePrompts(notes, caseStudies),
     },

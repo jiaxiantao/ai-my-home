@@ -8,7 +8,6 @@ const staticPaths = [
   "",
   "/notes",
   "/assistant",
-  "/agents",
   "/cases",
   "/experience",
   "/insights",
@@ -17,7 +16,6 @@ const staticPaths = [
   "/resume",
   "/status",
   "/release-center",
-  "/car-showroom",
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

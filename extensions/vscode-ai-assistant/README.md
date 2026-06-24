@@ -1,13 +1,15 @@
 # AI My Home · VS Code 插件（演示）
 
-智能 IDE 插件雏形：通过本站 `/api/chat` 或 `/api/agent` 为选中代码提供**解释、补全、重构**。
+智能 IDE 插件雏形：通过本站 `/api/chat` 为选中代码提供**解释、补全、重构**。
+
+> Agent 多步工具链已拆至 [home-agent](https://github.com/jiaxiantao/home-agent) 独立仓库。
 
 ## 架构
 
 ```text
 VS Code Command
     → aiClient.ts (HTTP)
-    → ai-my-home /api/chat | /api/agent
+    → ai-my-home /api/chat
     → Ollama / Mock
 
 扩展路线（LSP）：
@@ -39,6 +41,5 @@ pnpm compile
 ## 配置
 
 - `aiMyHome.apiBaseUrl` — 默认 `http://localhost:3000`
-- `aiMyHome.useAgentApi` — `true` 时走 `/api/agent` 多步工具链
 
 需本机 `pnpm dev` 且数据库/Ollama 或 `LLM_DISABLED=1` mock 可用。

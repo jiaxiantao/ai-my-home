@@ -13,6 +13,7 @@ import { ReleaseCenterSpotlight } from "@/components/release-center-spotlight";
 import { SystemsVisualization } from "@/components/systems-visualization";
 import { getHomepageContent } from "@/lib/content-service";
 import { getDashboardData } from "@/lib/dashboard-service";
+import { EXTERNAL_PROJECTS } from "@/lib/external-projects";
 import { getLlmLabel } from "@/lib/llm-config";
 
 const FullstackDashboard = dynamic(
@@ -60,9 +61,9 @@ const exploreLinks = [
   { href: "/insights", label: "Insights" },
   { href: "/notes", label: "Notes" },
   { href: "/assistant", label: "Assistant" },
-  { href: "/agents", label: "Agents" },
+  { href: EXTERNAL_PROJECTS.homeAgent.previewUrl, label: "Agents", external: true },
   { href: "/release-center", label: "Release Center" },
-  { href: "/car-showroom", label: "3D看车" },
+  { href: EXTERNAL_PROJECTS.carShowroom.previewUrl, label: "3D看车", external: true },
   { href: "/experience", label: "Experience" },
   { href: "/playbooks", label: "Playbooks" },
 ] as const;
@@ -178,7 +179,7 @@ export default async function Home() {
         <section id="edge-ai" className="space-y-6">
           <SectionHeading
             eyebrow="Edge AI"
-            title="浏览器端智能：Transformers.js · WASM · MediaPipe · Agent"
+            title="浏览器端智能：Transformers.js · WASM · MediaPipe"
           />
           <EdgeAiShowcase />
         </section>
@@ -212,15 +213,27 @@ export default async function Home() {
 
         <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-4">
           <div className="flex flex-wrap gap-2">
-            {exploreLinks.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="rounded-full border border-white/10 px-3 py-1.5 text-sm text-slate-300 transition hover:border-cyan-300/30 hover:text-white"
-              >
-                {item.label}
-              </Link>
-            ))}
+            {exploreLinks.map((item) =>
+              "external" in item && item.external ? (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-full border border-white/10 px-3 py-1.5 text-sm text-slate-300 transition hover:border-cyan-300/30 hover:text-white"
+                >
+                  {item.label}
+                </a>
+              ) : (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="rounded-full border border-white/10 px-3 py-1.5 text-sm text-slate-300 transition hover:border-cyan-300/30 hover:text-white"
+                >
+                  {item.label}
+                </Link>
+              ),
+            )}
           </div>
           <div className="flex flex-wrap gap-2">
             <CopyButton value={siteUrl} label="站点" />

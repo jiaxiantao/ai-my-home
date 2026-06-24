@@ -71,13 +71,17 @@ export async function listNotes() {
     return [] as NoteRecord[];
   }
 
-  const notes = await db.note.findMany({
-    orderBy: {
-      updatedAt: "desc",
-    },
-  });
+  try {
+    const notes = await db.note.findMany({
+      orderBy: {
+        updatedAt: "desc",
+      },
+    });
 
-  return notes.map(mapNote);
+    return notes.map(mapNote);
+  } catch {
+    return [] as NoteRecord[];
+  }
 }
 
 export async function listPublishedNotes() {
@@ -93,15 +97,19 @@ export async function getPublishedNoteBySlug(slug: string) {
     return null;
   }
 
-  const note = await db.note.findUnique({
-    where: { slug },
-  });
+  try {
+    const note = await db.note.findUnique({
+      where: { slug },
+    });
 
-  if (!note || !note.isPublished) {
+    if (!note || !note.isPublished) {
+      return null;
+    }
+
+    return mapNote(note);
+  } catch {
     return null;
   }
-
-  return mapNote(note);
 }
 
 export async function createNote(input: CreateNoteInput) {

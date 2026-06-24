@@ -1,3 +1,4 @@
+import { EXTERNAL_PROJECTS } from "@/lib/external-projects";
 import type { IntentLabel } from "@/lib/front-intelligence";
 
 export type AssistantContextLink = {
@@ -27,7 +28,10 @@ export function buildAssistantContextLinks(
     links.push({ href: "/status", label: "运行时诊断" });
   }
   if (labels.has("implementation")) {
-    links.push({ href: "/agents", label: "Agent 工具循环" });
+    links.push({
+      href: EXTERNAL_PROJECTS.homeAgent.previewUrl,
+      label: "Agent 工具循环",
+    });
   }
 
   links.push({ href: "/notes", label: "笔记库检索" });

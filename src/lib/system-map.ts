@@ -1,3 +1,5 @@
+import { EXTERNAL_PROJECTS } from "@/lib/external-projects";
+
 export type SystemArtifact = {
   label: string;
   href?: string;
@@ -61,22 +63,16 @@ export const architectureSystemMap: Record<string, SystemArtifact[]> = {
       summary: "references → meta → chunk → done",
     },
     {
-      label: "Agent SSE",
-      href: "/api/agent",
-      kind: "api",
-      summary: "plan → tool_call → tool_result → answer",
-    },
-    {
       label: "Assistant",
       href: "/assistant",
       kind: "route",
       summary: "RAG 多轮对话工作台",
     },
     {
-      label: "Agents",
-      href: "/agents",
+      label: "Home Agent（独立项目）",
+      href: EXTERNAL_PROJECTS.homeAgent.repoUrl,
       kind: "route",
-      summary: "工具循环编排演示",
+      summary: "规划 → 工具调用 → SSE trace（见 home-agent 仓库）",
     },
     {
       label: "端侧 AI",
@@ -109,6 +105,12 @@ export const architectureSystemMap: Record<string, SystemArtifact[]> = {
       href: "/cases/cross-platform-delivery",
       kind: "route",
       summary: "同构与发布治理实践",
+    },
+    {
+      label: "3D 看车（独立项目）",
+      href: EXTERNAL_PROJECTS.carShowroom.previewUrl,
+      kind: "route",
+      summary: "WebGL 展厅与 GLB 部件交互（见 3d-car-viewing 仓库）",
     },
   ],
 };
