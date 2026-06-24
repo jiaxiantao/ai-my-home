@@ -50,18 +50,19 @@ export type CaseStudy = {
 };
 
 export const siteProfile: SiteProfile = {
-  name: "Xiantao Jia",
-  title: "Senior Frontend Engineer",
-  tagline: "前端 / 全栈 · 架构、性能、AI 工作流",
+  name: "贾先涛",
+  title: "高级前端研发工程师",
+  tagline: "前端架构 · 大前端多端 · 工程化与 AI 工作流",
   intro:
-    "6 年复杂 Web 与中后台交付；本站在线演示 BFF、笔记库、检索问答与交互判断台。",
-  summary: "用可运行的页面和 API 代替自述。",
+    "6 年+ 复杂 Web / App / 小程序交付；曾任前端 TL。本站在线呈现简历与可运行技术作品。",
+  summary:
+    "浙江大搜车高级前端研发工程师，主导超级 4S 二手车、搜 e 销等多端产品；擅长架构、性能治理与团队交付。",
   focus: [
     "前端架构与设计系统",
-    "大前端与多端交付",
+    "大前端与多端交付（Web / App / 小程序）",
     "工程化与研发效能",
     "性能优化与体验治理",
-    "全栈协作与 AI 自动化",
+    "全栈协作与 AI 工作流",
   ],
   philosophy: [
     "先做正确抽象，再做局部优化，避免用短期技巧堆出长期债务。",
@@ -73,7 +74,7 @@ export const siteProfile: SiteProfile = {
     "让 AI 进入真实工作流，而不是停留在临时问答和单次生成。",
     "把复杂项目里的判断、权衡和复盘写成可复用的内容资产。",
   ],
-  email: "1374612574@qq.com",
+  email: "jiaxiantao@souche.com",
   github: "https://github.com/jiaxiantao",
 };
 

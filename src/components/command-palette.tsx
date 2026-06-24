@@ -38,7 +38,7 @@ const commands: CommandItem[] = [
     keywords: ["three", "3d"],
     external: true,
   },
-  { label: "Resume", href: "/resume", group: "内容", keywords: ["cv", "profile"] },
+  { label: "Resume", href: "/#resume", group: "内容", keywords: ["cv", "profile"] },
 ];
 
 export function CommandPalette() {

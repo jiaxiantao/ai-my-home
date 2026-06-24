@@ -7,7 +7,7 @@ const footerNav = [
   { href: "/notes", label: "Notes" },
   { href: "/assistant", label: "Assistant" },
   { href: "/cases", label: "Cases" },
-  { href: "/resume", label: "Resume" },
+  { href: "/#resume", label: "Resume" },
 ] as const;
 
 export function SiteFooter() {

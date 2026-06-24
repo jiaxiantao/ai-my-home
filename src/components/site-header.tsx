@@ -258,7 +258,7 @@ export function SiteHeader() {
               </div>
             );
           })}
-          <Link href="/resume" className="transition-colors hover:text-white">
+          <Link href="/#resume" className="transition-colors hover:text-white">
             Resume
           </Link>
           <button
@@ -326,7 +326,7 @@ export function SiteHeader() {
             ))}
             <li>
               <Link
-                href="/resume"
+                href="/#resume"
                 className="block rounded-xl border border-white/10 px-4 py-3 text-sm text-slate-200"
                 onClick={() => setOpen(false)}
               >
