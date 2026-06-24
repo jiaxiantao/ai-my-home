@@ -152,8 +152,8 @@ export function HomeResume({ siteUrl }: { siteUrl: string }) {
       </section>
 
       <section className="space-y-6">
-        <SectionLabel icon={Sparkles} label="业务项目 · 大风车" />
-        <ProjectGrid projects={resumeBusinessProjects} />
+        <SectionLabel icon={Sparkles} label="业务项目 · 大搜车" />
+        <ProjectGrid projects={resumeBusinessProjects} showLinks previewLinkLabel="产品官网" />
       </section>
 
       <section className="space-y-6">
@@ -170,7 +170,7 @@ export function HomeResume({ siteUrl }: { siteUrl: string }) {
           {" · "}
           以下为公开仓库，含在线预览的项目可直接体验。
         </p>
-        <ProjectGrid projects={resumeOpenSourceProjects} showLinks />
+        <ProjectGrid projects={resumeOpenSourceProjects} showLinks previewLinkLabel="在线预览" />
       </section>
 
       <section className="space-y-6">
@@ -219,9 +219,11 @@ export function HomeResume({ siteUrl }: { siteUrl: string }) {
 function ProjectGrid({
   projects,
   showLinks = false,
+  previewLinkLabel = "在线预览",
 }: {
   projects: ResumeProject[];
   showLinks?: boolean;
+  previewLinkLabel?: string;
 }) {
   return (
     <div className="grid gap-5 lg:grid-cols-2">
@@ -244,7 +246,7 @@ function ProjectGrid({
                   rel="noopener noreferrer"
                   className="rounded-full border border-cyan-300/25 bg-cyan-300/10 px-2.5 py-1 text-[11px] text-cyan-100 transition hover:border-cyan-200/40"
                 >
-                  在线预览
+                  {previewLinkLabel}
                 </a>
               ) : null}
               {project.repoUrl ? (

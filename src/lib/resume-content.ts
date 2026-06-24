@@ -49,7 +49,7 @@ export const resumeHeadline = {
   title: "高级前端研发工程师",
   tagline: "前端架构 · 大前端多端 · 工程化与 AI 工作流",
   objective:
-    "6 年+ 复杂业务与中后台交付经验，曾任前端 TL。长期参与大风车（大搜车）核心产品线，擅长从 0→1 搭建多端技术体系；同时维护多个 GitHub 开源演示项目，用可运行作品表达技术深度。",
+    "6 年+ 复杂业务与中后台交付经验，曾任前端 TL。深度参与大搜车大风车、超级 4S 二手车、搜 e 销等多端产品线；同时维护多个 GitHub 开源演示项目。",
 };
 
 export const resumeEducation: ResumeEducation = {
@@ -59,15 +59,17 @@ export const resumeEducation: ResumeEducation = {
   period: "2016.09 — 2020.06",
 };
 
+export const FENGCHE_OFFICIAL_URL = "https://fengche.souche.com/index.html";
+
 export const resumeExperiences: ResumeExperience[] = [
   {
-    company: "浙江大搜车汽车服务有限公司（大风车）",
+    company: "浙江大搜车汽车服务有限公司",
     role: "高级前端研发工程师 · 前端 TL",
     period: "2021.03 — 至今",
     summary:
-      "负责大风车旗下超级 4S 二手车、搜 e 销等核心产品的前端研发，覆盖 Web、App、小程序；与后端 TL 共同制定技术方案并推动落地。",
+      "负责大风车、超级 4S 二手车、搜 e 销等核心产品的前端研发，覆盖 Web、App、小程序与 PC；与后端 TL 共同制定技术方案并推动落地。",
     responsibilities: [
-      "主导大风车 · 超级 4S 二手车、搜 e 销的 Web / App / 小程序前端交付与架构演进",
+      "主导大风车 B 端 SaaS、超级 4S 二手车、搜 e 销的 Web / App / 小程序前端交付与架构演进",
       "担任前端 TL：需求技术方案、研发计划、Code Review、进度与质量把控",
       "基础框架构建与优化：兼容性、性能、核心模块与跨团队基础组件库共建",
       "编写模块与组件文档，组织前端技术分享与经验沉淀",
@@ -96,13 +98,28 @@ export const resumeExperiences: ResumeExperience[] = [
   },
 ];
 
-/** 大风车 / 大搜车业务项目 */
+/** 大搜车业务项目 */
 export const resumeBusinessProjects: ResumeProject[] = [
   {
-    name: "大风车 · 超级 4S 二手车",
+    name: "大风车",
+    period: "2021 — 至今",
+    stack: ["Web", "iOS / Android", "PC 同步助手", "React Native", "离线 H5 · Vue"],
+    summary:
+      "大搜车旗下二手车 B 端 SaaS，面向独立展厅车商：评估、ERP、CRM、营销平台与报表，覆盖车源全生命周期。",
+    bullets: [
+      "评估系统：评估中车辆匹配潜在客户，大数据估价与评估师业绩看板",
+      "ERP：采购到售后全链路状态节点、多店库存与调货、物料 / 价签 / 检测报告一键打印",
+      "CRM：客户需求与车源精准匹配、回访提醒与销售转化跟进",
+      "营销平台：车源同步多平台、自有 Web / 微店与 ROI 渠道分析",
+      "支持 iOS / Android / PC 多端，与展厅销售、评估等角色协同",
+    ],
+    previewUrl: FENGCHE_OFFICIAL_URL,
+  },
+  {
+    name: "超级 4S 二手车",
     period: "2022.02 — 至今",
     stack: ["React Native", "原生底座", "离线 H5 · Vue", "混合架构"],
-    summary: "大风车二手车 B 端核心产品，多端销售、车源与运营场景。",
+    summary: "大搜车二手车 B 端 / 多端销售与运营场景，混合跨端交付。",
     bullets: [
       "原生底座 + RN 主体 + 离线 H5 的混合研发模式，平衡包体、迭代与体验",
       "研发高级跨端组件：图片裁剪、车辆选择器、通用文件预览等",
@@ -111,10 +128,10 @@ export const resumeBusinessProjects: ResumeProject[] = [
     ],
   },
   {
-    name: "大风车 · 搜 e 销",
+    name: "搜 e 销",
     period: "2021.09 — 2022.02",
     stack: ["React", "umi", "uni-app / Taro", "Vue", "qiankun", "Vite"],
-    summary: "大风车销售渠道产品，从 0→1 搭建 Web、小程序、H5 多端体系。",
+    summary: "大搜车销售渠道产品，从 0→1 搭建 Web、小程序、H5 多端体系。",
     bullets: [
       "从 0→1 搭建 Web / 小程序 / H5 底层架构与技术选型",
       "Webpack 模块联邦、H5 Vite 构建提速；骨架屏、keep-alive、Service Worker 等优化",
@@ -247,6 +264,6 @@ export const resumeSkillGroups: ResumeSkillGroup[] = [
 
 export const resumeSelfEvaluation: string[] = [
   "关注前端与 AI 工程化前沿，熟悉产品从需求到上线的完整流程，能独立承担复杂前端项目并曾担任前端 TL。",
-  "大风车业务线交付与 GitHub 开源项目并行推进，重视可验证的技术表达与长期可维护性。",
+  "大风车业务线（评估 / ERP / CRM 等）与开源项目并行推进，重视可验证的技术表达与长期可维护性。",
   "本站点持续迭代，欢迎结合下方在线 Demo 与开源仓库进一步了解细节。",
 ];
