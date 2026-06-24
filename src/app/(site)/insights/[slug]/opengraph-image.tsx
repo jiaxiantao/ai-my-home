@@ -1,6 +1,12 @@
 import { ImageResponse } from "next/og";
 
-import { getInsightBySlug } from "@/lib/editorial-content";
+import { getInsightBySlug, insightArticles } from "@/lib/editorial-content";
+
+export const dynamic = "force-static";
+
+export function generateStaticParams() {
+  return insightArticles.map((article) => ({ slug: article.slug }));
+}
 
 export const size = {
   width: 1200,

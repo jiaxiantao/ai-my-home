@@ -4,6 +4,8 @@ import { insightArticles } from "@/lib/editorial-content";
 import { listPublishedNotes } from "@/lib/notes-service";
 import { caseStudies, domainDetails } from "@/lib/site-content";
 
+export const dynamic = "force-static";
+
 const staticPaths = [
   "",
   "/notes",

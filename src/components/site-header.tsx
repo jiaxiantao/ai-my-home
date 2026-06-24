@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { EXTERNAL_PROJECTS, HOME_AGENT_AGENTS_URL } from "@/lib/external-projects";
+import { HOME_AGENT_AGENTS_URL, PLATFORM_EXPERIENCE_NAV } from "@/lib/external-projects";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
@@ -35,6 +35,7 @@ const navGroups: Array<{ id: string; label: string; items: NavItem[] }> = [
       { href: "/#demo-lab", label: "判断台" },
       { href: "/release-center", label: "Release Center" },
       { href: "/status", label: "Status" },
+      { href: "/#cross-platform", label: "大前端" },
     ],
   },
   {
@@ -56,14 +57,11 @@ const navGroups: Array<{ id: string; label: string; items: NavItem[] }> = [
   {
     id: "platform",
     label: "平台体验",
-    items: [
-      { href: "/#cross-platform", label: "大前端" },
-      {
-        href: EXTERNAL_PROJECTS.carShowroom.previewUrl,
-        label: "3D看车",
-        external: true,
-      },
-    ],
+    items: PLATFORM_EXPERIENCE_NAV.map((project) => ({
+      href: project.previewUrl,
+      label: project.label,
+      external: true,
+    })),
   },
 ];
 

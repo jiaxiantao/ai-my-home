@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Command, MessageCircle, Search } from "lucide-react";
 
-import { EXTERNAL_PROJECTS, HOME_AGENT_AGENTS_URL } from "@/lib/external-projects";
+import { HOME_AGENT_AGENTS_URL, PLATFORM_EXPERIENCE_NAV } from "@/lib/external-projects";
 
 type CommandItem = {
   label: string;
@@ -32,12 +32,18 @@ const commands: CommandItem[] = [
   },
   { label: "运行时诊断", href: "/status", group: "工程", keywords: ["health", "status"] },
   {
-    label: "3D 看车",
-    href: EXTERNAL_PROJECTS.carShowroom.previewUrl,
-    group: "体验",
-    keywords: ["three", "3d"],
-    external: true,
+    label: "大前端",
+    href: "/#cross-platform",
+    group: "工程",
+    keywords: ["cross-platform", "h5", "小程序"],
   },
+  ...PLATFORM_EXPERIENCE_NAV.map((project) => ({
+    label: project.label,
+    href: project.previewUrl,
+    group: "体验" as const,
+    keywords: [project.label.toLowerCase(), "demo", "preview"],
+    external: true as const,
+  })),
   { label: "Resume", href: "/#resume", group: "内容", keywords: ["cv", "profile"] },
 ];
 

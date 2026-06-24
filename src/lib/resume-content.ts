@@ -1,3 +1,5 @@
+import { EXTERNAL_PROJECTS } from "@/lib/external-projects";
+
 export type ResumeContact = {
   phone: string;
   email: string;
@@ -102,7 +104,7 @@ export const resumeExperiences: ResumeExperience[] = [
 export const resumeBusinessProjects: ResumeProject[] = [
   {
     name: "大风车",
-    period: "2021 — 至今",
+    period: "2023.03 — 至今",
     stack: ["Web", "iOS / Android", "PC 同步助手", "React Native", "离线 H5 · Vue"],
     summary:
       "大搜车旗下二手车 B 端 SaaS，面向独立展厅车商：评估、ERP、CRM、营销平台与报表，覆盖车源全生命周期。",
@@ -153,8 +155,8 @@ export const resumeOpenSourceProjects: ResumeProject[] = [
       "多机位、环车巡检、截图分享与 URL 状态深链",
       "GitHub Pages 在线预览，独立仓库维护",
     ],
-    repoUrl: "https://github.com/jiaxiantao/3d-car-viewing",
-    previewUrl: "https://jiaxiantao.github.io/3d-car-viewing/",
+    repoUrl: EXTERNAL_PROJECTS.carShowroom.repoUrl,
+    previewUrl: EXTERNAL_PROJECTS.carShowroom.previewUrl,
   },
   {
     name: "home-agent",
@@ -166,8 +168,8 @@ export const resumeOpenSourceProjects: ResumeProject[] = [
       "规则规划器回退，支持 CI 与无 API Key 环境",
       "GitHub Pages 部署，可与本站点 Assistant 能力对照阅读",
     ],
-    repoUrl: "https://github.com/jiaxiantao/home-agent",
-    previewUrl: "https://jiaxiantao.github.io/home-agent/",
+    repoUrl: EXTERNAL_PROJECTS.homeAgent.repoUrl,
+    previewUrl: EXTERNAL_PROJECTS.homeAgent.previewUrl,
   },
   {
     name: "ai-my-home",
@@ -180,6 +182,7 @@ export const resumeOpenSourceProjects: ResumeProject[] = [
       "首页即结构化简历 + 可交互能力证明",
     ],
     repoUrl: "https://github.com/jiaxiantao/ai-my-home",
+    previewUrl: EXTERNAL_PROJECTS.aiMyHome.previewUrl,
   },
   {
     name: "team-docs",
@@ -191,7 +194,8 @@ export const resumeOpenSourceProjects: ResumeProject[] = [
       "Next.js 全栈，PostgreSQL 存储文档与版本",
       "面向团队知识沉淀与协作场景验证",
     ],
-    repoUrl: "https://github.com/jiaxiantao/team-docs",
+    repoUrl: EXTERNAL_PROJECTS.teamDocs.repoUrl,
+    previewUrl: EXTERNAL_PROJECTS.teamDocs.previewUrl,
   },
   {
     name: "cos-design",
@@ -202,7 +206,8 @@ export const resumeOpenSourceProjects: ResumeProject[] = [
       "可复用 UI 与交互模式整理",
       "TypeScript 工程化与组件规范实践",
     ],
-    repoUrl: "https://github.com/jiaxiantao/cos-design",
+    repoUrl: EXTERNAL_PROJECTS.cosDesign.repoUrl,
+    previewUrl: EXTERNAL_PROJECTS.cosDesign.previewUrl,
   },
   {
     name: "3d-express-warehouse",
@@ -213,7 +218,8 @@ export const resumeOpenSourceProjects: ResumeProject[] = [
       "仓库三维场景搭建与浏览交互",
       "WebGL 性能与展示效果平衡",
     ],
-    repoUrl: "https://github.com/jiaxiantao/3d-express-warehouse",
+    repoUrl: EXTERNAL_PROJECTS.expressWarehouse.repoUrl,
+    previewUrl: EXTERNAL_PROJECTS.expressWarehouse.previewUrl,
   },
 ];
 

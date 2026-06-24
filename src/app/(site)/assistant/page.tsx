@@ -10,20 +10,9 @@ export const metadata: Metadata = {
     "An AI assistant that answers questions by retrieving and grounding responses in my notes.",
 };
 
-type AssistantPageProps = {
-  searchParams: Promise<{
-    q?: string | string[];
-  }>;
-};
+export const dynamic = "force-static";
 
-export default async function AssistantPage({
-  searchParams,
-}: AssistantPageProps) {
-  const resolvedSearchParams = await searchParams;
-  const initialQuestion = Array.isArray(resolvedSearchParams.q)
-    ? resolvedSearchParams.q[0]
-    : resolvedSearchParams.q;
-
+export default function AssistantPage() {
   const llmLabel = isLlmConfigured() ? getLlmLabel() : undefined;
 
   return (
@@ -43,11 +32,7 @@ export default async function AssistantPage({
       </section>
 
       <section className="space-y-6">
-        <AssistantChatLoader
-          initialQuestion={initialQuestion}
-          autoRun={Boolean(initialQuestion?.trim())}
-          llmLabel={llmLabel}
-        />
+        <AssistantChatLoader llmLabel={llmLabel} />
       </section>
     </main>
   );

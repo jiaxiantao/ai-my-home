@@ -1,12 +1,7 @@
-import { redirect } from "next/navigation";
+import { AgentsExternalRedirect } from "@/components/agents-external-redirect";
 
-import { buildExternalAgentUrl } from "@/lib/external-projects";
+export const dynamic = "force-static";
 
-type AgentsRedirectProps = {
-  searchParams: Promise<{ q?: string }>;
-};
-
-export default async function AgentsRedirect({ searchParams }: AgentsRedirectProps) {
-  const { q } = await searchParams;
-  redirect(buildExternalAgentUrl(q));
+export default function AgentsRedirect() {
+  return <AgentsExternalRedirect />;
 }

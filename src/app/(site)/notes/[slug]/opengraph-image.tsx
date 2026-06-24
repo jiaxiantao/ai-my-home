@@ -2,6 +2,12 @@ import { ImageResponse } from "next/og";
 
 import { getPublishedNoteBySlug } from "@/lib/notes-service";
 
+export const dynamic = "force-static";
+
+export function generateStaticParams() {
+  return [];
+}
+
 export const size = {
   width: 1200,
   height: 630,

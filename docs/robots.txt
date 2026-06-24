@@ -1,0 +1,4 @@
+User-Agent: *
+Allow: /
+
+Sitemap: https://jiaxiantao.github.io/ai-my-home/sitemap.xml

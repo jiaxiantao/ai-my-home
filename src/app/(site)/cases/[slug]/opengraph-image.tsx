@@ -1,6 +1,12 @@
 import { ImageResponse } from "next/og";
 
-import { getCaseStudyDetailBySlug } from "@/lib/editorial-content";
+import { caseStudyDetails, getCaseStudyDetailBySlug } from "@/lib/editorial-content";
+
+export const dynamic = "force-static";
+
+export function generateStaticParams() {
+  return caseStudyDetails.map((entry) => ({ slug: entry.slug }));
+}
 
 export const size = {
   width: 1200,

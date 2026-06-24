@@ -22,6 +22,7 @@ import {
   resumeSkillGroups,
   type ResumeProject,
 } from "@/lib/resume-content";
+import { PLATFORM_EXPERIENCE_NAV } from "@/lib/external-projects";
 import { techStackGroups } from "@/lib/showcase-content";
 
 export function HomeResume({ siteUrl }: { siteUrl: string }) {
@@ -46,7 +47,7 @@ export function HomeResume({ siteUrl }: { siteUrl: string }) {
           <div className="flex flex-wrap gap-3">
             <Link
               href="#portfolio"
-              className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-100"
+              className="inline-flex items-center gap-2 rounded-full border border-cyan-300/35 bg-cyan-400/10 px-5 py-2.5 text-sm font-semibold text-cyan-50 transition hover:border-cyan-300/55 hover:bg-cyan-400/18"
             >
               查看在线作品
               <ArrowRight className="h-4 w-4" />
@@ -170,6 +171,19 @@ export function HomeResume({ siteUrl }: { siteUrl: string }) {
           {" · "}
           以下为公开仓库，含在线预览的项目可直接体验。
         </p>
+        <div className="flex flex-wrap gap-2">
+          {PLATFORM_EXPERIENCE_NAV.map((project) => (
+            <a
+              key={project.previewUrl}
+              href={project.previewUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-full border border-cyan-300/25 bg-cyan-300/10 px-3 py-1 text-xs text-cyan-100 transition hover:border-cyan-200/40 hover:bg-cyan-300/15"
+            >
+              {project.label}
+            </a>
+          ))}
+        </div>
         <ProjectGrid projects={resumeOpenSourceProjects} showLinks previewLinkLabel="在线预览" />
       </section>
 

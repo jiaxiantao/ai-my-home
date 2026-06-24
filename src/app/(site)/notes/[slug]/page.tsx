@@ -21,6 +21,10 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
   day: "numeric",
 });
 
+export function generateStaticParams() {
+  return [];
+}
+
 function scoreRelatedNote(
   tags: string[],
   currentSlug: string,

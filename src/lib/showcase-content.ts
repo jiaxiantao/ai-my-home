@@ -65,7 +65,7 @@ export const careerTimeline: CareerStage[] = [
       "负责大风车、超级 4S 二手车、搜 e 销等多端产品，从架构搭建到团队交付与跨端组件沉淀。",
     focus: ["大风车 B 端 SaaS", "React Native 混合架构", "前端 TL", "跨端组件库", "性能与体验治理"],
     achievements: [
-      "参与大风车评估 / ERP / CRM / 营销等模块的多端前端交付（产品官网 fengche.souche.com）。",
+      "参与大风车评估 / ERP / CRM / 营销等模块的多端前端交付（2023.03 起，产品官网 fengche.souche.com）。",
       "主导搜 e 销从 0→1 的 Web / 小程序 / H5 技术体系搭建。",
       "推动超级 4S 二手车 RN + 原生 + 离线 H5 混合模式落地。",
     ],

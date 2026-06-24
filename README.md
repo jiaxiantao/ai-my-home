@@ -37,6 +37,18 @@ pnpm dev
 
 打开 [http://localhost:3000](http://localhost:3000)。
 
+## GitHub Pages 在线预览
+
+静态演示：<https://jiaxiantao.github.io/ai-my-home/>
+
+Pages 配置：**Deploy from a branch · `main` · `/docs`**。`main` 推送后 `deploy-pages.yml` 会执行 `pnpm build:pages` 并将构建产物写入 `docs/`。
+
+```bash
+pnpm build:pages   # 本地验证静态导出
+```
+
+GitHub Pages 为纯静态站点：简历、工程 Demo、端侧 AI、Cases / Insights 可浏览；`/api/*`、登录写库、Assistant 对话等需服务端的能力在预览站不可用。完整全栈请用 Docker 或 `pnpm dev`。
+
 ### 发布中心与数据库
 
 `pnpm db:setup`（`prisma db push` + `seed`）会创建并初始化：
@@ -79,6 +91,7 @@ Assistant（`/assistant`）与 `/api/chat` 使用同一套 LLM 配置。Agent �
 
 | 项目 | 预览 | 仓库 |
 |------|------|------|
+| **本站点** | [jiaxiantao.github.io/ai-my-home](https://jiaxiantao.github.io/ai-my-home/) | [ai-my-home](https://github.com/jiaxiantao/ai-my-home) |
 | 3D 看车 | [jiaxiantao.github.io/3d-car-viewing](https://jiaxiantao.github.io/3d-car-viewing/) | [3d-car-viewing](https://github.com/jiaxiantao/3d-car-viewing) |
 | Agent 编排 | [jiaxiantao.github.io/home-agent](https://jiaxiantao.github.io/home-agent/) | [home-agent](https://github.com/jiaxiantao/home-agent) |
 
