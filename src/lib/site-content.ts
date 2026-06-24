@@ -56,7 +56,7 @@ export const siteProfile: SiteProfile = {
   intro:
     "6 年+ 复杂 Web / App / 小程序交付；曾任前端 TL。本站在线呈现简历与可运行技术作品。",
   summary:
-    "浙江大搜车高级前端研发工程师，主导超级 4S 二手车、搜 e 销等多端产品；擅长架构、性能治理与团队交付。",
+    "浙江大搜车（大风车）高级前端研发工程师，主导超级 4S 二手车、搜 e 销等多端产品；擅长架构、性能治理与团队交付。",
   focus: [
     "前端架构与设计系统",
     "大前端与多端交付（Web / App / 小程序）",
@@ -74,7 +74,7 @@ export const siteProfile: SiteProfile = {
     "让 AI 进入真实工作流，而不是停留在临时问答和单次生成。",
     "把复杂项目里的判断、权衡和复盘写成可复用的内容资产。",
   ],
-  email: "jiaxiantao@souche.com",
+  email: "1374612574@qq.com",
   github: "https://github.com/jiaxiantao",
 };
 

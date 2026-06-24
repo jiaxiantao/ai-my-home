@@ -12,13 +12,15 @@ import {
 import { CopyButton } from "@/components/copy-button";
 import { TechStackBoard } from "@/components/tech-stack-board";
 import {
+  resumeBusinessProjects,
   resumeContact,
   resumeEducation,
   resumeExperiences,
   resumeHeadline,
-  resumeProjects,
+  resumeOpenSourceProjects,
   resumeSelfEvaluation,
   resumeSkillGroups,
+  type ResumeProject,
 } from "@/lib/resume-content";
 import { techStackGroups } from "@/lib/showcase-content";
 
@@ -150,39 +152,25 @@ export function HomeResume({ siteUrl }: { siteUrl: string }) {
       </section>
 
       <section className="space-y-6">
-        <SectionLabel icon={Sparkles} label="项目经验" />
-        <div className="grid gap-5 lg:grid-cols-2">
-          {resumeProjects.map((project) => (
-            <article
-              key={project.name}
-              className="rounded-[1.75rem] border border-white/10 bg-white/5 p-6"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <h2 className="text-lg font-semibold text-white">{project.name}</h2>
-                <span className="font-mono text-[11px] text-slate-500">{project.period}</span>
-              </div>
-              <p className="mt-2 text-sm text-slate-400">{project.summary}</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {project.stack.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full border border-white/10 bg-slate-950/60 px-2.5 py-1 text-[11px] text-slate-300"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-              <ul className="mt-4 space-y-2">
-                {project.bullets.map((bullet) => (
-                  <li key={bullet} className="flex gap-2 text-sm leading-6 text-slate-300">
-                    <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-cyan-300" />
-                    {bullet}
-                  </li>
-                ))}
-              </ul>
-            </article>
-          ))}
-        </div>
+        <SectionLabel icon={Sparkles} label="业务项目 · 大风车" />
+        <ProjectGrid projects={resumeBusinessProjects} />
+      </section>
+
+      <section className="space-y-6">
+        <SectionLabel icon={Sparkles} label="开源项目 · GitHub" />
+        <p className="text-sm text-slate-500">
+          <a
+            href={resumeContact.github}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-cyan-200/90 hover:text-cyan-100"
+          >
+            github.com/jiaxiantao
+          </a>
+          {" · "}
+          以下为公开仓库，含在线预览的项目可直接体验。
+        </p>
+        <ProjectGrid projects={resumeOpenSourceProjects} showLinks />
       </section>
 
       <section className="space-y-6">
@@ -224,6 +212,73 @@ export function HomeResume({ siteUrl }: { siteUrl: string }) {
           ))}
         </ul>
       </section>
+    </div>
+  );
+}
+
+function ProjectGrid({
+  projects,
+  showLinks = false,
+}: {
+  projects: ResumeProject[];
+  showLinks?: boolean;
+}) {
+  return (
+    <div className="grid gap-5 lg:grid-cols-2">
+      {projects.map((project) => (
+        <article
+          key={project.name}
+          className="rounded-[1.75rem] border border-white/10 bg-white/5 p-6"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <h2 className="text-lg font-semibold text-white">{project.name}</h2>
+            <span className="font-mono text-[11px] text-slate-500">{project.period}</span>
+          </div>
+          <p className="mt-2 text-sm text-slate-400">{project.summary}</p>
+          {showLinks && (project.repoUrl || project.previewUrl) ? (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {project.previewUrl ? (
+                <a
+                  href={project.previewUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-full border border-cyan-300/25 bg-cyan-300/10 px-2.5 py-1 text-[11px] text-cyan-100 transition hover:border-cyan-200/40"
+                >
+                  在线预览
+                </a>
+              ) : null}
+              {project.repoUrl ? (
+                <a
+                  href={project.repoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-full border border-white/10 bg-slate-950/60 px-2.5 py-1 text-[11px] text-slate-300 transition hover:border-white/20"
+                >
+                  仓库
+                </a>
+              ) : null}
+            </div>
+          ) : null}
+          <div className="mt-3 flex flex-wrap gap-2">
+            {project.stack.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full border border-white/10 bg-slate-950/60 px-2.5 py-1 text-[11px] text-slate-300"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+          <ul className="mt-4 space-y-2">
+            {project.bullets.map((bullet) => (
+              <li key={bullet} className="flex gap-2 text-sm leading-6 text-slate-300">
+                <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-cyan-300" />
+                {bullet}
+              </li>
+            ))}
+          </ul>
+        </article>
+      ))}
     </div>
   );
 }

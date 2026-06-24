@@ -60,7 +60,7 @@ export const careerTimeline: CareerStage[] = [
   {
     slug: "souche-tl",
     period: "2021.03 — 至今",
-    title: "大搜车 · 高级前端研发工程师 / 前端 TL",
+    title: "大搜车（大风车）· 高级前端研发工程师 / 前端 TL",
     summary:
       "负责超级 4S 二手车、搜 e 销等多端产品，从架构搭建到团队交付与跨端组件沉淀。",
     focus: ["React Native 混合架构", "前端 TL", "跨端组件库", "性能与体验治理"],
@@ -73,7 +73,7 @@ export const careerTimeline: CareerStage[] = [
   {
     slug: "souche-senior",
     period: "2021.03 — 2022",
-    title: "大搜车 · 前端研发（成长期）",
+    title: "大搜车（大风车）· 前端研发（成长期）",
     summary:
       "深入二手车与销售渠道业务，完成从页面交付到模块 owner 与工程化意识的转变。",
     focus: ["复杂业务页面", "微前端 qiankun", "构建提速", "安全与内存治理"],
