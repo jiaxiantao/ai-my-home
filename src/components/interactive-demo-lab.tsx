@@ -71,6 +71,7 @@ export function InteractiveDemoLab() {
   const searchParams = useSearchParams();
 
   const didInitRef = useRef(false);
+  const skipInitialUrlSyncRef = useRef(true);
   const [copied, setCopied] = useState(false);
 
   const [activeTab, setActiveTab] = useState<DemoTabId>("architecture");
@@ -125,6 +126,13 @@ export function InteractiveDemoLab() {
   }, [searchParams]);
 
   useEffect(() => {
+    if (!didInitRef.current) return;
+
+    if (skipInitialUrlSyncRef.current) {
+      skipInitialUrlSyncRef.current = false;
+      if (!searchParams.toString()) return;
+    }
+
     const state: DemoLabUrlState = {
       tab: activeTab,
       scenario: selectedScenarioId,
@@ -136,7 +144,9 @@ export function InteractiveDemoLab() {
     };
 
     const query = buildDemoLabQuery(state);
-    router.replace(`/?${query}#demo-lab`, { scroll: false });
+    if (query === searchParams.toString()) return;
+
+    router.replace(`/?${query}`, { scroll: false });
   }, [
     activeTab,
     selectedScenarioId,
@@ -146,6 +156,7 @@ export function InteractiveDemoLab() {
     selectedConstraintIds,
     modeId,
     router,
+    searchParams,
   ]);
 
   const labState = useMemo(

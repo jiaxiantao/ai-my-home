@@ -5,6 +5,7 @@ import { CapabilityProfileSection } from "@/components/capability-profile-sectio
 import { CaseProofCard } from "@/components/case-proof-card";
 import { CopyButton } from "@/components/copy-button";
 import { HomeResume } from "@/components/home-resume";
+import { HomeScrollRestoration } from "@/components/home-scroll-restoration";
 import { SectionHeading } from "@/components/section-heading";
 import { SectionSkeleton } from "@/components/section-skeleton";
 import { FrontIntelligenceSpotlight } from "@/components/front-intelligence-spotlight";
@@ -79,6 +80,7 @@ export default async function Home() {
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-16 px-6 py-10 lg:px-8 lg:py-14">
+      <HomeScrollRestoration />
       <HomeResume siteUrl={siteUrl} />
 
       <section id="portfolio" className="space-y-6 scroll-mt-24">
