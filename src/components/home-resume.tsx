@@ -1,10 +1,13 @@
+import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
   Briefcase,
+  Globe,
   GraduationCap,
   Mail,
   MapPin,
+  PenLine,
   Phone,
   Sparkles,
 } from "lucide-react";
@@ -33,12 +36,22 @@ export function HomeResume({ siteUrl }: { siteUrl: string }) {
           <p className="text-sm uppercase tracking-[0.32em] text-cyan-200/70">
             Resume · {resumeHeadline.nameEn}
           </p>
-          <div>
-            <h1 className="text-4xl font-semibold tracking-tight text-white md:text-5xl">
-              {resumeHeadline.name}
-            </h1>
-            <p className="mt-2 text-lg text-slate-300">{resumeHeadline.title}</p>
-            <p className="mt-1 text-sm text-cyan-200/80">{resumeHeadline.tagline}</p>
+          <div className="flex items-start gap-5">
+            <Image
+              src={resumeContact.avatar}
+              alt={`${resumeHeadline.name} 头像`}
+              width={96}
+              height={96}
+              className="h-24 w-24 shrink-0 rounded-full border-2 border-cyan-300/30 object-cover shadow-lg shadow-cyan-500/10"
+              priority
+            />
+            <div>
+              <h1 className="text-4xl font-semibold tracking-tight text-white md:text-5xl">
+                {resumeHeadline.name}
+              </h1>
+              <p className="mt-2 text-lg text-slate-300">{resumeHeadline.title}</p>
+              <p className="mt-1 text-sm text-cyan-200/80">{resumeHeadline.tagline}</p>
+            </div>
           </div>
           <p className="max-w-2xl text-sm leading-7 text-slate-400">
             {resumeHeadline.objective}
@@ -84,6 +97,28 @@ export function HomeResume({ siteUrl }: { siteUrl: string }) {
             <li className="flex items-center gap-3">
               <MapPin className="h-4 w-4 shrink-0 text-cyan-300/80" />
               {resumeContact.location}
+            </li>
+            <li className="flex items-center gap-3">
+              <Globe className="h-4 w-4 shrink-0 text-cyan-300/80" />
+              <a
+                href={resumeContact.homepage}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white"
+              >
+                个人主页
+              </a>
+            </li>
+            <li className="flex items-center gap-3">
+              <PenLine className="h-4 w-4 shrink-0 text-cyan-300/80" />
+              <a
+                href={resumeContact.juejin}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white"
+              >
+                掘金技术博客
+              </a>
             </li>
           </ul>
 

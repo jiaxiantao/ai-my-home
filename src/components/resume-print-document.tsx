@@ -7,6 +7,7 @@ import {
   resumeOpenSourceProjects,
   resumeSelfEvaluation,
   resumeSkillGroups,
+  resolveResumePublicPath,
   type ResumeProject,
 } from "@/lib/resume-content";
 
@@ -22,21 +23,31 @@ export function ResumePrintDocument() {
   return (
     <article className="resume-print mx-auto min-h-screen max-w-[210mm] bg-white px-10 py-9 text-[13px] leading-[1.55] text-slate-800 print:px-8 print:py-7">
       <header className="border-b border-slate-300 pb-5">
-        <div className="flex items-start justify-between gap-6">
-          <div>
-            <h1 className="text-[26px] font-bold tracking-tight text-slate-900">
-              {resumeHeadline.name}
-            </h1>
-            <p className="mt-1 text-[15px] font-semibold text-slate-700">
-              {resumeHeadline.title}
-            </p>
-            <p className="mt-1 text-[12px] text-slate-500">{resumeHeadline.tagline}</p>
-          </div>
-          <div className="shrink-0 text-right text-[12px] text-slate-600">
-            <p>{resumeContact.phone}</p>
-            <p className="mt-0.5">{resumeContact.email}</p>
-            <p className="mt-0.5">{resumeContact.location}</p>
-            <p className="mt-0.5 text-slate-500">github.com/jiaxiantao</p>
+        <div className="flex items-start gap-5">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={resolveResumePublicPath(resumeContact.avatar)}
+            alt={`${resumeHeadline.name} 头像`}
+            className="h-[88px] w-[88px] shrink-0 rounded-full border border-slate-200 object-cover"
+          />
+          <div className="flex min-w-0 flex-1 items-start justify-between gap-4">
+            <div className="min-w-0">
+              <h1 className="text-[26px] font-bold tracking-tight text-slate-900">
+                {resumeHeadline.name}
+              </h1>
+              <p className="mt-1 text-[15px] font-semibold text-slate-700">
+                {resumeHeadline.title}
+              </p>
+              <p className="mt-1 text-[12px] text-slate-500">{resumeHeadline.tagline}</p>
+            </div>
+            <div className="shrink-0 text-right text-[11.5px] leading-5 text-slate-600">
+              <p>{resumeContact.phone}</p>
+              <p>{resumeContact.email}</p>
+              <p>{resumeContact.location}</p>
+              <p className="text-slate-500">github.com/jiaxiantao</p>
+              <p className="text-slate-500">jiaxiantao.github.io/ai-my-home</p>
+              <p className="text-slate-500">juejin.cn · 技术博客</p>
+            </div>
           </div>
         </div>
         <p className="mt-4 text-[12.5px] leading-6 text-slate-600">

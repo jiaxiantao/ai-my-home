@@ -5,6 +5,9 @@ export type ResumeContact = {
   email: string;
   github: string;
   location: string;
+  homepage: string;
+  juejin: string;
+  avatar: string;
 };
 
 export type ResumeEducation = {
@@ -38,11 +41,21 @@ export type ResumeSkillGroup = {
   items: string[];
 };
 
+export const RESUME_AVATAR_PATH = "/resume/avatar.png";
+
+export function resolveResumePublicPath(path: string) {
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+  return `${basePath}${path}`;
+}
+
 export const resumeContact: ResumeContact = {
   phone: "13166990795",
   email: "1374612574@qq.com",
   github: "https://github.com/jiaxiantao",
   location: "杭州",
+  homepage: "https://jiaxiantao.github.io/ai-my-home/",
+  juejin: "https://juejin.cn/user/3958672823687880/posts",
+  avatar: RESUME_AVATAR_PATH,
 };
 
 export const resumeHeadline = {
