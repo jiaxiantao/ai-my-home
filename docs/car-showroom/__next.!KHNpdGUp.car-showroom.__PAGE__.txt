@@ -2,5 +2,5 @@
 2:I[1998,["3929","static/chunks/app/(site)/car-showroom/page-bfff79b96c31f910.js"],"StaticExportRedirect"]
 3:I[8871,[],"OutletBoundary"]
 4:"$Sreact.suspense"
-0:{"rsc":["$","$1","c",{"children":[["$","$L2",null,{"href":"https://jiaxiantao.github.io/3d-car-viewing/","label":"正在跳转到 3D 看车演示…"}],null,["$","$L3",null,{"children":["$","$4",null,{"name":"Next.MetadataOutlet","children":"$@5"}]}]]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"FQ5TZv4_qN110xOcGO9R0"}
+0:{"rsc":["$","$1","c",{"children":[["$","$L2",null,{"href":"https://jiaxiantao.github.io/3d-car-viewing/","label":"正在跳转到 3D 看车演示…"}],null,["$","$L3",null,{"children":["$","$4",null,{"name":"Next.MetadataOutlet","children":"$@5"}]}]]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"7Aiw9Abh7PhhUwN-z0ePY"}
 5:null
