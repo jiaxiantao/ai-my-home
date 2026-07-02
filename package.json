@@ -18,6 +18,7 @@
     "smoke": "tsx scripts/smoke-api.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "resume:pdf": "node scripts/generate-resume-pdf.mjs",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate"
   },

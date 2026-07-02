@@ -95,3 +95,21 @@ body {
 .streaming-cursor {
   animation: streaming-cursor-blink 1s step-end infinite;
 }
+
+.resume-print {
+  font-family:
+    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC",
+    sans-serif;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm 10mm;
+  }
+
+  body {
+    background: white !important;
+    color: #1e293b !important;
+  }
+}
