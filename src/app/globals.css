@@ -96,6 +96,17 @@ body {
   animation: streaming-cursor-blink 1s step-end infinite;
 }
 
+[data-weather-backdrop] > div {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 0 !important;
+}
+
+[data-weather-backdrop] canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
 .resume-print {
   font-family:
     "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC",
