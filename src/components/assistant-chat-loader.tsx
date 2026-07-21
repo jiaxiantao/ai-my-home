@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const AssistantChat = dynamic(
   () =>
@@ -9,7 +9,7 @@ const AssistantChat = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="rounded-[2rem] border border-white/10 bg-white/5 p-8 text-sm text-slate-400">
+      <div className="rounded-4xl border border-white/10 bg-white/5 p-8 text-sm text-slate-400">
         正在加载对话工作台…
       </div>
     ),
@@ -25,18 +25,14 @@ export function AssistantChatLoader({
   autoRun?: boolean;
   llmLabel?: string;
 }) {
-  const [initialQuestion, setInitialQuestion] = useState(initialQuestionProp);
-
-  useEffect(() => {
-    if (initialQuestionProp?.trim()) {
-      return;
-    }
-
-    const q = new URLSearchParams(window.location.search).get("q") ?? undefined;
-    if (q) {
-      setInitialQuestion(q);
-    }
-  }, [initialQuestionProp]);
+  const [urlQuestion] = useState(() =>
+    typeof window === "undefined"
+      ? undefined
+      : (new URLSearchParams(window.location.search).get("q") ?? undefined),
+  );
+  const initialQuestion = initialQuestionProp?.trim()
+    ? initialQuestionProp
+    : urlQuestion;
 
   const shouldAutoRun = autoRun ?? Boolean(initialQuestion?.trim());
 
