@@ -1,2 +1,3 @@
-:HL["/ai-my-home/next-static/static/css/7ff7969b2f4e96bd.css","style"]
-0:{"tree":{"name":"","param":null,"prefetchHints":24,"slots":{"children":{"name":"(site)","param":null,"prefetchHints":4,"slots":{"children":{"name":"domains","param":null,"prefetchHints":0,"slots":{"children":{"name":"slug","param":{"type":"d","key":"engineering-efficiency","siblings":null},"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}}}}}},"staleTime":300,"buildId":"7Aiw9Abh7PhhUwN-z0ePY"}
+:HL["/ai-my-home/next-static/static/css/05cd85c34e32a73f.css","style"]
+:HL["/ai-my-home/next-static/static/css/02ea312c3f25d147.css","style"]
+0:{"tree":{"name":"","param":null,"prefetchHints":24,"slots":{"children":{"name":"(site)","param":null,"prefetchHints":4,"slots":{"children":{"name":"domains","param":null,"prefetchHints":0,"slots":{"children":{"name":"slug","param":{"type":"d","key":"engineering-efficiency","siblings":null},"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}}}}}},"staleTime":300,"buildId":"9--mMs88u3LaY-TNe3wmY"}
