@@ -41,9 +41,9 @@ pnpm dev
 
 静态演示：<https://jiaxiantao.github.io/ai-my-home/>
 
-Pages 配置：**GitHub Actions**。`main` 推送后，`deploy-pages.yml` 会执行
-`pnpm build:pages`，将 `out/` 上传为 Pages artifact，再通过官方
-`actions/deploy-pages` 发布。
+Pages 配置：**GitHub Actions**。`main` 推送后只会触发一次 `CI` workflow：
+先跑校验，再执行 `pnpm build:pages`，将 `out/` 上传为 Pages artifact 并由
+`actions/deploy-pages` 发布。PR 只跑校验、不部署。
 
 ```bash
 pnpm build:pages   # 本地验证静态导出
