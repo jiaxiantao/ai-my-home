@@ -23,6 +23,7 @@ import {
   resumeOpenSourceProjects,
   resumeSelfEvaluation,
   resumeSkillGroups,
+  resolveResumePublicPath,
   type ResumeProject,
 } from "@/lib/resume-content";
 import { PLATFORM_EXPERIENCE_NAV } from "@/lib/external-projects";
@@ -38,11 +39,12 @@ export function HomeResume({ siteUrl }: { siteUrl: string }) {
           </p>
           <div className="flex items-start gap-5">
             <Image
-              src={resumeContact.avatar}
+              src={resolveResumePublicPath(resumeContact.avatar)}
               alt={`${resumeHeadline.name} 头像`}
               width={96}
               height={96}
               className="h-24 w-24 shrink-0 rounded-full border-2 border-cyan-300/30 object-cover shadow-lg shadow-cyan-500/10"
+              unoptimized
               priority
             />
             <div>
