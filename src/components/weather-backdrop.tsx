@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { WeatherBackground, type WeatherType } from "cos-design";
+import { WeatherBackground, type WeatherType } from "@cos-design/weather-background";
 
 type WeatherBackdropProps = {
   weather?: WeatherType;
