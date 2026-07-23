@@ -306,7 +306,7 @@ export function SiteHeader() {
               <div
                 role="listbox"
                 aria-label="心情选项"
-                className="rounded-xl border border-white/10 bg-slate-950/95 p-2 shadow-2xl"
+                className="max-h-[min(70vh,28rem)] min-w-52 overflow-y-auto rounded-xl border border-white/10 bg-slate-950/95 p-2 shadow-2xl"
               >
                 {MOOD_OPTIONS.map((option) => {
                   const selected = option.id === mood.id;
@@ -376,7 +376,7 @@ export function SiteHeader() {
                 <div
                   role="listbox"
                   aria-label="心情选项"
-                  className="rounded-xl border border-white/10 bg-slate-950/95 p-2 shadow-2xl"
+                  className="max-h-[min(70vh,28rem)] min-w-52 overflow-y-auto rounded-xl border border-white/10 bg-slate-950/95 p-2 shadow-2xl"
                 >
                   {MOOD_OPTIONS.map((option) => {
                     const selected = option.id === mood.id;

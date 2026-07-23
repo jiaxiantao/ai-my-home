@@ -5,11 +5,17 @@ import { WeatherBackground, type WeatherType } from "@cos-design/weather-backgro
 
 type WeatherBackdropProps = {
   weather?: WeatherType;
+  live?: boolean;
+  night?: boolean;
 };
 
 type Size = { width: number; height: number };
 
-export function WeatherBackdrop({ weather = "thunderstorm" }: WeatherBackdropProps) {
+export function WeatherBackdrop({
+  weather = "thunderstorm",
+  live = false,
+  night = false,
+}: WeatherBackdropProps) {
   const [size, setSize] = useState<Size | null>(null);
 
   useEffect(() => {
@@ -34,7 +40,13 @@ export function WeatherBackdrop({ weather = "thunderstorm" }: WeatherBackdropPro
       className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-[#252f42]"
     >
       {size ? (
-        <WeatherBackground width={size.width} height={size.height} weather={weather} />
+        <WeatherBackground
+          width={size.width}
+          height={size.height}
+          weather={weather}
+          live={live}
+          night={night}
+        />
       ) : null}
     </div>
   );
