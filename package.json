@@ -23,7 +23,8 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
-    "@cos-design/weather-background": "^3.5.1",
+    "@cos-design/ripple-water": "3.5.3",
+    "@cos-design/weather-background": "^3.5.3",
     "@mediapipe/tasks-vision": "^0.10.35",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",

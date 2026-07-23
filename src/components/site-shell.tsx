@@ -10,13 +10,19 @@ import {
 
 function SiteShellContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { weather, live, night } = useWeatherMood();
+  const { kind, weather, live, night, ripple } = useWeatherMood();
   const isPrintRoute = pathname.startsWith("/resume/print");
 
   return (
     <>
       {!isPrintRoute ? (
-        <WeatherBackdrop weather={weather} live={live} night={night} />
+        <WeatherBackdrop
+          kind={kind}
+          weather={weather}
+          live={live}
+          night={night}
+          ripple={ripple}
+        />
       ) : null}
       <div className="relative z-10 flex min-h-full flex-1 flex-col">{children}</div>
     </>
