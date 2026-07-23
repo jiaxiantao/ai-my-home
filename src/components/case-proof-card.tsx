@@ -4,7 +4,7 @@ import type { CaseStudy } from "@/lib/site-content";
 
 export function CaseProofCard({ caseStudy }: { caseStudy: CaseStudy }) {
   return (
-    <article className="flex h-full flex-col rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-6">
+    <article className="flex h-full flex-col rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
       <div className="flex flex-wrap gap-2">
         {caseStudy.stack.map((item) => (
           <span

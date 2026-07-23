@@ -69,7 +69,7 @@ export default async function NotesPage() {
 
       <details
         id="workspace"
-        className="group rounded-[1.75rem] border border-white/10 bg-slate-950/60"
+        className="group rounded-[1.75rem] border border-white/10 bg-slate-950/35"
       >
         <summary className="cursor-pointer list-none px-6 py-5 text-sm font-semibold text-slate-200 marker:content-none [&::-webkit-details-marker]:hidden">
           <span className="text-cyan-200/80">维护入口</span>

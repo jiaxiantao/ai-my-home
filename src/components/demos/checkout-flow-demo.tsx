@@ -55,7 +55,7 @@ export function CheckoutFlowDemo() {
         })}
       </div>
 
-      <div className="rounded-2xl border border-white/10 bg-slate-950/80 p-5">
+      <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-5">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200/75">
           useReducer 状态机
         </p>

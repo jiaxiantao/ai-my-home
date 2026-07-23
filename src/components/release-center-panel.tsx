@@ -386,7 +386,7 @@ export function ReleaseCenterPanel() {
           ).map(([status, count]) => (
             <span
               key={status}
-              className="rounded-full border border-white/10 bg-slate-950/60 px-3 py-1 text-xs text-slate-300"
+              className="rounded-full border border-white/10 bg-slate-950/35 px-3 py-1 text-xs text-slate-300"
             >
               {formatReleaseOrderStatus(status)} · {count}
             </span>
@@ -418,7 +418,7 @@ export function ReleaseCenterPanel() {
         </p>
       ) : null}
 
-      <section className="grid gap-4 rounded-[2rem] border border-white/10 bg-slate-950/70 p-6 lg:grid-cols-2">
+      <section className="grid gap-4 rounded-[2rem] border border-white/10 bg-slate-950/35 p-6 lg:grid-cols-2">
         <div className="grid gap-3">
           <p className="text-sm font-semibold text-white">1) 添加应用</p>
           <Input
@@ -680,7 +680,7 @@ export function ReleaseCenterPanel() {
                   return next;
                 });
               }}
-              className="group rounded-[1.5rem] border border-white/10 bg-slate-950/75 open:border-cyan-300/20"
+              className="group rounded-[1.5rem] border border-white/10 bg-slate-950/40 open:border-cyan-300/20"
             >
               <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3 p-5 marker:content-none [&::-webkit-details-marker]:hidden">
                 <div className="flex min-w-0 flex-1 items-start gap-3">
@@ -908,7 +908,7 @@ export function ReleaseCenterPanel() {
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <article className="rounded-2xl border border-white/10 bg-slate-950/70 p-4">
+    <article className="rounded-2xl border border-white/10 bg-slate-950/35 p-4">
       <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{label}</p>
       <p className="mt-2 text-2xl font-semibold text-white">{value}</p>
     </article>

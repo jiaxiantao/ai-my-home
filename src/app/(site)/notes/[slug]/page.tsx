@@ -116,7 +116,7 @@ export default async function NoteDetailPage({ params }: NoteDetailPageProps) {
         </section>
 
         <section className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-          <article className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-7">
+          <article className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-7">
             <div className="space-y-6 text-sm leading-8 text-slate-200">
               <ReactMarkdown
                 components={{
@@ -167,7 +167,7 @@ export default async function NoteDetailPage({ params }: NoteDetailPageProps) {
           </article>
 
           <aside className="grid gap-6">
-            <article className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-6">
+            <article className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-6">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
                 Continue In Assistant
               </p>
@@ -185,7 +185,7 @@ export default async function NoteDetailPage({ params }: NoteDetailPageProps) {
               </a>
             </article>
 
-            <article className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-6">
+            <article className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-6">
               <SectionHeading
                 eyebrow="Related Notes"
                 title="可以继续顺着相近主题往下读"

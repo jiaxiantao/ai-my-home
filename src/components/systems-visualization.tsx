@@ -59,7 +59,7 @@ export function SystemsVisualization({
       <SystemsScene nodes={sceneNodes.length ? sceneNodes : undefined} />
 
       <div className="grid gap-4">
-        <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/90 p-4">
+        <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-4">
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200/75">
               PostgreSQL · unnest(tags)
@@ -71,7 +71,7 @@ export function SystemsVisualization({
           <LazyTagDistributionChart data={tagData} />
         </article>
 
-        <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/90 p-4">
+        <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-4">
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200/75">
             PostgreSQL · date_trunc(month)
           </p>

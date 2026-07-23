@@ -122,7 +122,7 @@ export function SseInspectorDemo() {
         </p>
       </div>
 
-      <div className="max-h-80 overflow-auto rounded-2xl border border-white/10 bg-slate-950/80 p-3 font-mono text-xs">
+      <div className="max-h-80 overflow-auto rounded-2xl border border-white/10 bg-slate-950/40 p-3 font-mono text-xs">
         {logs.length ? (
           logs.map((log) => (
             <article

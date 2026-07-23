@@ -97,7 +97,7 @@ export function DebounceThrottleDemo() {
         />
       </div>
 
-      <div className="grid gap-2 rounded-2xl border border-white/10 bg-slate-950/80 p-4 font-mono text-xs">
+      <div className="grid gap-2 rounded-2xl border border-white/10 bg-slate-950/40 p-4 font-mono text-xs">
         {logs.length ? (
           logs.map((entry) => (
             <div key={entry.id} className="flex gap-3 text-slate-400">

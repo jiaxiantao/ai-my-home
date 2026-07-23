@@ -68,7 +68,7 @@ export function NoteLibrary({ notes }: { notes: NoteRecord[] }) {
 
   return (
     <div className="grid gap-6">
-      <div className="grid gap-4 rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 lg:grid-cols-[1.2fr_0.8fr]">
+      <div className="grid gap-4 rounded-[2rem] border border-white/10 bg-slate-950/40 p-6 lg:grid-cols-[1.2fr_0.8fr]">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
             Public Library
@@ -108,7 +108,7 @@ export function NoteLibrary({ notes }: { notes: NoteRecord[] }) {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="例如：架构、性能、AI 工作流"
-            className="rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/40"
+            className="rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/40"
           />
         </label>
 
@@ -119,7 +119,7 @@ export function NoteLibrary({ notes }: { notes: NoteRecord[] }) {
             className={`rounded-full border px-4 py-2 text-sm transition ${
               activeTag === "all"
                 ? "border-cyan-300/40 bg-cyan-300/10 text-cyan-100"
-                : "border-white/10 bg-slate-950/80 text-slate-300 hover:border-white/20 hover:text-white"
+                : "border-white/10 bg-slate-950/40 text-slate-300 hover:border-white/20 hover:text-white"
             }`}
           >
             全部
@@ -132,7 +132,7 @@ export function NoteLibrary({ notes }: { notes: NoteRecord[] }) {
               className={`rounded-full border px-4 py-2 text-sm transition ${
                 activeTag === tag
                   ? "border-cyan-300/40 bg-cyan-300/10 text-cyan-100"
-                  : "border-white/10 bg-slate-950/80 text-slate-300 hover:border-white/20 hover:text-white"
+                  : "border-white/10 bg-slate-950/40 text-slate-300 hover:border-white/20 hover:text-white"
               }`}
             >
               {tag}
@@ -146,7 +146,7 @@ export function NoteLibrary({ notes }: { notes: NoteRecord[] }) {
           {filteredNotes.map((note) => (
             <article
               key={note.id}
-              className="rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-6"
+              className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6"
             >
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div className="max-w-3xl">
@@ -183,7 +183,7 @@ export function NoteLibrary({ notes }: { notes: NoteRecord[] }) {
           ))}
         </div>
       ) : (
-        <div className="rounded-[2rem] border border-dashed border-white/15 bg-slate-950/70 p-8 text-sm leading-7 text-slate-400">
+        <div className="rounded-[2rem] border border-dashed border-white/15 bg-slate-950/35 p-8 text-sm leading-7 text-slate-400">
           当前筛选下还没有结果，可以换个关键词，或者切回其他标签再看看。
         </div>
       )}

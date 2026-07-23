@@ -177,7 +177,7 @@ export function CapabilityTopology({
   return (
     <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
       <div
-        className="topology-grid relative min-h-[42rem] overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/80"
+        className="topology-grid relative min-h-[42rem] overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/40"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
@@ -245,7 +245,7 @@ export function CapabilityTopology({
         </svg>
 
         <div className="absolute inset-0 grid grid-cols-[minmax(0,1fr)_minmax(12rem,15rem)_minmax(0,1fr)] grid-rows-[auto_1fr_auto_1fr_auto] items-center justify-items-center px-5 py-6 sm:grid-cols-[minmax(0,1fr)_minmax(14rem,16rem)_minmax(0,1fr)] sm:px-8 sm:py-8">
-          <div className="topology-core col-start-2 row-start-3 w-52 rounded-4xl border border-cyan-300/20 bg-slate-950/88 px-4 py-4 shadow-[0_0_80px_rgba(34,211,238,0.12)] backdrop-blur sm:w-60 sm:rounded-[2rem] sm:px-5 sm:py-5">
+          <div className="topology-core col-start-2 row-start-3 w-52 rounded-4xl border border-cyan-300/20 bg-slate-950/45 px-4 py-4 shadow-[0_0_80px_rgba(34,211,238,0.12)] backdrop-blur sm:w-60 sm:rounded-[2rem] sm:px-5 sm:py-5">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-200/80">
               Core Node
             </p>
@@ -286,8 +286,8 @@ export function CapabilityTopology({
                   onMouseEnter={() => setActiveSlug(domain.slug)}
                   className={`group flex w-24 flex-col rounded-3xl border px-3 py-3 text-left transition duration-300 sm:w-32 sm:rounded-[1.5rem] sm:px-4 sm:py-4 ${
                     isActive
-                      ? "border-cyan-300/45 bg-slate-900/95 shadow-[0_0_50px_rgba(34,211,238,0.16)]"
-                      : "border-white/10 bg-slate-900/80 hover:border-white/25 hover:bg-slate-900/95"
+                      ? "border-cyan-300/45 bg-slate-900/50 shadow-[0_0_50px_rgba(34,211,238,0.16)]"
+                      : "border-white/10 bg-slate-900/40 hover:border-white/25 hover:bg-slate-900/50"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-3">
@@ -369,7 +369,7 @@ export function CapabilityTopology({
       </div>
 
       <aside className="grid gap-4">
-        <article className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-7">
+        <article className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-7">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
             Active Domain
           </p>
@@ -402,7 +402,7 @@ export function CapabilityTopology({
           </a>
         </article>
 
-        <article className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-7">
+        <article className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-7">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
             Why It Connects
           </p>
@@ -418,7 +418,7 @@ export function CapabilityTopology({
           </div>
         </article>
 
-        <article className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-7">
+        <article className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-7">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
             Live Signals
           </p>

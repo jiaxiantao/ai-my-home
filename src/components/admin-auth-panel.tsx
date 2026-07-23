@@ -30,7 +30,7 @@ export function AdminAuthPanel() {
   }
 
   return (
-    <div className="space-y-4 rounded-4xl border border-white/10 bg-gradient-to-b from-slate-900/70 to-slate-950/80 p-6">
+    <div className="space-y-4 rounded-4xl border border-white/10 bg-gradient-to-b from-slate-900/40 to-slate-950/35 p-6">
       <Badge variant={authenticated ? "secondary" : "default"} className="w-fit">
         {authenticated ? "Admin Online" : "Guest"}
       </Badge>

@@ -85,7 +85,7 @@ function ResultColumn({
   payload: SearchPayload | null;
 }) {
   return (
-    <article className="rounded-2xl border border-white/10 bg-slate-950/80 p-4">
+    <article className="rounded-2xl border border-white/10 bg-slate-950/40 p-4">
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm font-semibold text-white">{title}</p>
         {payload ? (

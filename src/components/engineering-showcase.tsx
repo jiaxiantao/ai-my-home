@@ -128,7 +128,7 @@ export function EngineeringShowcase() {
         })}
       </div>
 
-      <div className="rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-5 md:p-7">
+      <div className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-5 md:p-7">
         {active === "vitals" ? <WebVitalsDemo /> : null}
         {active === "api" ? <ApiLatencyDemo /> : null}
         {active === "virtual" ? <VirtualScrollDemo /> : null}

@@ -209,7 +209,7 @@ export function NoteManager() {
     <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
       <form
         onSubmit={handleSubmit}
-        className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-7"
+        className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-7"
       >
         <h2 className="text-2xl font-semibold tracking-tight text-white">
           添加笔记
@@ -326,7 +326,7 @@ export function NoteManager() {
 
       <div className="grid gap-4">
         {isLoading ? (
-          <div className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-8 text-sm text-slate-400">
+          <div className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-8 text-sm text-slate-400">
             正在加载笔记...
           </div>
         ) : notes.length ? (
@@ -339,7 +339,7 @@ export function NoteManager() {
             />
           ))
         ) : (
-          <div className="rounded-[2rem] border border-dashed border-white/15 bg-slate-950/70 p-8 text-sm text-slate-400">
+          <div className="rounded-[2rem] border border-dashed border-white/15 bg-slate-950/35 p-8 text-sm text-slate-400">
             还没有笔记，先添加第一条。
           </div>
         )}

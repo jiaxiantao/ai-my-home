@@ -175,7 +175,7 @@ export function MediapipePoseDemo() {
         <video ref={videoRef} className="hidden" playsInline muted />
         <canvas ref={canvasRef} className="h-auto w-full max-h-[360px] object-contain" />
         {status !== "running" ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-slate-950/70 text-sm text-slate-400">
+          <div className="absolute inset-0 flex items-center justify-center bg-slate-950/35 text-sm text-slate-400">
             {status === "error" ? error : "预览区 · 点击上方按钮启动"}
           </div>
         ) : null}

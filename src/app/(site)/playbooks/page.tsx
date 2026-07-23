@@ -36,7 +36,7 @@ export default function PlaybooksPage() {
             ].map((item, index) => (
               <article
                 key={item}
-                className="rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-6"
+                className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6"
               >
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
                   Signal 0{index + 1}
@@ -57,7 +57,7 @@ export default function PlaybooksPage() {
           <PlaybookAccordion items={playbooks} />
         </section>
 
-        <section className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-8">
+        <section className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-8">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
             Next Step
           </p>

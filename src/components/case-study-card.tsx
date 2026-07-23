@@ -8,7 +8,7 @@ type CaseStudyCardProps = {
 
 export function CaseStudyCard({ caseStudy }: CaseStudyCardProps) {
   return (
-    <article className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-7">
+    <article className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-7">
       <div className="flex flex-wrap gap-2">
         {caseStudy.stack.map((item) => (
           <span

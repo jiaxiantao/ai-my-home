@@ -119,7 +119,7 @@ export function ChatComposer({
                 alt={image.name}
                 className="h-20 w-20 object-cover"
               />
-              <figcaption className="absolute inset-x-0 bottom-0 bg-slate-950/80 px-1 py-0.5 font-mono text-[9px] text-slate-300">
+              <figcaption className="absolute inset-x-0 bottom-0 bg-slate-950/40 px-1 py-0.5 font-mono text-[9px] text-slate-300">
                 {image.name}
               </figcaption>
             </figure>

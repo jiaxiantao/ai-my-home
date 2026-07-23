@@ -29,7 +29,7 @@ export function DashboardReleasePanel({ release }: { release: ReleaseSummary }) 
         {statusOrder.map((status) => (
           <div
             key={status}
-            className="rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2 text-center"
+            className="rounded-xl border border-white/10 bg-slate-950/35 px-3 py-2 text-center"
           >
             <p className="text-[10px] uppercase tracking-wider text-slate-500">
               {formatReleaseOrderStatus(status)}

@@ -1,7 +1,7 @@
 export function SectionSkeleton({ lines = 3 }: { lines?: number }) {
   return (
     <div
-      className="animate-pulse rounded-[1.75rem] border border-white/10 bg-slate-950/60 p-8"
+      className="animate-pulse rounded-[1.75rem] border border-white/10 bg-slate-950/35 p-8"
       aria-hidden
     >
       <div className="h-3 w-24 rounded-full bg-white/10" />

@@ -25,7 +25,7 @@ export function PlaybookAccordion({ items }: PlaybookAccordionProps) {
               "rounded-[2rem] border p-6 transition",
               isOpen
                 ? "border-cyan-300/30 bg-cyan-300/8"
-                : "border-white/10 bg-slate-950/80",
+                : "border-white/10 bg-slate-950/40",
             )}
           >
             <button
@@ -77,7 +77,7 @@ export function PlaybookAccordion({ items }: PlaybookAccordionProps) {
                       {item.phases.map((phase) => (
                         <div
                           key={phase.title}
-                          className="rounded-[1.25rem] border border-white/10 bg-slate-950/70 p-4"
+                          className="rounded-[1.25rem] border border-white/10 bg-slate-950/35 p-4"
                         >
                           <p className="text-sm font-semibold text-white">{phase.title}</p>
                           <p className="mt-3 text-sm leading-7 text-slate-300">

@@ -36,7 +36,7 @@ export default function NowPage() {
           </div>
 
           <div className="grid gap-4">
-            <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-6">
+            <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
                 Active Tracks
               </p>
@@ -46,7 +46,7 @@ export default function NowPage() {
               <p className="mt-2 text-sm text-slate-400">个持续推进的方向</p>
             </article>
 
-            <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-6">
+            <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
                 Recent Logs
               </p>

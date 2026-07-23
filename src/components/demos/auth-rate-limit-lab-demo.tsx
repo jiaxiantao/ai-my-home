@@ -165,7 +165,7 @@ export function AuthRateLimitLabDemo() {
         登录攻防实验台：复用真实限流算法，模拟同 IP 暴力尝试与分布式 IP 撞库，观察拦截效果差异。
       </p>
 
-      <div className="grid gap-3 rounded-2xl border border-white/10 bg-slate-950/70 p-4 md:grid-cols-3">
+      <div className="grid gap-3 rounded-2xl border border-white/10 bg-slate-950/35 p-4 md:grid-cols-3">
         <label className="grid gap-2 text-xs text-slate-400">
           用户名
           <input
@@ -199,7 +199,7 @@ export function AuthRateLimitLabDemo() {
         </div>
       </div>
 
-      <div className="grid gap-3 rounded-2xl border border-white/10 bg-slate-950/70 p-4 md:grid-cols-4">
+      <div className="grid gap-3 rounded-2xl border border-white/10 bg-slate-950/35 p-4 md:grid-cols-4">
         <StatCard label="连续失败" value={`${failedStreak}`} helper="failed streak" />
         <StatCard label="账号重试频率" value={`${usernameBurst}/min`} helper="username burst" />
         <StatCard label="IP 切换次数" value={`${ipSwitchCount}/min`} helper="ip switch" />
@@ -211,7 +211,7 @@ export function AuthRateLimitLabDemo() {
             className={`rounded-full border px-3 py-1 transition ${
               suspiciousUa
                 ? "border-cyan-300/35 bg-cyan-300/10 text-cyan-100"
-                : "border-white/10 bg-slate-950/70 text-slate-400"
+                : "border-white/10 bg-slate-950/35 text-slate-400"
             }`}
           >
             {suspiciousUa ? "ON" : "OFF"}
@@ -235,7 +235,7 @@ export function AuthRateLimitLabDemo() {
         />
       </div>
 
-      <article className="rounded-2xl border border-white/10 bg-slate-950/80 p-4">
+      <article className="rounded-2xl border border-white/10 bg-slate-950/40 p-4">
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-100">
             风险评分拆解
@@ -288,7 +288,7 @@ export function AuthRateLimitLabDemo() {
         <p className="mt-2 text-sm leading-7 text-cyan-50">{recommendation}</p>
       </div>
 
-      <div className="grid gap-2 rounded-2xl border border-white/10 bg-slate-950/80 p-4 font-mono text-xs">
+      <div className="grid gap-2 rounded-2xl border border-white/10 bg-slate-950/40 p-4 font-mono text-xs">
         {logs.length ? (
           logs.map((item) => (
             <div key={item.id} className="flex flex-wrap items-center gap-x-3 gap-y-1">

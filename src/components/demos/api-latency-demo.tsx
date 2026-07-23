@@ -141,7 +141,7 @@ export function ApiLatencyDemo() {
 
       <div
         ref={chartRef}
-        className="h-[220px] w-full rounded-2xl border border-white/10 bg-slate-950/60"
+        className="h-[220px] w-full rounded-2xl border border-white/10 bg-slate-950/35"
       />
 
       {rows.length ? (

@@ -182,7 +182,7 @@ export function InteractiveDemoLab() {
 
   return (
     <div className="grid gap-6">
-      <div className="grid gap-3 rounded-[2rem] border border-white/10 bg-slate-950/80 p-4 md:grid-cols-3">
+      <div className="grid gap-3 rounded-[2rem] border border-white/10 bg-slate-950/40 p-4 md:grid-cols-3">
         {demoTabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = tab.id === activeTab;
@@ -199,7 +199,7 @@ export function InteractiveDemoLab() {
               }`}
             >
               <div className="flex items-center gap-3">
-                <div className="rounded-2xl border border-white/10 bg-slate-950/70 p-2 text-cyan-100">
+                <div className="rounded-2xl border border-white/10 bg-slate-950/35 p-2 text-cyan-100">
                   <Icon className="h-4 w-4" />
                 </div>
                 <p className="text-base font-semibold text-white">{tab.title}</p>
@@ -305,7 +305,7 @@ function ArchitectureDemo({
 
   return (
     <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-      <article className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-7">
+      <article className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-7">
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
           Scenario Switcher
         </p>
@@ -323,7 +323,7 @@ function ArchitectureDemo({
             >
               <div className="flex items-center justify-between gap-4">
                 <h3 className="text-lg font-semibold text-white">{item.title}</h3>
-                <span className="rounded-full border border-white/10 bg-slate-950/70 px-3 py-1 text-xs text-slate-300">
+                <span className="rounded-full border border-white/10 bg-slate-950/35 px-3 py-1 text-xs text-slate-300">
                   {item.signals.length} signals
                 </span>
               </div>
@@ -334,7 +334,7 @@ function ArchitectureDemo({
       </article>
 
       <div className="grid gap-4">
-        <article className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-7">
+        <article className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-7">
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
@@ -366,7 +366,7 @@ function ArchitectureDemo({
           </div>
         </article>
 
-        <article className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-7">
+        <article className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-7">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
             Expected Output
           </p>
@@ -453,7 +453,7 @@ function PerformanceDemo({
 
   return (
     <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-      <article className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-7">
+      <article className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-7">
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
           Performance Inputs
         </p>
@@ -509,7 +509,7 @@ function PerformanceDemo({
       </article>
 
       <div className="grid gap-4">
-        <article className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-7">
+        <article className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-7">
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
@@ -550,7 +550,7 @@ function PerformanceDemo({
                   {lane.actions.map((item) => (
                     <span
                       key={item}
-                      className="rounded-full border border-white/10 bg-slate-950/70 px-3 py-1 text-xs text-slate-300"
+                      className="rounded-full border border-white/10 bg-slate-950/35 px-3 py-1 text-xs text-slate-300"
                     >
                       {item}
                     </span>
@@ -611,7 +611,7 @@ function WorkflowDemo({
 
   return (
     <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-      <article className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-7">
+      <article className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-7">
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
           Workflow Switches
         </p>
@@ -648,7 +648,7 @@ function WorkflowDemo({
       </article>
 
       <div className="grid gap-4">
-        <article className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-7">
+        <article className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-7">
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
@@ -690,7 +690,7 @@ function WorkflowDemo({
                       className={`rounded-full px-3 py-1 text-xs ${
                         active
                           ? "border border-cyan-300/20 bg-cyan-300/10 text-cyan-100"
-                          : "border border-white/10 bg-slate-950/70 text-slate-400"
+                          : "border border-white/10 bg-slate-950/35 text-slate-400"
                       }`}
                     >
                       {active ? "active" : "missing"}
@@ -787,7 +787,7 @@ function BlueprintDemo({
 
   return (
     <div className="grid gap-6 xl:grid-cols-[0.92fr_1.08fr]">
-      <article className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-7">
+      <article className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-7">
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
           Project Constraints
         </p>
@@ -845,7 +845,7 @@ function BlueprintDemo({
       </article>
 
       <div className="grid gap-4">
-        <article className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-7">
+        <article className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-7">
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
@@ -890,7 +890,7 @@ function BlueprintDemo({
           </div>
         </article>
 
-        <article className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-7">
+        <article className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-7">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
             Why This Fits
           </p>

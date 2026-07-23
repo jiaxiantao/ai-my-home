@@ -101,7 +101,7 @@ export function EdgeAiShowcase() {
         })}
       </div>
 
-      <div className="rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-5 md:p-7">
+      <div className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-5 md:p-7">
         {active === "transformers" ? <BrowserMlDemo /> : null}
         {active === "wasm" ? <WasmAccelerationDemo /> : null}
         {active === "pose" ? <MediapipePoseDemo /> : null}

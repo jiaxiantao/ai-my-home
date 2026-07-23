@@ -52,7 +52,7 @@ export function NoteSearchDemo() {
     })) ?? [];
 
   return (
-    <div className="grid gap-6 rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-6">
+    <div className="grid gap-6 rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200/75">

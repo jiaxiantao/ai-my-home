@@ -70,7 +70,7 @@ export function CapabilityExplorer({
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 rounded-[2rem] border border-white/10 bg-white/5 p-5 lg:flex-row lg:items-center lg:justify-between">
-        <div className="inline-flex w-fit rounded-full border border-white/10 bg-slate-950/70 p-1">
+        <div className="inline-flex w-fit rounded-full border border-white/10 bg-slate-950/35 p-1">
           <button
             type="button"
             onClick={() => setActiveTab("domains")}
@@ -102,7 +102,7 @@ export function CapabilityExplorer({
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="搜索关键字，例如 架构、性能、AI、协作..."
-              className="w-full rounded-full border border-white/10 bg-slate-950/80 py-3 pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/40"
+              className="w-full rounded-full border border-white/10 bg-slate-950/40 py-3 pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/40"
             />
           </label>
 
@@ -137,7 +137,7 @@ export function CapabilityExplorer({
 
 function EmptyState({ label }: { label: string }) {
   return (
-    <div className="rounded-[2rem] border border-dashed border-white/15 bg-slate-950/70 p-8 text-sm text-slate-400">
+    <div className="rounded-[2rem] border border-dashed border-white/15 bg-slate-950/35 p-8 text-sm text-slate-400">
       {label}
     </div>
   );

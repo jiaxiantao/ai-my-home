@@ -32,7 +32,7 @@ import { techStackGroups } from "@/lib/showcase-content";
 export function HomeResume({ siteUrl }: { siteUrl: string }) {
   return (
     <div id="resume" className="flex flex-col gap-14 scroll-mt-24">
-      <section className="grid gap-8 rounded-[2rem] border border-white/10 bg-gradient-to-br from-slate-900/90 via-slate-950/95 to-slate-950 p-8 lg:grid-cols-[1.15fr_0.85fr] lg:p-10">
+      <section className="grid gap-8 rounded-[2rem] border border-white/10 bg-gradient-to-br from-slate-900/45 via-slate-950/40 to-slate-950/35 p-8 backdrop-blur-xl lg:grid-cols-[1.15fr_0.85fr] lg:p-10">
         <div className="space-y-6">
           <p className="text-sm uppercase tracking-[0.32em] text-cyan-200/70">
             Resume · {resumeHeadline.nameEn}
@@ -79,7 +79,7 @@ export function HomeResume({ siteUrl }: { siteUrl: string }) {
           </div>
         </div>
 
-        <aside className="space-y-4 rounded-[1.5rem] border border-white/10 bg-slate-950/80 p-6">
+        <aside className="space-y-4 rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-6 backdrop-blur-md">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
             联系方式
           </p>
@@ -144,7 +144,7 @@ export function HomeResume({ siteUrl }: { siteUrl: string }) {
           {resumeExperiences.map((job) => (
             <article
               key={job.company}
-              className="rounded-[1.75rem] border border-white/10 bg-slate-950/75 p-6 md:p-7"
+              className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6 md:p-7"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -230,7 +230,7 @@ export function HomeResume({ siteUrl }: { siteUrl: string }) {
           {resumeSkillGroups.map((group) => (
             <article
               key={group.title}
-              className="rounded-[1.5rem] border border-white/10 bg-slate-950/70 p-5"
+              className="rounded-[1.5rem] border border-white/10 bg-slate-950/35 p-5"
             >
               <h3 className="text-sm font-semibold text-white">{group.title}</h3>
               <ul className="mt-3 space-y-2">
@@ -305,7 +305,7 @@ function ProjectGrid({
                   href={project.repoUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-full border border-white/10 bg-slate-950/60 px-2.5 py-1 text-[11px] text-slate-300 transition hover:border-white/20"
+                  className="rounded-full border border-white/10 bg-slate-950/35 px-2.5 py-1 text-[11px] text-slate-300 transition hover:border-white/20"
                 >
                   仓库
                 </a>
@@ -316,7 +316,7 @@ function ProjectGrid({
             {project.stack.map((tag) => (
               <span
                 key={tag}
-                className="rounded-full border border-white/10 bg-slate-950/60 px-2.5 py-1 text-[11px] text-slate-300"
+                className="rounded-full border border-white/10 bg-slate-950/35 px-2.5 py-1 text-[11px] text-slate-300"
               >
                 {tag}
               </span>

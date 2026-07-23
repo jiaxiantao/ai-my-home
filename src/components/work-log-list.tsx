@@ -10,7 +10,7 @@ export function WorkLogList({ items }: WorkLogListProps) {
       {items.map((item) => (
         <article
           key={`${item.date}-${item.title}`}
-          className="rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-6"
+          className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6"
         >
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <h3 className="text-xl font-semibold tracking-tight text-white">

@@ -39,7 +39,7 @@ export function InterviewHighlights({ items }: InterviewHighlightsProps) {
         })}
       </div>
 
-      <article className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-7">
+      <article className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-7">
         <div className="flex flex-wrap gap-2">
           {activeItem.labels.map((label) => (
             <span
@@ -101,7 +101,7 @@ function HighlightColumn({
       ? "border-cyan-300/20 bg-cyan-300/10"
       : variant === "muted"
         ? "border-white/10 bg-white/5"
-        : "border-white/10 bg-slate-900/80";
+        : "border-white/10 bg-slate-900/40";
 
   return (
     <div className={`rounded-[1.5rem] border p-5 ${className}`}>

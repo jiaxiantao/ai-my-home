@@ -45,7 +45,7 @@ export function CareerTimeline({ items }: CareerTimelineProps) {
         })}
       </div>
 
-      <article className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-7">
+      <article className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-7">
         <p className="text-xs font-semibold uppercase tracking-[0.26em] text-cyan-200/75">
           当前阶段聚焦
         </p>

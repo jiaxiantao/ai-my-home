@@ -162,7 +162,7 @@ export function FullstackDashboard({
 
   return (
     <div className="grid gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-[2rem] border border-white/10 bg-slate-950/80 px-6 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-[2rem] border border-white/10 bg-slate-950/40 px-6 py-4">
         <div className="flex items-center gap-3">
           <Activity className="h-5 w-5 text-cyan-300" />
           <div>
@@ -208,7 +208,7 @@ export function FullstackDashboard({
         })}
       </div>
 
-      <div className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 md:p-8">
+      <div className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-6 md:p-8">
         <DashboardPanelMount id="overview" active={activePanel}>
           <div className="grid gap-6">
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
@@ -249,25 +249,25 @@ export function FullstackDashboard({
                   Prisma · 库表计数
                 </p>
                 <div className="mt-4 grid grid-cols-2 gap-3 font-mono text-sm">
-                  <div className="rounded-xl border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-300">
+                  <div className="rounded-xl border border-white/10 bg-slate-950/35 px-4 py-3 text-slate-300">
                     Note
                     <p className="mt-1 text-2xl font-semibold text-white tabular-nums">
                       {analytics.stats.totalNotes}
                     </p>
                   </div>
-                  <div className="rounded-xl border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-300">
+                  <div className="rounded-xl border border-white/10 bg-slate-950/35 px-4 py-3 text-slate-300">
                     Domain
                     <p className="mt-1 text-2xl font-semibold text-white tabular-nums">
                       {analytics.stats.domainCount}
                     </p>
                   </div>
-                  <div className="rounded-xl border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-300">
+                  <div className="rounded-xl border border-white/10 bg-slate-950/35 px-4 py-3 text-slate-300">
                     Topic
                     <p className="mt-1 text-2xl font-semibold text-white tabular-nums">
                       {analytics.stats.topicCount}
                     </p>
                   </div>
-                  <div className="rounded-xl border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-300">
+                  <div className="rounded-xl border border-white/10 bg-slate-950/35 px-4 py-3 text-slate-300">
                     CaseStudy
                     <p className="mt-1 text-2xl font-semibold text-white tabular-nums">
                       {analytics.stats.caseStudyCount}
@@ -290,7 +290,7 @@ export function FullstackDashboard({
                   {currentTracks.map((track) => (
                     <div
                       key={track.slug}
-                      className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-slate-950/60 px-4 py-3"
+                      className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-slate-950/35 px-4 py-3"
                     >
                       <span className="text-sm font-medium text-white">
                         {track.title}
@@ -316,7 +316,7 @@ export function FullstackDashboard({
                   {recentLogs.map((log) => (
                     <div
                       key={`${log.date}-${log.title}`}
-                      className="rounded-xl border border-white/10 bg-slate-950/60 px-4 py-3"
+                      className="rounded-xl border border-white/10 bg-slate-950/35 px-4 py-3"
                     >
                       <div className="flex justify-between gap-2 text-xs text-slate-500">
                         <span>{log.date}</span>

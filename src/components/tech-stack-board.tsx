@@ -21,7 +21,7 @@ export function TechStackBoard({ items }: TechStackBoardProps) {
             {group.items.map((item) => (
               <span
                 key={item}
-                className="rounded-full border border-white/10 bg-slate-950/70 px-3 py-2 text-sm text-slate-200"
+                className="rounded-full border border-white/10 bg-slate-950/35 px-3 py-2 text-sm text-slate-200"
               >
                 {item}
               </span>

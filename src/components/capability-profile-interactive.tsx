@@ -37,7 +37,7 @@ export function CapabilityProfileInteractive({
     CAPABILITY_DIMENSIONS.find((item) => item.key === highlightKey) ?? null;
 
   return (
-    <div className="grid gap-6 rounded-4xl border border-white/10 bg-slate-950/75 p-6 md:grid-cols-[1fr_1.1fr] md:p-8">
+    <div className="grid gap-6 rounded-4xl border border-white/10 bg-slate-950/40 p-6 md:grid-cols-[1fr_1.1fr] md:p-8">
       <div className="space-y-4">
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/80">
           Capability Radar

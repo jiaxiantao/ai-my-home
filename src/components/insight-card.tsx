@@ -8,7 +8,7 @@ type InsightCardProps = {
 
 export function InsightCard({ article }: InsightCardProps) {
   return (
-    <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-6">
+    <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
       <div className="flex flex-wrap items-center gap-3 text-xs">
         <span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-cyan-100">
           {article.category}

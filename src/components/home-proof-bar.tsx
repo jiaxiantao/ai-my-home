@@ -32,7 +32,7 @@ export function HomeProofBar({ dashboard }: { dashboard: DashboardData }) {
         {stats.map((stat) => (
           <div
             key={stat.label}
-            className="rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3"
+            className="rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3"
           >
             <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
               {stat.label}

@@ -63,7 +63,7 @@ export function InsightsExplorer({ articles }: InsightsExplorerProps) {
                 className={`rounded-full border px-4 py-2 text-sm transition ${
                   isActive
                     ? "border-cyan-300/30 bg-cyan-300/10 text-cyan-100"
-                    : "border-white/10 bg-slate-950/70 text-slate-300 hover:text-white"
+                    : "border-white/10 bg-slate-950/35 text-slate-300 hover:text-white"
                 }`}
               >
                 {category}
@@ -78,7 +78,7 @@ export function InsightsExplorer({ articles }: InsightsExplorerProps) {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="搜索文章主题，例如 性能、AI、架构、治理..."
-            className="w-full rounded-full border border-white/10 bg-slate-950/80 py-3 pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/40"
+            className="w-full rounded-full border border-white/10 bg-slate-950/40 py-3 pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/40"
           />
         </label>
       </div>
@@ -90,7 +90,7 @@ export function InsightsExplorer({ articles }: InsightsExplorerProps) {
           ))}
         </div>
       ) : (
-        <div className="rounded-[2rem] border border-dashed border-white/15 bg-slate-950/70 p-8 text-sm text-slate-400">
+        <div className="rounded-[2rem] border border-dashed border-white/15 bg-slate-950/35 p-8 text-sm text-slate-400">
           没有找到匹配文章，换个关键词试试。
         </div>
       )}

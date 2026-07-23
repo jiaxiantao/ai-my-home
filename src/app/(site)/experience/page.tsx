@@ -37,7 +37,7 @@ export default function ExperiencePage() {
           </div>
 
           <div className="grid gap-4">
-            <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-6">
+            <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
                 Chapters
               </p>
@@ -47,7 +47,7 @@ export default function ExperiencePage() {
               <p className="mt-2 text-sm text-slate-400">个阶段性的工作切面</p>
             </article>
 
-            <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-6">
+            <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
                 Focus
               </p>

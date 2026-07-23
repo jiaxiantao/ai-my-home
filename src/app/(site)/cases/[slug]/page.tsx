@@ -102,7 +102,7 @@ export default async function CaseDetailPage({ params }: CasePageProps) {
         </section>
 
         <section className="grid gap-4 lg:grid-cols-[1fr_1fr]">
-          <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-6">
+          <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
               Lessons Learned
             </p>
@@ -116,7 +116,7 @@ export default async function CaseDetailPage({ params }: CasePageProps) {
             </ul>
           </article>
 
-          <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-6">
+          <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
               Related Domains
             </p>
@@ -152,7 +152,7 @@ function CardList({
       className={`rounded-[1.75rem] border p-6 ${
         accent
           ? "border-cyan-300/20 bg-cyan-300/10"
-          : "border-white/10 bg-slate-950/80"
+          : "border-white/10 bg-slate-950/40"
       }`}
     >
       <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">

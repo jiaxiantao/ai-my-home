@@ -35,7 +35,7 @@ export function CurrentTracks({ items }: CurrentTracksProps) {
             >
               <div className="flex items-center justify-between gap-4">
                 <h3 className="text-lg font-semibold text-white">{item.title}</h3>
-                <span className="rounded-full border border-white/10 bg-slate-950/70 px-3 py-1 text-xs text-slate-300">
+                <span className="rounded-full border border-white/10 bg-slate-950/35 px-3 py-1 text-xs text-slate-300">
                   {item.status}
                 </span>
               </div>
@@ -45,7 +45,7 @@ export function CurrentTracks({ items }: CurrentTracksProps) {
         })}
       </div>
 
-      <article className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-7">
+      <article className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-7">
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
           Active Track
         </p>

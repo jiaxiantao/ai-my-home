@@ -99,7 +99,7 @@ export default async function InsightDetailPage({ params }: InsightPageProps) {
           </div>
         </section>
 
-        <section className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-8">
+        <section className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-8">
           <div className="markdown">
             <ReactMarkdown>{article.body}</ReactMarkdown>
           </div>
@@ -118,7 +118,7 @@ export default async function InsightDetailPage({ params }: InsightPageProps) {
             </p>
           </article>
 
-          <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-6">
+          <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
               Key Takeaways
             </p>

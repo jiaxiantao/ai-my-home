@@ -70,7 +70,7 @@ export function FrontIntelligenceSpotlight({
                   href={feature.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-full border border-white/10 bg-slate-950/60 px-3 py-1 text-slate-300 transition hover:border-violet-300/30 hover:text-white"
+                  className="rounded-full border border-white/10 bg-slate-950/35 px-3 py-1 text-slate-300 transition hover:border-violet-300/30 hover:text-white"
                 >
                   {feature.label}
                 </a>
@@ -78,7 +78,7 @@ export function FrontIntelligenceSpotlight({
                 <Link
                   key={feature.id}
                   href={feature.href}
-                  className="rounded-full border border-white/10 bg-slate-950/60 px-3 py-1 text-slate-300 transition hover:border-violet-300/30 hover:text-white"
+                  className="rounded-full border border-white/10 bg-slate-950/35 px-3 py-1 text-slate-300 transition hover:border-violet-300/30 hover:text-white"
                 >
                   {feature.label}
                 </Link>
@@ -99,7 +99,7 @@ export function FrontIntelligenceSpotlight({
           </Link>
         </div>
 
-        <div className="rounded-[1.5rem] border border-white/10 bg-slate-950/70 p-5">
+        <div className="rounded-[1.5rem] border border-white/10 bg-slate-950/35 p-5">
           <FrontIntelligenceComposerDemo
             samplePrompts={intelligence.samplePrompts}
             llmLabel={llmLabel}

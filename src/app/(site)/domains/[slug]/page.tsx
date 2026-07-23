@@ -80,7 +80,7 @@ export default async function DomainPage({ params }: DomainPageProps) {
           </div>
 
           <div className="grid gap-4">
-            <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-6">
+            <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/70">
                 Focus Highlights
               </p>
@@ -94,7 +94,7 @@ export default async function DomainPage({ params }: DomainPageProps) {
               </ul>
             </article>
 
-            <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-6">
+            <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/70">
                 Working Principles
               </p>
@@ -123,7 +123,7 @@ export default async function DomainPage({ params }: DomainPageProps) {
             {domain.topics.map((topic, index) => (
               <article
                 key={topic.title}
-                className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-7"
+                className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-7"
               >
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                   <div>
@@ -151,7 +151,7 @@ export default async function DomainPage({ params }: DomainPageProps) {
         <section className="grid gap-4 md:grid-cols-3">
           <a
             href="/resume"
-            className="rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-6 transition hover:border-cyan-300/30 hover:bg-white/7"
+            className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6 transition hover:border-cyan-300/30 hover:bg-white/7"
           >
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
               Resume
@@ -166,7 +166,7 @@ export default async function DomainPage({ params }: DomainPageProps) {
 
           <a
             href="/playbooks"
-            className="rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-6 transition hover:border-cyan-300/30 hover:bg-white/7"
+            className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6 transition hover:border-cyan-300/30 hover:bg-white/7"
           >
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
               Playbooks
@@ -181,7 +181,7 @@ export default async function DomainPage({ params }: DomainPageProps) {
 
           <a
             href="/api/profile"
-            className="rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-6 transition hover:border-cyan-300/30 hover:bg-white/7"
+            className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6 transition hover:border-cyan-300/30 hover:bg-white/7"
           >
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
               API

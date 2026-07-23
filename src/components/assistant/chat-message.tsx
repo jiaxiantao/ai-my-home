@@ -81,7 +81,7 @@ export function ChatMessageBubble({
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
               rows={4}
-              className="w-full rounded-xl border border-white/10 bg-slate-950/80 px-3 py-2 text-sm text-white"
+              className="w-full rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2 text-sm text-white"
             />
             <div className="flex gap-2">
               <button
@@ -125,7 +125,7 @@ export function ChatMessageBubble({
               key={alt}
               type="button"
               onClick={() => onUseAlternative?.(alt)}
-              className="rounded-full border border-white/10 bg-slate-950/60 px-3 py-1.5 text-left text-xs text-slate-300 transition hover:border-cyan-300/30 hover:text-white"
+              className="rounded-full border border-white/10 bg-slate-950/35 px-3 py-1.5 text-left text-xs text-slate-300 transition hover:border-cyan-300/30 hover:text-white"
             >
               {alt}
             </button>

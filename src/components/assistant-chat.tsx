@@ -532,7 +532,7 @@ export function AssistantChat({
       />
 
       <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-        <div className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-7">
+        <div className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-7">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-2xl font-semibold tracking-tight text-white">
@@ -806,7 +806,7 @@ export function AssistantChat({
         </div>
 
         <aside className="grid gap-4">
-          <article className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-6">
+          <article className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
               Observability
             </p>
@@ -817,7 +817,7 @@ export function AssistantChat({
             </div>
           </article>
 
-          <article className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-6">
+          <article className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
               References
             </p>
@@ -831,7 +831,7 @@ export function AssistantChat({
               <ReferenceCard key={reference.id} reference={reference} />
             ))
           ) : (
-            <div className="rounded-[1.75rem] border border-dashed border-white/15 bg-slate-950/70 p-6 text-sm text-slate-400">
+            <div className="rounded-[1.75rem] border border-dashed border-white/15 bg-slate-950/35 p-6 text-sm text-slate-400">
               发送问题后展示召回笔记。
             </div>
           )}

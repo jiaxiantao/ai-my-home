@@ -21,7 +21,7 @@ export function ChatSessionSidebar({
   onDelete,
 }: ChatSessionSidebarProps) {
   return (
-    <aside className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-5">
+    <aside className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-5">
       <div className="flex items-center justify-between gap-2">
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
           Sessions

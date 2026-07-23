@@ -33,7 +33,7 @@ export function VirtualScrollDemo() {
     <div className="grid gap-4 lg:grid-cols-[1fr_0.9fr]">
       <div
         ref={containerRef}
-        className="h-80 overflow-auto rounded-2xl border border-white/10 bg-slate-950/80"
+        className="h-80 overflow-auto rounded-2xl border border-white/10 bg-slate-950/40"
         onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
         onMouseEnter={() => {
           if (containerRef.current) {

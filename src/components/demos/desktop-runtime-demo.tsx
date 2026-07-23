@@ -108,7 +108,7 @@ export function DesktopRuntimeDemo() {
         </div>
       </div>
 
-      <article className="rounded-2xl border border-white/10 bg-slate-950/80 p-4">
+      <article className="rounded-2xl border border-white/10 bg-slate-950/40 p-4">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-200/80">
           选型清单
         </p>

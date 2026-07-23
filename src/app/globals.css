@@ -3,8 +3,8 @@
 :root {
   --background: #020617;
   --foreground: #e2e8f0;
-  --surface: rgba(15, 23, 42, 0.78);
-  --surface-strong: rgba(15, 23, 42, 0.92);
+  --surface: rgba(15, 23, 42, 0.4);
+  --surface-strong: rgba(15, 23, 42, 0.52);
   --border: rgba(148, 163, 184, 0.16);
   --accent: #67e8f9;
 }
@@ -105,6 +105,13 @@ body {
 [data-weather-backdrop] canvas {
   width: 100% !important;
   height: 100% !important;
+}
+
+/* Glass panels: let weather/ripple backdrops read through site chrome */
+.glass-panel {
+  background: rgba(2, 6, 23, 0.38);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
 .resume-print {

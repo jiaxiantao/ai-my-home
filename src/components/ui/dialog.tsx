@@ -36,7 +36,7 @@ export function Dialog({
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
-        className="absolute inset-0 bg-slate-950/80 backdrop-blur-[2px]"
+        className="absolute inset-0 bg-slate-950/70 backdrop-blur-[2px]"
         onClick={() => onOpenChange(false)}
       />
       {children}
@@ -57,7 +57,7 @@ export function DialogContent({
   return (
     <div
       className={cn(
-        "relative z-10 w-full max-w-md rounded-3xl border border-white/15 bg-slate-950/95 p-6 shadow-2xl",
+        "relative z-10 w-full max-w-md rounded-3xl border border-white/15 bg-slate-950/45 p-6 shadow-2xl backdrop-blur-xl",
         className,
       )}
     >

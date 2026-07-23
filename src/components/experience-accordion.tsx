@@ -25,7 +25,7 @@ export function ExperienceAccordion({ items }: ExperienceAccordionProps) {
               "rounded-[2rem] border p-6 transition",
               isOpen
                 ? "border-cyan-300/30 bg-cyan-300/8"
-                : "border-white/10 bg-slate-950/80",
+                : "border-white/10 bg-slate-950/40",
             )}
           >
             <button

@@ -168,7 +168,7 @@ export default async function Home() {
         <CapabilityTopology profile={profile} domains={domains} />
       </section>
 
-      <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-4">
+      <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-slate-950/35 px-5 py-4">
         <div className="flex flex-wrap gap-2">
           {exploreLinks.map((item) =>
             "external" in item && item.external ? (

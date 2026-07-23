@@ -194,7 +194,7 @@ export function SiteHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-20 border-b border-white/10 bg-slate-950/70 backdrop-blur-xl">
+    <header className="sticky top-0 z-20 border-b border-white/10 bg-slate-950/35 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
         <div className="flex flex-col gap-1">
           <Link
@@ -248,7 +248,7 @@ export function SiteHeader() {
                   onMouseEnter={cancelCloseTimer}
                   onMouseLeave={scheduleDropdownClose}
                 >
-                  <div className="rounded-xl border border-white/10 bg-slate-950/95 p-2 shadow-2xl">
+                  <div className="rounded-xl border border-white/10 bg-slate-950/45 p-2 shadow-2xl backdrop-blur-xl">
                     {group.items.map((item) => (
                       <NavLink
                         key={item.href}
@@ -303,7 +303,7 @@ export function SiteHeader() {
               <div
                 role="listbox"
                 aria-label="心情选项"
-                className="max-h-[min(70vh,28rem)] min-w-52 overflow-y-auto rounded-xl border border-white/10 bg-slate-950/95 p-2 shadow-2xl"
+                className="max-h-[min(70vh,28rem)] min-w-52 overflow-y-auto rounded-xl border border-white/10 bg-slate-950/45 p-2 shadow-2xl backdrop-blur-xl"
               >
                 {MOOD_OPTIONS.map((option) => {
                   const selected = option.id === mood.id;
@@ -373,7 +373,7 @@ export function SiteHeader() {
                 <div
                   role="listbox"
                   aria-label="心情选项"
-                  className="max-h-[min(70vh,28rem)] min-w-52 overflow-y-auto rounded-xl border border-white/10 bg-slate-950/95 p-2 shadow-2xl"
+                  className="max-h-[min(70vh,28rem)] min-w-52 overflow-y-auto rounded-xl border border-white/10 bg-slate-950/45 p-2 shadow-2xl backdrop-blur-xl"
                 >
                   {MOOD_OPTIONS.map((option) => {
                     const selected = option.id === mood.id;
@@ -433,7 +433,7 @@ export function SiteHeader() {
       </div>
 
       {open ? (
-        <nav className="border-t border-white/10 bg-slate-950/95 px-6 py-4 lg:hidden">
+        <nav className="border-t border-white/10 bg-slate-950/45 px-6 py-4 backdrop-blur-xl lg:hidden">
           <ul className="grid gap-2">
             {navGroups.map((group) => (
               <li key={group.id} className="rounded-xl border border-white/10 bg-white/5 p-3">

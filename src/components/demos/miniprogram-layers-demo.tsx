@@ -87,7 +87,7 @@ export function MiniprogramLayersDemo() {
         ))}
       </div>
 
-      <article className="rounded-2xl border border-white/10 bg-slate-950/80 p-5">
+      <article className="rounded-2xl border border-white/10 bg-slate-950/40 p-5">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200/80">
           {layer.title}
         </p>
