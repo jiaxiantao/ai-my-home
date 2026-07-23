@@ -9,7 +9,7 @@ importers:
   .:
     dependencies:
       '@cos-design/ripple-water':
-        specifier: 3.5.3
+        specifier: ^3.5.3
         version: 3.5.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@cos-design/weather-background':
         specifier: ^3.5.3
