@@ -15,6 +15,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import {
+  MOOD_OPTIONS,
+  useWeatherMood,
+} from "@/components/weather-mood-provider";
 import { HOME_AGENT_AGENTS_URL, PLATFORM_EXPERIENCE_NAV } from "@/lib/external-projects";
 import { cn } from "@/lib/utils";
 
@@ -109,6 +113,7 @@ function NavLink({
 
 export function SiteHeader() {
   const desktopNavRef = useRef<HTMLElement | null>(null);
+  const mobileMoodRef = useRef<HTMLDivElement | null>(null);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [open, setOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
@@ -116,6 +121,8 @@ export function SiteHeader() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const { authenticated, loading, message, clearMessage, login, logout } = useAuth();
+  const { mood, setMoodId } = useWeatherMood();
+  const moodDropdownExpanded = activeDropdown === "mood";
 
   async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -134,10 +141,11 @@ export function SiteHeader() {
 
   useEffect(() => {
     function handlePointerDown(event: PointerEvent) {
-      if (!desktopNavRef.current) return;
       const target = event.target as Node | null;
       if (!target) return;
-      if (!desktopNavRef.current.contains(target)) {
+      const inDesktopNav = Boolean(desktopNavRef.current?.contains(target));
+      const inMobileMood = Boolean(mobileMoodRef.current?.contains(target));
+      if (!inDesktopNav && !inMobileMood) {
         setActiveDropdown(null);
       }
     }
@@ -259,6 +267,75 @@ export function SiteHeader() {
           <Link href="/#resume" className="transition-colors hover:text-white">
             Resume
           </Link>
+          <div className="relative">
+            <button
+              type="button"
+              onMouseEnter={() => {
+                cancelCloseTimer();
+                setActiveDropdown("mood");
+              }}
+              onMouseLeave={scheduleDropdownClose}
+              onFocus={() => setActiveDropdown("mood")}
+              onClick={() =>
+                setActiveDropdown((current) => (current === "mood" ? null : "mood"))
+              }
+              className="inline-flex items-center gap-1 text-sm text-slate-300 transition hover:text-white"
+              aria-expanded={moodDropdownExpanded}
+              aria-haspopup="listbox"
+              aria-label="切换心情天气"
+            >
+              心情 · {mood.label}
+              <ChevronDown
+                className={cn(
+                  "h-3.5 w-3.5 transition-transform duration-200",
+                  moodDropdownExpanded && "rotate-180",
+                )}
+              />
+            </button>
+            <div
+              className={cn(
+                "absolute right-0 top-full z-20 min-w-44 pt-2 transition-opacity duration-150",
+                moodDropdownExpanded
+                  ? "pointer-events-auto opacity-100"
+                  : "pointer-events-none opacity-0",
+              )}
+              aria-hidden={!moodDropdownExpanded}
+              onMouseEnter={cancelCloseTimer}
+              onMouseLeave={scheduleDropdownClose}
+            >
+              <div
+                role="listbox"
+                aria-label="心情选项"
+                className="rounded-xl border border-white/10 bg-slate-950/95 p-2 shadow-2xl"
+              >
+                {MOOD_OPTIONS.map((option) => {
+                  const selected = option.id === mood.id;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      role="option"
+                      aria-selected={selected}
+                      tabIndex={moodDropdownExpanded ? 0 : -1}
+                      onClick={() => {
+                        setMoodId(option.id);
+                        setActiveDropdown(null);
+                      }}
+                      className={cn(
+                        "flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-xs transition",
+                        selected
+                          ? "bg-white/10 text-white"
+                          : "text-slate-300 hover:bg-white/10 hover:text-white",
+                      )}
+                    >
+                      <span>{option.label}</span>
+                      <span className="text-[10px] text-slate-500">{option.description}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
           <button
             type="button"
             onClick={() => setAuthOpen(true)}
@@ -275,6 +352,62 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2 lg:hidden">
+          <div className="relative" ref={mobileMoodRef}>
+            <button
+              type="button"
+              onClick={() =>
+                setActiveDropdown((current) => (current === "mood" ? null : "mood"))
+              }
+              className="inline-flex h-10 items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 text-[11px] text-slate-200"
+              aria-expanded={moodDropdownExpanded}
+              aria-haspopup="listbox"
+              aria-label="切换心情天气"
+            >
+              {mood.label}
+              <ChevronDown
+                className={cn(
+                  "h-3.5 w-3.5 transition-transform duration-200",
+                  moodDropdownExpanded && "rotate-180",
+                )}
+              />
+            </button>
+            {moodDropdownExpanded ? (
+              <div className="absolute right-0 top-full z-30 min-w-44 pt-2">
+                <div
+                  role="listbox"
+                  aria-label="心情选项"
+                  className="rounded-xl border border-white/10 bg-slate-950/95 p-2 shadow-2xl"
+                >
+                  {MOOD_OPTIONS.map((option) => {
+                    const selected = option.id === mood.id;
+                    return (
+                      <button
+                        key={option.id}
+                        type="button"
+                        role="option"
+                        aria-selected={selected}
+                        onClick={() => {
+                          setMoodId(option.id);
+                          setActiveDropdown(null);
+                        }}
+                        className={cn(
+                          "flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-xs transition",
+                          selected
+                            ? "bg-white/10 text-white"
+                            : "text-slate-300 hover:bg-white/10 hover:text-white",
+                        )}
+                      >
+                        <span>{option.label}</span>
+                        <span className="text-[10px] text-slate-500">
+                          {option.description}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+          </div>
           <button
             type="button"
             onClick={() => setAuthOpen(true)}

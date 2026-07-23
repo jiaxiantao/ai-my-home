@@ -3,15 +3,28 @@
 import { usePathname } from "next/navigation";
 
 import { WeatherBackdrop } from "@/components/weather-backdrop";
+import {
+  WeatherMoodProvider,
+  useWeatherMood,
+} from "@/components/weather-mood-provider";
 
-export function SiteShell({ children }: { children: React.ReactNode }) {
+function SiteShellContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { weather } = useWeatherMood();
   const isPrintRoute = pathname.startsWith("/resume/print");
 
   return (
     <>
-      {!isPrintRoute ? <WeatherBackdrop /> : null}
+      {!isPrintRoute ? <WeatherBackdrop weather={weather} /> : null}
       <div className="relative z-10 flex min-h-full flex-1 flex-col">{children}</div>
     </>
+  );
+}
+
+export function SiteShell({ children }: { children: React.ReactNode }) {
+  return (
+    <WeatherMoodProvider>
+      <SiteShellContent>{children}</SiteShellContent>
+    </WeatherMoodProvider>
   );
 }
