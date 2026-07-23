@@ -452,15 +452,6 @@ export function SiteHeader() {
                 </div>
               </li>
             ))}
-            <li>
-              <Link
-                href="/#resume"
-                className="block rounded-xl border border-white/10 px-4 py-3 text-sm text-slate-200"
-                onClick={() => setOpen(false)}
-              >
-                Resume
-              </Link>
-            </li>
           </ul>
         </nav>
       ) : null}
