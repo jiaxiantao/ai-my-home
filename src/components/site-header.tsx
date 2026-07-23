@@ -264,9 +264,6 @@ export function SiteHeader() {
               </div>
             );
           })}
-          <Link href="/#resume" className="transition-colors hover:text-white">
-            Resume
-          </Link>
           <div className="relative">
             <button
               type="button"
