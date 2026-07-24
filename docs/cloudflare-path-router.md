@@ -65,7 +65,7 @@ curl -sI https://www.jiaxiantao.xyz/cos-design/ | head
 
 浏览器打开：
 
-- https://www.jiaxiantao.xyz/
+- https://www.jiaxiantao.xyz/ （应跳到 `/ai-my-home/`）
 - https://www.jiaxiantao.xyz/ai-my-home/
 - https://www.jiaxiantao.xyz/cos-design/
 
