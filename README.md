@@ -39,9 +39,10 @@ pnpm dev
 
 ## GitHub Pages 在线预览
 
-静态演示：<https://www.jiaxiantao.xyz/ai-my-home/>（Cloudflare 路径路由）
+静态演示：<https://jiaxiantao.xyz/ai-my-home/>（Cloudflare 路径路由）
 
-根路径入口：<https://www.jiaxiantao.xyz/> → 302 到 `/ai-my-home/` 
+根路径入口：<https://jiaxiantao.xyz/> → 302 到 `/ai-my-home/`  
+`www` 会 301 到裸域（避免双主机名缓存导致样式异常）。  
 源站：<https://jiaxiantao.github.io/ai-my-home/>
 
 Pages 配置：**GitHub Actions**。`main` 推送后只会触发一次 `CI` workflow：
@@ -98,10 +99,10 @@ Assistant（`/assistant`）与 `/api/chat` 使用同一套 LLM 配置。Agent �
 
 | 项目 | 预览 | 仓库 |
 |------|------|------|
-| **本站点** | [www.jiaxiantao.xyz/ai-my-home](https://www.jiaxiantao.xyz/ai-my-home/) | [ai-my-home](https://github.com/jiaxiantao/ai-my-home) |
-| 博客 | [www.jiaxiantao.xyz/blogs](https://www.jiaxiantao.xyz/blogs/) | [blogs](https://github.com/jiaxiantao/blogs) |
-| 3D 看车 | [www.jiaxiantao.xyz/3d-car-viewing](https://www.jiaxiantao.xyz/3d-car-viewing/) | [3d-car-viewing](https://github.com/jiaxiantao/3d-car-viewing) |
-| Agent 编排 | [www.jiaxiantao.xyz/home-agent](https://www.jiaxiantao.xyz/home-agent/) | [home-agent](https://github.com/jiaxiantao/home-agent) |
+| **本站点** | [jiaxiantao.xyz/ai-my-home](https://jiaxiantao.xyz/ai-my-home/) | [ai-my-home](https://github.com/jiaxiantao/ai-my-home) |
+| 博客 | [jiaxiantao.xyz/blogs](https://jiaxiantao.xyz/blogs/) | [blogs](https://github.com/jiaxiantao/blogs) |
+| 3D 看车 | [jiaxiantao.xyz/3d-car-viewing](https://jiaxiantao.xyz/3d-car-viewing/) | [3d-car-viewing](https://github.com/jiaxiantao/3d-car-viewing) |
+| Agent 编排 | [jiaxiantao.xyz/home-agent](https://jiaxiantao.xyz/home-agent/) | [home-agent](https://github.com/jiaxiantao/home-agent) |
 
 本站导航与 `/car-showroom`、`/agents` 会跳转到对应外部地址。
 

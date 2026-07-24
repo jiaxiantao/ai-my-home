@@ -16,7 +16,7 @@ const dynamicOgImages = [
 ];
 
 const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.jiaxiantao.xyz/ai-my-home";
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://jiaxiantao.xyz/ai-my-home";
 
 function stashApiRoutes() {
   if (!fs.existsSync(apiDir)) {

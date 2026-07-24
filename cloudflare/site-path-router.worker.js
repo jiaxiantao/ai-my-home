@@ -1,20 +1,24 @@
 /**
- * Path-based reverse proxy for www.jiaxiantao.xyz → GitHub Pages project sites.
+ * Path-based reverse proxy for jiaxiantao.xyz → GitHub Pages project sites.
+ *
+ * Canonical host is the apex domain (no www). www redirects here so browser
+ * and CDN caches do not split across two hostnames.
  *
  * Examples:
- *   /                 → 302 /ai-my-home/  (required for Next basePath hydration)
- *   /ai-my-home/...   → jiaxiantao.github.io/ai-my-home/...
- *   /cos-design/...   → jiaxiantao.github.io/cos-design/...
- *   /next-static/...  → jiaxiantao.github.io/ai-my-home/next-static/...
- *     (compat for stale HTML from a brief root deploy without basePath)
+ *   www.jiaxiantao.xyz/*  → 301 jiaxiantao.xyz/* (same path)
+ *   /                     → 302 /ai-my-home/  (required for Next basePath hydration)
+ *   /ai-my-home/...       → jiaxiantao.github.io/ai-my-home/...
+ *   /cos-design/...       → jiaxiantao.github.io/cos-design/...
+ *   /next-static/...      → jiaxiantao.github.io/ai-my-home/next-static/...
  *
- * Deploy: Cloudflare Dashboard → Workers & Pages → Create Worker,
- * paste this file, then add route www.jiaxiantao.xyz/* (and apex if needed)
+ * Deploy: Cloudflare Dashboard → Workers & Pages → edit Worker,
+ * paste this file, ensure routes: jiaxiantao.xyz/* and www.jiaxiantao.xyz/*
  *
  * See docs/cloudflare-path-router.md
  */
 
 const GITHUB_PAGES_ORIGIN = "https://jiaxiantao.github.io";
+const CANONICAL_HOST = "jiaxiantao.xyz";
 const DEFAULT_PROJECT = "/ai-my-home";
 
 /** Longest-prefix match; order does not matter because we pick the longest. */
@@ -85,28 +89,17 @@ function resolveUpstreamPath(pathname) {
 function buildUpstreamHeaders(request) {
   const headers = new Headers(request.headers);
   headers.delete("host");
-  // Fetch uncompressed so we can safely rewrite headers; CF recompresses to client.
+  // Fetch uncompressed so we can set accurate Content-Length.
   headers.set("accept-encoding", "identity");
   return headers;
 }
 
-function buildClientHeaders(upstreamResponse, requestUrl) {
+function buildClientHeaders(upstreamResponse, requestUrl, { isHtml, isEmpty }) {
   const responseHeaders = new Headers(upstreamResponse.headers);
 
-  // Body is identity from upstream; drop encoding metadata so CF can negotiate cleanly.
   responseHeaders.delete("content-encoding");
   responseHeaders.delete("content-length");
   responseHeaders.delete("transfer-encoding");
-
-  // Prevent intermediary transforms from corrupting CSS/JS payloads.
-  const cacheControl = responseHeaders.get("cache-control");
-  if (cacheControl) {
-    if (!/\bno-transform\b/i.test(cacheControl)) {
-      responseHeaders.set("cache-control", `${cacheControl}, no-transform`);
-    }
-  } else {
-    responseHeaders.set("cache-control", "no-transform");
-  }
 
   const location = responseHeaders.get("location");
   if (location) {
@@ -114,7 +107,7 @@ function buildClientHeaders(upstreamResponse, requestUrl) {
       const loc = new URL(location, GITHUB_PAGES_ORIGIN);
       if (loc.hostname === "jiaxiantao.github.io") {
         loc.protocol = requestUrl.protocol;
-        loc.host = requestUrl.host;
+        loc.host = CANONICAL_HOST;
         responseHeaders.set("location", loc.toString());
       }
     } catch {
@@ -122,38 +115,61 @@ function buildClientHeaders(upstreamResponse, requestUrl) {
     }
   }
 
-  const contentType = responseHeaders.get("content-type") || "";
-  if (contentType.includes("text/html")) {
-    // Avoid sticky stale HTML after basePath / routing changes.
+  if (isHtml) {
     responseHeaders.set(
       "cache-control",
       "public, max-age=0, must-revalidate, no-transform",
     );
+  } else if (isEmpty) {
+    // Never let CDN keep an empty CSS/JS/image body.
+    responseHeaders.set("cache-control", "no-store, no-transform");
+  } else {
+    const cacheControl = responseHeaders.get("cache-control");
+    if (cacheControl) {
+      if (!/\bno-transform\b/i.test(cacheControl)) {
+        responseHeaders.set("cache-control", `${cacheControl}, no-transform`);
+      }
+    } else {
+      responseHeaders.set(
+        "cache-control",
+        "public, max-age=14400, no-transform",
+      );
+    }
   }
 
   responseHeaders.set("x-proxied-by", "jiaxiantao-xyz-router");
   return responseHeaders;
 }
 
-function redirectTo(url, pathname) {
-  const target = new URL(pathname, url.origin);
+function redirectToPath(url, pathname) {
+  const target = new URL(pathname, `https://${CANONICAL_HOST}`);
   target.search = url.search;
   return Response.redirect(target.toString(), 302);
+}
+
+function redirectToCanonicalHost(url) {
+  const target = new URL(url.toString());
+  target.protocol = "https:";
+  target.hostname = CANONICAL_HOST;
+  return Response.redirect(target.toString(), 301);
 }
 
 const worker = {
   async fetch(request) {
     const url = new URL(request.url);
 
-    // This site is built with basePath=/ai-my-home. Serving its HTML at "/"
-    // makes Next.js hydrate on the wrong pathname and drop styles.
-    if (url.pathname === "/" || url.pathname === "") {
-      return redirectTo(url, `${DEFAULT_PROJECT}/`);
+    // One hostname only — avoids www vs apex split caches (www looked unstyled).
+    if (url.hostname === `www.${CANONICAL_HOST}`) {
+      return redirectToCanonicalHost(url);
     }
 
-    // Honor trailingSlash: true from the static export.
+    // basePath=/ai-my-home — HTML must be served under that path.
+    if (url.pathname === "/" || url.pathname === "") {
+      return redirectToPath(url, `${DEFAULT_PROJECT}/`);
+    }
+
     if (url.pathname === DEFAULT_PROJECT) {
-      return redirectTo(url, `${DEFAULT_PROJECT}/`);
+      return redirectToPath(url, `${DEFAULT_PROJECT}/`);
     }
 
     const upstreamPath = resolveUpstreamPath(url.pathname);
@@ -181,12 +197,42 @@ const worker = {
     });
 
     const upstreamResponse = await fetch(upstreamRequest);
+    const contentType = upstreamResponse.headers.get("content-type") || "";
+    const isHtml = contentType.includes("text/html");
 
-    // Buffer so Content-Length is correct after stripping content-encoding.
+    if (request.method === "HEAD") {
+      const responseHeaders = buildClientHeaders(upstreamResponse, url, {
+        isHtml,
+        isEmpty: false,
+      });
+      responseHeaders.set("x-upstream-url", upstreamUrl.toString());
+      return new Response(null, {
+        status: upstreamResponse.status,
+        statusText: upstreamResponse.statusText,
+        headers: responseHeaders,
+      });
+    }
+
     const body = await upstreamResponse.arrayBuffer();
-    const responseHeaders = buildClientHeaders(upstreamResponse, url);
+    const isEmpty = body.byteLength === 0 && upstreamResponse.status === 200;
+    const responseHeaders = buildClientHeaders(upstreamResponse, url, {
+      isHtml,
+      isEmpty,
+    });
     responseHeaders.set("content-length", String(body.byteLength));
     responseHeaders.set("x-upstream-url", upstreamUrl.toString());
+
+    if (isEmpty && !isHtml) {
+      return new Response("Bad Gateway: empty upstream asset", {
+        status: 502,
+        headers: {
+          "content-type": "text/plain; charset=utf-8",
+          "cache-control": "no-store",
+          "x-proxied-by": "jiaxiantao-xyz-router",
+          "x-upstream-url": upstreamUrl.toString(),
+        },
+      });
+    }
 
     return new Response(body, {
       status: upstreamResponse.status,

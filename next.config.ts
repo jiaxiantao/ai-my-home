@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const isGhPages = process.env.GH_PAGES === "1";
-/** Project Pages path; custom domain www.jiaxiantao.xyz serves via Cloudflare Worker under this prefix. */
+/** Project Pages path; custom domain jiaxiantao.xyz serves via Cloudflare Worker under this prefix. */
 const ghPagesBasePath = (process.env.GH_PAGES_BASE_PATH ?? "/ai-my-home").replace(
   /\/$/,
   "",

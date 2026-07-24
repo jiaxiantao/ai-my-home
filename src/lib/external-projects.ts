@@ -1,4 +1,4 @@
-const SITE = "https://www.jiaxiantao.xyz";
+const SITE = "https://jiaxiantao.xyz";
 
 export const EXTERNAL_PROJECTS = {
   cosDesign: {

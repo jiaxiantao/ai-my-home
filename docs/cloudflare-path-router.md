@@ -1,14 +1,18 @@
-# Cloudflare 路径路由：www.jiaxiantao.xyz → 多个 GitHub Pages 项目
+# Cloudflare 路径路由：jiaxiantao.xyz → 多个 GitHub Pages 项目
+
+**规范域名：裸域 `jiaxiantao.xyz`（不要用 www）。**  
+`www.jiaxiantao.xyz` 会 **301** 到裸域，避免两套主机名各自缓存导致「加 www 样式就乱」。
 
 目标：
 
 | 访问 | 实际内容 |
 |------|----------|
-| `https://www.jiaxiantao.xyz/` | **302 →** `/ai-my-home/`（必须，否则 basePath hydration 会丢样式） |
-| `https://www.jiaxiantao.xyz/ai-my-home/` | `jiaxiantao.github.io/ai-my-home/` |
-| `https://www.jiaxiantao.xyz/cos-design/` | `jiaxiantao.github.io/cos-design/` |
-| `https://www.jiaxiantao.xyz/home-agent/` | `jiaxiantao.github.io/home-agent/` |
-| `https://www.jiaxiantao.xyz/blogs/` | `jiaxiantao.github.io/blogs/` |
+| `https://www.jiaxiantao.xyz/*` | **301 →** `https://jiaxiantao.xyz/*` |
+| `https://jiaxiantao.xyz/` | **302 →** `/ai-my-home/`（必须，否则 basePath hydration 会丢样式） |
+| `https://jiaxiantao.xyz/ai-my-home/` | `jiaxiantao.github.io/ai-my-home/` |
+| `https://jiaxiantao.xyz/cos-design/` | `jiaxiantao.github.io/cos-design/` |
+| `https://jiaxiantao.xyz/home-agent/` | `jiaxiantao.github.io/home-agent/` |
+| `https://jiaxiantao.xyz/blogs/` | `jiaxiantao.github.io/blogs/` |
 | … | 见 Worker 内 `PROJECT_PREFIXES` |
 
 Worker 源码：[`cloudflare/site-path-router.worker.js`](../cloudflare/site-path-router.worker.js)
@@ -16,11 +20,11 @@ Worker 源码：[`cloudflare/site-path-router.worker.js`](../cloudflare/site-pat
 ## 1. 仓库侧（已配置）
 
 - 本站静态构建仍使用 `basePath=/ai-my-home`
-- 规范站址：`https://www.jiaxiantao.xyz/ai-my-home`
+- 规范站址：`https://jiaxiantao.xyz/ai-my-home`
 
 ## 2. GitHub Pages
 
-**建议去掉**本仓库 Pages 里的 Custom domain（`www.jiaxiantao.xyz`）。
+**建议去掉**本仓库 Pages 里的 Custom domain（`www.jiaxiantao.xyz` / `jiaxiantao.xyz`）。
 
 原因：多项目路径分流应由 Cloudflare Worker 做前端入口；GitHub 只保留：
 
@@ -32,11 +36,10 @@ Worker 源码：[`cloudflare/site-path-router.worker.js`](../cloudflare/site-pat
 
 ## 3. Cloudflare DNS
 
-`www` 记录：
-
 | Type | Name | Content | Proxy |
 |------|------|---------|--------|
 | CNAME | `www` | `jiaxiantao.github.io` | **橙色云 Proxied**（必须） |
+| CNAME 或 A/AAAA | `@` | 按 Cloudflare 提示指向 Pages/Worker 入口 | **橙色云 Proxied**（必须） |
 
 橙云表示流量进 Cloudflare，Worker 才能接管。
 
@@ -45,9 +48,9 @@ Worker 源码：[`cloudflare/site-path-router.worker.js`](../cloudflare/site-pat
 1. Cloudflare Dashboard → **Workers & Pages** → **Create** → **Create Worker**
 2. 清空默认代码，粘贴 `cloudflare/site-path-router.worker.js` 全文 → **Deploy**
 3. Worker → **Settings** → **Domains & Routes** → **Add route**
-   - Route: `www.jiaxiantao.xyz/*`
+   - Route: `jiaxiantao.xyz/*`
    - Zone: `jiaxiantao.xyz`
-4. （可选）根域名也要：再加 `jiaxiantao.xyz/*`，并给 `@` 配好橙云记录
+   - 再加：`www.jiaxiantao.xyz/*`（用于 301 到裸域）
 
 ## 5. SSL
 
@@ -56,18 +59,19 @@ SSL/TLS → Overview → **Full**（源站 github.io 为 HTTPS）。
 ## 6. 验证
 
 ```bash
-curl -sI https://www.jiaxiantao.xyz/ | head
-curl -sI https://www.jiaxiantao.xyz/ai-my-home/ | head
-curl -sI https://www.jiaxiantao.xyz/cos-design/ | head
+curl -sI https://www.jiaxiantao.xyz/ai-my-home/ | head   # 应 301 到裸域
+curl -sI https://jiaxiantao.xyz/ | head                  # 应 302 到 /ai-my-home/
+curl -sI https://jiaxiantao.xyz/ai-my-home/ | head
+curl -sI https://jiaxiantao.xyz/cos-design/ | head
 ```
 
 响应头可看到 `x-proxied-by: jiaxiantao-xyz-router`。
 
 浏览器打开：
 
-- https://www.jiaxiantao.xyz/ （应跳到 `/ai-my-home/`）
-- https://www.jiaxiantao.xyz/ai-my-home/
-- https://www.jiaxiantao.xyz/cos-design/
+- https://www.jiaxiantao.xyz/ai-my-home/ （应跳到裸域）
+- https://jiaxiantao.xyz/ai-my-home/
+- https://jiaxiantao.xyz/cos-design/
 
 ## 7. 增加新项目
 
@@ -81,8 +85,6 @@ Worker 会把站点根下的常见资源转发到默认站 `ai-my-home`：
 - `/robots.txt` → `/ai-my-home/robots.txt`
 - `/sitemap.xml` → `/ai-my-home/sitemap.xml`
 - `/next-static/*`、`/_next/*`、`/resume/*`、`/models/*`、`/workers/*` → 加上 `/ai-my-home` 前缀
-
-这是为了兼容曾短暂「去掉 basePath」部署留下的浏览器缓存 HTML（资源写在域名根路径，会导致整页无样式、头像裂图）。
 
 修改 Worker 后需在 Cloudflare 控制台重新粘贴部署，并建议：
 
