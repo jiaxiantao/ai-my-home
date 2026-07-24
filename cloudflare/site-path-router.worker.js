@@ -2,7 +2,7 @@
  * Path-based reverse proxy for www.jiaxiantao.xyz → GitHub Pages project sites.
  *
  * Examples:
- *   /                 → jiaxiantao.github.io/ai-my-home/
+ *   /                 → 302 /ai-my-home/  (required for Next basePath hydration)
  *   /ai-my-home/...   → jiaxiantao.github.io/ai-my-home/...
  *   /cos-design/...   → jiaxiantao.github.io/cos-design/...
  *   /next-static/...  → jiaxiantao.github.io/ai-my-home/next-static/...
@@ -56,10 +56,6 @@ const DEFAULT_SITE_ROOT_PATHS = new Set([
 ]);
 
 function resolveUpstreamPath(pathname) {
-  if (pathname === "/" || pathname === "") {
-    return `${DEFAULT_PROJECT}/`;
-  }
-
   if (
     DEFAULT_SITE_ROOT_PATHS.has(pathname) ||
     pathname.startsWith("/.well-known/")
@@ -102,6 +98,16 @@ function buildClientHeaders(upstreamResponse, requestUrl) {
   responseHeaders.delete("content-length");
   responseHeaders.delete("transfer-encoding");
 
+  // Prevent intermediary transforms from corrupting CSS/JS payloads.
+  const cacheControl = responseHeaders.get("cache-control");
+  if (cacheControl) {
+    if (!/\bno-transform\b/i.test(cacheControl)) {
+      responseHeaders.set("cache-control", `${cacheControl}, no-transform`);
+    }
+  } else {
+    responseHeaders.set("cache-control", "no-transform");
+  }
+
   const location = responseHeaders.get("location");
   if (location) {
     try {
@@ -121,7 +127,7 @@ function buildClientHeaders(upstreamResponse, requestUrl) {
     // Avoid sticky stale HTML after basePath / routing changes.
     responseHeaders.set(
       "cache-control",
-      "public, max-age=0, must-revalidate",
+      "public, max-age=0, must-revalidate, no-transform",
     );
   }
 
@@ -129,9 +135,27 @@ function buildClientHeaders(upstreamResponse, requestUrl) {
   return responseHeaders;
 }
 
+function redirectTo(url, pathname) {
+  const target = new URL(pathname, url.origin);
+  target.search = url.search;
+  return Response.redirect(target.toString(), 302);
+}
+
 const worker = {
   async fetch(request) {
     const url = new URL(request.url);
+
+    // This site is built with basePath=/ai-my-home. Serving its HTML at "/"
+    // makes Next.js hydrate on the wrong pathname and drop styles.
+    if (url.pathname === "/" || url.pathname === "") {
+      return redirectTo(url, `${DEFAULT_PROJECT}/`);
+    }
+
+    // Honor trailingSlash: true from the static export.
+    if (url.pathname === DEFAULT_PROJECT) {
+      return redirectTo(url, `${DEFAULT_PROJECT}/`);
+    }
+
     const upstreamPath = resolveUpstreamPath(url.pathname);
 
     if (!upstreamPath) {
@@ -157,10 +181,14 @@ const worker = {
     });
 
     const upstreamResponse = await fetch(upstreamRequest);
+
+    // Buffer so Content-Length is correct after stripping content-encoding.
+    const body = await upstreamResponse.arrayBuffer();
     const responseHeaders = buildClientHeaders(upstreamResponse, url);
+    responseHeaders.set("content-length", String(body.byteLength));
     responseHeaders.set("x-upstream-url", upstreamUrl.toString());
 
-    return new Response(upstreamResponse.body, {
+    return new Response(body, {
       status: upstreamResponse.status,
       statusText: upstreamResponse.statusText,
       headers: responseHeaders,

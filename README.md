@@ -41,7 +41,7 @@ pnpm dev
 
 静态演示：<https://www.jiaxiantao.xyz/ai-my-home/>（Cloudflare 路径路由）
 
-根路径入口：<https://www.jiaxiantao.xyz/> → 同上  
+根路径入口：<https://www.jiaxiantao.xyz/> → 302 到 `/ai-my-home/` 
 源站：<https://jiaxiantao.github.io/ai-my-home/>
 
 Pages 配置：**GitHub Actions**。`main` 推送后只会触发一次 `CI` workflow：

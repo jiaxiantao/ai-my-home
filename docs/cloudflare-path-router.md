@@ -4,8 +4,8 @@
 
 | 访问 | 实际内容 |
 |------|----------|
-| `https://www.jiaxiantao.xyz/` | `jiaxiantao.github.io/ai-my-home/` |
-| `https://www.jiaxiantao.xyz/ai-my-home/` | 同上 |
+| `https://www.jiaxiantao.xyz/` | **302 →** `/ai-my-home/`（必须，否则 basePath hydration 会丢样式） |
+| `https://www.jiaxiantao.xyz/ai-my-home/` | `jiaxiantao.github.io/ai-my-home/` |
 | `https://www.jiaxiantao.xyz/cos-design/` | `jiaxiantao.github.io/cos-design/` |
 | `https://www.jiaxiantao.xyz/home-agent/` | `jiaxiantao.github.io/home-agent/` |
 | `https://www.jiaxiantao.xyz/blogs/` | `jiaxiantao.github.io/blogs/` |
