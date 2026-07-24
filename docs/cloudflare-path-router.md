@@ -72,15 +72,21 @@ curl -sI https://www.jiaxiantao.xyz/cos-design/ | head
 
 编辑 Worker 里 `PROJECT_PREFIXES`，增加例如 `"/new-repo"`，对应 GitHub Pages 路径 `/new-repo`，重新 Deploy。
 
-## 8. 根路径资源
+## 8. 根路径资源（含旧 HTML 兼容）
 
 Worker 会把站点根下的常见资源转发到默认站 `ai-my-home`：
 
 - `/favicon.ico` → `/ai-my-home/favicon.ico`
 - `/robots.txt` → `/ai-my-home/robots.txt`
 - `/sitemap.xml` → `/ai-my-home/sitemap.xml`
+- `/next-static/*`、`/_next/*`、`/resume/*`、`/models/*`、`/workers/*` → 加上 `/ai-my-home` 前缀
 
-修改 Worker 后需在 Cloudflare 控制台重新粘贴部署。
+这是为了兼容曾短暂「去掉 basePath」部署留下的浏览器缓存 HTML（资源写在域名根路径，会导致整页无样式、头像裂图）。
+
+修改 Worker 后需在 Cloudflare 控制台重新粘贴部署，并建议：
+
+1. Caching → Configuration → **Purge Everything**
+2. 浏览器强制刷新（Cmd+Shift+R）
 
 ## 说明
 
