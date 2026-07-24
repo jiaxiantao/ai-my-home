@@ -23,7 +23,7 @@ test.describe("Site navigation", () => {
     await expect(page.getByRole("heading", { level: 1 })).toContainText(
       /AI 对话工作台/,
     );
-    await expect(page.getByText("正在加载对话工作台…")).toBeHidden({
+    await expect(page.getByText("正在加载对话工作台…")).toHaveCount(0, {
       timeout: 30_000,
     });
     await expect(page.getByText("Sessions")).toBeVisible({ timeout: 5_000 });

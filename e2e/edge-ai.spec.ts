@@ -19,6 +19,8 @@ test.describe("Edge AI showcase", () => {
       timeout: 30_000,
     });
 
-    await expect(section.getByRole("link", { name: /Agents/i })).toBeVisible();
+    await expect(
+      section.getByRole("link", { name: /Agent 工具循环|Home Agent/i }),
+    ).toBeVisible();
   });
 });
