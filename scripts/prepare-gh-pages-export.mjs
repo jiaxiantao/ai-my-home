@@ -61,10 +61,4 @@ walkFiles(outRoot, (filePath) => {
 
 fs.writeFileSync(path.join(outRoot, ".nojekyll"), "# disable jekyll\n");
 
-const customDomain = process.env.GH_PAGES_CUSTOM_DOMAIN ?? "www.jiaxiantao.xyz";
-if (customDomain) {
-  fs.writeFileSync(path.join(outRoot, "CNAME"), `${customDomain}\n`);
-  console.log(`[gh-pages] wrote CNAME -> ${customDomain}`);
-}
-
 console.log(`[gh-pages] renamed ${FROM} -> ${TO}, rewrote ${rewritten} files`);

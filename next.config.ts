@@ -1,13 +1,16 @@
 import type { NextConfig } from "next";
 
 const isGhPages = process.env.GH_PAGES === "1";
-/** Custom domain serves at site root; set GH_PAGES_BASE_PATH=/ai-my-home only for path-based github.io deploys. */
-const ghPagesBasePath = (process.env.GH_PAGES_BASE_PATH ?? "").replace(/\/$/, "");
+/** Project Pages path; custom domain www.jiaxiantao.xyz serves via Cloudflare Worker under this prefix. */
+const ghPagesBasePath = (process.env.GH_PAGES_BASE_PATH ?? "/ai-my-home").replace(
+  /\/$/,
+  "",
+) || "/ai-my-home";
 
 const nextConfig: NextConfig = {
   output: isGhPages ? "export" : "standalone",
-  basePath: isGhPages && ghPagesBasePath ? ghPagesBasePath : undefined,
-  assetPrefix: isGhPages && ghPagesBasePath ? ghPagesBasePath : undefined,
+  basePath: isGhPages ? ghPagesBasePath : undefined,
+  assetPrefix: isGhPages ? ghPagesBasePath : undefined,
   trailingSlash: isGhPages ? true : undefined,
   images: {
     unoptimized: isGhPages,
