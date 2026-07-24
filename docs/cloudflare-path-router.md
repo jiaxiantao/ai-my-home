@@ -8,6 +8,7 @@
 | `https://www.jiaxiantao.xyz/ai-my-home/` | 同上 |
 | `https://www.jiaxiantao.xyz/cos-design/` | `jiaxiantao.github.io/cos-design/` |
 | `https://www.jiaxiantao.xyz/home-agent/` | `jiaxiantao.github.io/home-agent/` |
+| `https://www.jiaxiantao.xyz/blogs/` | `jiaxiantao.github.io/blogs/` |
 | … | 见 Worker 内 `PROJECT_PREFIXES` |
 
 Worker 源码：[`cloudflare/site-path-router.worker.js`](../cloudflare/site-path-router.worker.js)

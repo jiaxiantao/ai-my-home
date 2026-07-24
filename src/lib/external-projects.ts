@@ -26,6 +26,11 @@ export const EXTERNAL_PROJECTS = {
     previewUrl: `${SITE}/home-agent/`,
     repoUrl: "https://github.com/jiaxiantao/home-agent",
   },
+  blogs: {
+    label: "博客",
+    previewUrl: `${SITE}/blogs/`,
+    repoUrl: "https://github.com/jiaxiantao/blogs",
+  },
   aiMyHome: {
     label: "ai-my-home",
     previewUrl: `${SITE}/ai-my-home/`,
@@ -40,6 +45,7 @@ export const PLATFORM_EXPERIENCE_NAV = [
   EXTERNAL_PROJECTS.expressWarehouse,
   EXTERNAL_PROJECTS.carShowroom,
   EXTERNAL_PROJECTS.homeAgent,
+  EXTERNAL_PROJECTS.blogs,
 ] as const;
 
 /** 导航「Agents」入口 */

@@ -234,6 +234,18 @@ export const resumeOpenSourceProjects: ResumeProject[] = [
     repoUrl: EXTERNAL_PROJECTS.expressWarehouse.repoUrl,
     previewUrl: EXTERNAL_PROJECTS.expressWarehouse.previewUrl,
   },
+  {
+    name: "blogs",
+    period: "开源 · 持续更新",
+    stack: ["博客", "技术写作", "GitHub Pages"],
+    summary: "个人技术博客：工程实践、前端架构与学习笔记沉淀。",
+    bullets: [
+      "独立仓库维护，GitHub Pages 发布",
+      "通过自定义域名路径 /blogs 访问",
+    ],
+    repoUrl: EXTERNAL_PROJECTS.blogs.repoUrl,
+    previewUrl: EXTERNAL_PROJECTS.blogs.previewUrl,
+  },
 ];
 
 /** @deprecated 使用 resumeBusinessProjects + resumeOpenSourceProjects */

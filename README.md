@@ -99,8 +99,9 @@ Assistant（`/assistant`）与 `/api/chat` 使用同一套 LLM 配置。Agent �
 | 项目 | 预览 | 仓库 |
 |------|------|------|
 | **本站点** | [www.jiaxiantao.xyz/ai-my-home](https://www.jiaxiantao.xyz/ai-my-home/) | [ai-my-home](https://github.com/jiaxiantao/ai-my-home) |
-| 3D 看车 | [jiaxiantao.github.io/3d-car-viewing](https://jiaxiantao.github.io/3d-car-viewing/) | [3d-car-viewing](https://github.com/jiaxiantao/3d-car-viewing) |
-| Agent 编排 | [jiaxiantao.github.io/home-agent](https://jiaxiantao.github.io/home-agent/) | [home-agent](https://github.com/jiaxiantao/home-agent) |
+| 博客 | [www.jiaxiantao.xyz/blogs](https://www.jiaxiantao.xyz/blogs/) | [blogs](https://github.com/jiaxiantao/blogs) |
+| 3D 看车 | [www.jiaxiantao.xyz/3d-car-viewing](https://www.jiaxiantao.xyz/3d-car-viewing/) | [3d-car-viewing](https://github.com/jiaxiantao/3d-car-viewing) |
+| Agent 编排 | [www.jiaxiantao.xyz/home-agent](https://www.jiaxiantao.xyz/home-agent/) | [home-agent](https://github.com/jiaxiantao/home-agent) |
 
 本站导航与 `/car-showroom`、`/agents` 会跳转到对应外部地址。
 

@@ -25,6 +25,7 @@ const PROJECT_PREFIXES = [
   "/3d-car-viewing",
   "/home-agent",
   "/3d-express-warehouse",
+  "/blogs",
 ];
 
 /**
