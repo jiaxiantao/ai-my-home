@@ -47,6 +47,7 @@ const UI_TARGET_SELECTOR = [
   '[role="listbox"]',
   '[contenteditable="true"]',
   "[data-no-ripple]",
+  "[data-no-backdrop-interact]",
   "header",
   "nav",
 ].join(",");
@@ -56,6 +57,39 @@ function isUiTarget(target: EventTarget | null) {
     return true;
   }
   return Boolean(target.closest(UI_TARGET_SELECTOR));
+}
+
+function dispatchBackdropPointer(
+  canvas: HTMLCanvasElement,
+  clientX: number,
+  clientY: number,
+  type: "pointerdown" | "click",
+) {
+  const common = {
+    clientX,
+    clientY,
+    bubbles: true,
+    cancelable: true,
+    view: window,
+    button: 0,
+  } as const;
+
+  if (type === "pointerdown") {
+    // SmokeFog listens to pointerdown on its canvas.
+    canvas.dispatchEvent(
+      new PointerEvent("pointerdown", {
+        ...common,
+        pointerId: 1,
+        pointerType: "mouse",
+        isPrimary: true,
+        buttons: 1,
+      }),
+    );
+    return;
+  }
+
+  // RippleWater listens to click / touchstart on its canvas.
+  canvas.dispatchEvent(new MouseEvent("click", common));
 }
 
 export function WeatherBackdrop({
@@ -71,7 +105,6 @@ export function WeatherBackdrop({
   const [size, setSize] = useState<Size | null>(null);
   const isRipple = kind === "ripple";
   const isSmoke = kind === "smoke";
-  const needsPointerForward = isRipple || isSmoke;
 
   useEffect(() => {
     const update = () => {
@@ -89,33 +122,30 @@ export function WeatherBackdrop({
   }, []);
 
   // Backdrop stays pointer-events-none so page scroll/UI keep working.
-  // Forward blank-area clicks to canvas for ripples / smoke disperse.
+  // Forward blank-area presses to the canvas:
+  // - pointerdown → SmokeFog disperse
+  // - click (on pointerup without drag) → RippleWater ripples
   useEffect(() => {
-    if (!needsPointerForward) {
-      return;
-    }
-
-    function forwardPointer(clientX: number, clientY: number) {
-      const canvas = rootRef.current?.querySelector("canvas");
-      if (!canvas) {
-        return;
-      }
-      canvas.dispatchEvent(
-        new MouseEvent("click", {
-          clientX,
-          clientY,
-          bubbles: true,
-          cancelable: true,
-          view: window,
-        }),
-      );
+    function getCanvas() {
+      return rootRef.current?.querySelector("canvas") ?? null;
     }
 
     function onPointerDown(event: PointerEvent) {
       if (event.pointerType === "mouse" && event.button !== 0) {
         return;
       }
+      if (isUiTarget(event.target)) {
+        pointerStartRef.current = null;
+        return;
+      }
+
       pointerStartRef.current = { x: event.clientX, y: event.clientY };
+
+      const canvas = getCanvas();
+      if (!canvas) {
+        return;
+      }
+      dispatchBackdropPointer(canvas, event.clientX, event.clientY, "pointerdown");
     }
 
     function onPointerUp(event: PointerEvent) {
@@ -135,7 +165,12 @@ export function WeatherBackdrop({
       if (window.getSelection()?.toString()) {
         return;
       }
-      forwardPointer(event.clientX, event.clientY);
+
+      const canvas = getCanvas();
+      if (!canvas) {
+        return;
+      }
+      dispatchBackdropPointer(canvas, event.clientX, event.clientY, "click");
     }
 
     function onPointerCancel() {
@@ -151,7 +186,7 @@ export function WeatherBackdrop({
       document.removeEventListener("pointerup", onPointerUp, true);
       document.removeEventListener("pointercancel", onPointerCancel, true);
     };
-  }, [needsPointerForward]);
+  }, [kind]);
 
   return (
     <div
