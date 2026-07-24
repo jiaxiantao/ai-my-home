@@ -45,7 +45,7 @@ export function ResumePrintDocument() {
               <p>{resumeContact.email}</p>
               <p>{resumeContact.location}</p>
               <p className="text-slate-500">github.com/jiaxiantao</p>
-              <p className="text-slate-500">jiaxiantao.github.io/ai-my-home</p>
+              <p className="text-slate-500">www.jiaxiantao.xyz</p>
               <p className="text-slate-500">juejin.cn · 技术博客</p>
             </div>
           </div>

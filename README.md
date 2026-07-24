@@ -39,7 +39,9 @@ pnpm dev
 
 ## GitHub Pages 在线预览
 
-静态演示：<https://jiaxiantao.github.io/ai-my-home/>
+静态演示：<https://www.jiaxiantao.xyz/>（GitHub Pages + Cloudflare）
+
+备用入口：<https://jiaxiantao.github.io/ai-my-home/>（自定义域名生效后会跳转）
 
 Pages 配置：**GitHub Actions**。`main` 推送后只会触发一次 `CI` workflow：
 先跑校验，再执行 `pnpm build:pages`，将 `out/` 上传为 Pages artifact 并由
@@ -93,7 +95,7 @@ Assistant（`/assistant`）与 `/api/chat` 使用同一套 LLM 配置。Agent �
 
 | 项目 | 预览 | 仓库 |
 |------|------|------|
-| **本站点** | [jiaxiantao.github.io/ai-my-home](https://jiaxiantao.github.io/ai-my-home/) | [ai-my-home](https://github.com/jiaxiantao/ai-my-home) |
+| **本站点** | [www.jiaxiantao.xyz](https://www.jiaxiantao.xyz/) | [ai-my-home](https://github.com/jiaxiantao/ai-my-home) |
 | 3D 看车 | [jiaxiantao.github.io/3d-car-viewing](https://jiaxiantao.github.io/3d-car-viewing/) | [3d-car-viewing](https://github.com/jiaxiantao/3d-car-viewing) |
 | Agent 编排 | [jiaxiantao.github.io/home-agent](https://jiaxiantao.github.io/home-agent/) | [home-agent](https://github.com/jiaxiantao/home-agent) |
 

@@ -156,7 +156,8 @@ jobs:
       - name: Build static site for GitHub Pages
         run: pnpm build:pages
         env:
-          NEXT_PUBLIC_SITE_URL: https://jiaxiantao.github.io/ai-my-home
+          NEXT_PUBLIC_SITE_URL: https://www.jiaxiantao.xyz
+          GH_PAGES_CUSTOM_DOMAIN: www.jiaxiantao.xyz
           NODE_OPTIONS: --max-old-space-size=6144
 
       - name: Upload GitHub Pages artifact

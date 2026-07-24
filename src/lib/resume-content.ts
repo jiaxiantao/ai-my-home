@@ -53,7 +53,7 @@ export const resumeContact: ResumeContact = {
   email: "1374612574@qq.com",
   github: "https://github.com/jiaxiantao",
   location: "杭州",
-  homepage: "https://jiaxiantao.github.io/ai-my-home/",
+  homepage: "https://www.jiaxiantao.xyz/",
   juejin: "https://juejin.cn/user/3958672823687880/posts",
   avatar: RESUME_AVATAR_PATH,
 };

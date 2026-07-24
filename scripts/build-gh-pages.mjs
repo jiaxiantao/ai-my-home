@@ -15,8 +15,7 @@ const dynamicOgImages = [
   "src/app/(site)/notes/[slug]/opengraph-image.tsx",
 ];
 
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://jiaxiantao.github.io/ai-my-home";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.jiaxiantao.xyz";
 
 function stashApiRoutes() {
   if (!fs.existsSync(apiDir)) {

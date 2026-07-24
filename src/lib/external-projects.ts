@@ -26,7 +26,7 @@ export const EXTERNAL_PROJECTS = {
   },
   aiMyHome: {
     label: "ai-my-home",
-    previewUrl: "https://jiaxiantao.github.io/ai-my-home/",
+    previewUrl: "https://www.jiaxiantao.xyz/",
     repoUrl: "https://github.com/jiaxiantao/ai-my-home",
   },
 } as const;

@@ -1,12 +1,13 @@
 import type { NextConfig } from "next";
 
 const isGhPages = process.env.GH_PAGES === "1";
-const ghPagesBasePath = "/ai-my-home";
+/** Custom domain serves at site root; set GH_PAGES_BASE_PATH=/ai-my-home only for path-based github.io deploys. */
+const ghPagesBasePath = (process.env.GH_PAGES_BASE_PATH ?? "").replace(/\/$/, "");
 
 const nextConfig: NextConfig = {
   output: isGhPages ? "export" : "standalone",
-  basePath: isGhPages ? ghPagesBasePath : undefined,
-  assetPrefix: isGhPages ? ghPagesBasePath : undefined,
+  basePath: isGhPages && ghPagesBasePath ? ghPagesBasePath : undefined,
+  assetPrefix: isGhPages && ghPagesBasePath ? ghPagesBasePath : undefined,
   trailingSlash: isGhPages ? true : undefined,
   images: {
     unoptimized: isGhPages,
