@@ -369,19 +369,6 @@ function parseSseEventName(block: string) {
   return null;
 }
 
-function parseSseData(block: string) {
-  const lines = block.split("\n");
-  const dataLine = lines.find((line) => line.startsWith("data:"));
-  if (!dataLine) {
-    return null;
-  }
-  try {
-    return JSON.parse(dataLine.slice(5).trim()) as unknown;
-  } catch {
-    return null;
-  }
-}
-
 function StatusCard({
   label,
   ok,

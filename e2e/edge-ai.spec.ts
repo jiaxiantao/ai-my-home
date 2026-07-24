@@ -20,7 +20,7 @@ test.describe("Edge AI showcase", () => {
     });
 
     await expect(
-      section.getByRole("link", { name: /Agent 工具循环|Home Agent/i }),
+      section.getByRole("link", { name: "Home Agent", exact: true }),
     ).toBeVisible();
   });
 });

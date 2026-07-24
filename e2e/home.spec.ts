@@ -45,21 +45,27 @@ test.describe("Homepage", () => {
 
   test("capability radar lists scored dimensions", async ({ page }) => {
     await page.goto("/#capability-radar");
+    const section = page.locator("#capability-radar");
+    await expect(section).toBeVisible({ timeout: 30_000 });
 
-    await expect(page.getByText("全栈 API")).toBeVisible();
-    await expect(page.getByText("CI/CD")).toBeVisible();
-    await expect(page.getByText(/当前高亮：/)).toBeVisible();
+    await expect(
+      section.getByRole("button", { name: /全栈 API/ }),
+    ).toBeVisible();
+    await expect(section.getByRole("button", { name: /CI\/CD/ })).toBeVisible();
+    await expect(section.getByText(/当前高亮：/)).toBeVisible();
   });
 
   test("demo lab URL state renders system map", async ({ page }) => {
     await page.goto(
       "/?lab=architecture&scenario=content-platform#demo-lab",
     );
+    const section = page.locator("#demo-lab");
+    await expect(section).toBeVisible({ timeout: 20_000 });
 
-    await expect(page.getByText("System Map")).toBeVisible({
+    await expect(section.getByText("System Map")).toBeVisible({
       timeout: 20_000,
     });
-    await expect(page.getByText("Demo Lab → 智能编排")).toBeVisible();
+    await expect(section.getByText("Demo Lab → 智能编排")).toBeVisible();
   });
 
   test("sitemap and robots are served", async ({ request }) => {
