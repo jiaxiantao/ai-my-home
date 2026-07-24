@@ -11,6 +11,9 @@ importers:
       '@cos-design/ripple-water':
         specifier: ^3.5.3
         version: 3.5.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@cos-design/smoke-fog':
+        specifier: ^3.5.4
+        version: 3.5.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@cos-design/weather-background':
         specifier: ^3.5.3
         version: 3.5.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -194,6 +197,12 @@ packages:
 
   '@cos-design/shared@3.5.3':
     resolution: {integrity: sha512-oDZcV99eFSxdcimJl5BkFNRf8C0hoTizd0Gn6Y2Xu9R3pNYfySu31Sc0BUmU4w7zUeo0QqZbmgifv03FH2pKZA==}
+
+  '@cos-design/smoke-fog@3.5.4':
+    resolution: {integrity: sha512-XiCd5lg5T13LtKo2hZyvjx+Z2duwA5kV7o72uwK329PxEwvoiVWmb1+v98z3RE4YvHE75Va4ybPln++A7ciaTg==}
+    peerDependencies:
+      react: '>=18.0.0'
+      react-dom: '>=18.0.0'
 
   '@cos-design/weather-background@3.5.3':
     resolution: {integrity: sha512-s3AyygZ6dm5n1QC2N84VgsOMS08BNaxM9OSMVX/Clm81T2WoGrgpfBLoYWAa40ZZKF2Q+H3lsZ0lLNEbbwCp8g==}
@@ -3591,6 +3600,12 @@ snapshots:
       react-dom: 19.2.4(react@19.2.4)
 
   '@cos-design/shared@3.5.3': {}
+
+  '@cos-design/smoke-fog@3.5.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@cos-design/shared': 3.5.3
+      react: 19.2.4
+      react-dom: 19.2.4(react@19.2.4)
 
   '@cos-design/weather-background@3.5.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:

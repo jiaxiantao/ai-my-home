@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@cos-design/ripple-water": "^3.5.3",
+    "@cos-design/smoke-fog": "^3.5.4",
     "@cos-design/weather-background": "^3.5.3",
     "@mediapipe/tasks-vision": "^0.10.35",
     "@prisma/adapter-pg": "^7.8.0",

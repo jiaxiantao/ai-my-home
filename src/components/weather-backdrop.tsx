@@ -2,11 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { RippleWater } from "@cos-design/ripple-water";
+import { SmokeFog } from "@cos-design/smoke-fog";
 import { WeatherBackground, type WeatherType } from "@cos-design/weather-background";
 
 import type {
   MoodBackdropKind,
   RippleMoodConfig,
+  SmokeMoodConfig,
 } from "@/components/weather-mood-provider";
 
 type WeatherBackdropProps = {
@@ -15,6 +17,7 @@ type WeatherBackdropProps = {
   live?: boolean;
   night?: boolean;
   ripple?: RippleMoodConfig | null;
+  smoke?: SmokeMoodConfig | null;
 };
 
 type Size = { width: number; height: number };
@@ -61,11 +64,14 @@ export function WeatherBackdrop({
   live = false,
   night = false,
   ripple = null,
+  smoke = null,
 }: WeatherBackdropProps) {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
   const [size, setSize] = useState<Size | null>(null);
   const isRipple = kind === "ripple";
+  const isSmoke = kind === "smoke";
+  const needsPointerForward = isRipple || isSmoke;
 
   useEffect(() => {
     const update = () => {
@@ -83,13 +89,13 @@ export function WeatherBackdrop({
   }, []);
 
   // Backdrop stays pointer-events-none so page scroll/UI keep working.
-  // Forward blank-area clicks to RippleWater's canvas for ripples.
+  // Forward blank-area clicks to canvas for ripples / smoke disperse.
   useEffect(() => {
-    if (!isRipple) {
+    if (!needsPointerForward) {
       return;
     }
 
-    function forwardRipple(clientX: number, clientY: number) {
+    function forwardPointer(clientX: number, clientY: number) {
       const canvas = rootRef.current?.querySelector("canvas");
       if (!canvas) {
         return;
@@ -129,7 +135,7 @@ export function WeatherBackdrop({
       if (window.getSelection()?.toString()) {
         return;
       }
-      forwardRipple(event.clientX, event.clientY);
+      forwardPointer(event.clientX, event.clientY);
     }
 
     function onPointerCancel() {
@@ -145,7 +151,7 @@ export function WeatherBackdrop({
       document.removeEventListener("pointerup", onPointerUp, true);
       document.removeEventListener("pointercancel", onPointerCancel, true);
     };
-  }, [isRipple]);
+  }, [needsPointerForward]);
 
   return (
     <div
@@ -169,6 +175,18 @@ export function WeatherBackdrop({
             reflection={ripple?.reflection}
             interactive
             showHint={false}
+          />
+        ) : isSmoke ? (
+          <SmokeFog
+            width={size.width}
+            height={size.height}
+            density={smoke?.density}
+            color={smoke?.color}
+            backgroundColor={smoke?.backgroundColor}
+            speed={smoke?.speed}
+            disperseStrength={smoke?.disperseStrength}
+            disperseRadius={smoke?.disperseRadius}
+            interactive
           />
         ) : (
           <WeatherBackground

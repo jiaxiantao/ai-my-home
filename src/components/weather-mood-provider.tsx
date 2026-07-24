@@ -9,7 +9,7 @@ import {
 } from "react";
 import type { WeatherType } from "@cos-design/weather-background";
 
-export type MoodBackdropKind = "weather" | "ripple";
+export type MoodBackdropKind = "weather" | "ripple" | "smoke";
 
 export type RippleMoodConfig = {
   fromColor?: string;
@@ -21,6 +21,15 @@ export type RippleMoodConfig = {
   reflection?: number;
 };
 
+export type SmokeMoodConfig = {
+  density?: number;
+  color?: string;
+  backgroundColor?: string | [string, string, string];
+  speed?: number;
+  disperseStrength?: number;
+  disperseRadius?: number;
+};
+
 export type MoodOption = {
   id: string;
   label: string;
@@ -30,9 +39,10 @@ export type MoodOption = {
   live?: boolean;
   night?: boolean;
   ripple?: RippleMoodConfig;
+  smoke?: SmokeMoodConfig;
 };
 
-/** 心情 → 背景：天气场景 + 水波纹场景 */
+/** 心情 → 背景：天气 / 水波纹 / 烟雾场景 */
 export const MOOD_OPTIONS: MoodOption[] = [
   { id: "cheerful", label: "开心", description: "大晴天", kind: "weather", weather: "sunny" },
   { id: "calm", label: "平静", description: "多云", kind: "weather", weather: "partlyCloudy" },
@@ -125,6 +135,62 @@ export const MOOD_OPTIONS: MoodOption[] = [
       reflection: 0.4,
     },
   },
+  {
+    id: "smoke-mist",
+    label: "薄雾",
+    description: "轻烟缭绕",
+    kind: "smoke",
+    smoke: {
+      density: 0.42,
+      color: "#d2d4d8",
+      backgroundColor: ["#14151c", "#1a1b24", "#0e0f14"],
+      speed: 0.85,
+      disperseStrength: 1,
+      disperseRadius: 1,
+    },
+  },
+  {
+    id: "smoke-dense",
+    label: "沉雾",
+    description: "浓烟弥漫",
+    kind: "smoke",
+    smoke: {
+      density: 0.78,
+      color: "#c8ccd2",
+      backgroundColor: ["#101118", "#151822", "#090a0f"],
+      speed: 0.65,
+      disperseStrength: 1.2,
+      disperseRadius: 1.15,
+    },
+  },
+  {
+    id: "smoke-ember",
+    label: "暖烟",
+    description: "余烬薄雾",
+    kind: "smoke",
+    smoke: {
+      density: 0.55,
+      color: "#e8d2c0",
+      backgroundColor: ["#1c1412", "#241816", "#100c0b"],
+      speed: 0.95,
+      disperseStrength: 1.1,
+      disperseRadius: 1,
+    },
+  },
+  {
+    id: "smoke-cyan",
+    label: "青岚",
+    description: "冷调烟霭",
+    kind: "smoke",
+    smoke: {
+      density: 0.5,
+      color: "#c5d8e6",
+      backgroundColor: ["#101820", "#152028", "#0a1016"],
+      speed: 1.05,
+      disperseStrength: 1,
+      disperseRadius: 1.05,
+    },
+  },
 ];
 
 const DEFAULT_MOOD_ID = "stormy";
@@ -137,6 +203,7 @@ type WeatherMoodContextValue = {
   live: boolean;
   night: boolean;
   ripple: RippleMoodConfig | null;
+  smoke: SmokeMoodConfig | null;
   setMoodId: (moodId: string) => void;
 };
 
@@ -170,6 +237,7 @@ export function WeatherMoodProvider({ children }: { children: ReactNode }) {
       live: Boolean(mood.live),
       night: Boolean(mood.night),
       ripple: mood.kind === "ripple" ? (mood.ripple ?? {}) : null,
+      smoke: mood.kind === "smoke" ? (mood.smoke ?? {}) : null,
       setMoodId,
     }),
     [mood],
