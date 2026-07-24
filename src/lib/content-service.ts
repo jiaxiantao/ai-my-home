@@ -1,6 +1,6 @@
 import type { CaseStudy as PrismaCaseStudy, Domain, Topic } from "@prisma/client";
 
-import { getDb } from "@/lib/db";
+import { getReadyDb } from "@/lib/db";
 import {
   caseStudies,
   domainDetails,
@@ -50,7 +50,7 @@ function mapCaseStudyRecord(caseStudy: PrismaCaseStudy): CaseStudy {
 }
 
 async function loadDomains(): Promise<DomainDetail[]> {
-  const db = getDb();
+  const db = await getReadyDb();
 
   if (!db) {
     return domainDetails;
@@ -77,7 +77,7 @@ async function loadDomains(): Promise<DomainDetail[]> {
 }
 
 async function loadCaseStudies(): Promise<CaseStudy[]> {
-  const db = getDb();
+  const db = await getReadyDb();
 
   if (!db) {
     return caseStudies;

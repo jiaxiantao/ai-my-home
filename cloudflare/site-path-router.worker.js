@@ -13,6 +13,7 @@
  */
 
 const GITHUB_PAGES_ORIGIN = "https://jiaxiantao.github.io";
+const DEFAULT_PROJECT = "/ai-my-home";
 
 /** Longest-prefix match; order does not matter because we pick the longest. */
 const PROJECT_PREFIXES = [
@@ -24,9 +25,25 @@ const PROJECT_PREFIXES = [
   "/3d-express-warehouse",
 ];
 
+/** Root-level browser/SEO paths that belong to the default portfolio site. */
+const DEFAULT_SITE_ROOT_PATHS = new Set([
+  "/favicon.ico",
+  "/robots.txt",
+  "/sitemap.xml",
+  "/manifest.webmanifest",
+  "/site.webmanifest",
+]);
+
 function resolveUpstreamPath(pathname) {
   if (pathname === "/" || pathname === "") {
-    return "/ai-my-home/";
+    return `${DEFAULT_PROJECT}/`;
+  }
+
+  if (
+    DEFAULT_SITE_ROOT_PATHS.has(pathname) ||
+    pathname.startsWith("/.well-known/")
+  ) {
+    return `${DEFAULT_PROJECT}${pathname}`;
   }
 
   const sorted = [...PROJECT_PREFIXES].sort((a, b) => b.length - a.length);
@@ -49,7 +66,7 @@ function buildUpstreamHeaders(request) {
   return headers;
 }
 
-export default {
+const worker = {
   async fetch(request) {
     const url = new URL(request.url);
     const upstreamPath = resolveUpstreamPath(url.pathname);
@@ -104,3 +121,5 @@ export default {
     });
   },
 };
+
+export default worker;

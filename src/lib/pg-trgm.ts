@@ -1,4 +1,4 @@
-import { getDb } from "@/lib/db";
+import { getReadyDb } from "@/lib/db";
 
 let extensionReady: boolean | null = null;
 
@@ -7,7 +7,7 @@ export async function ensurePgTrgmExtension() {
     return extensionReady;
   }
 
-  const db = getDb();
+  const db = await getReadyDb();
 
   if (!db) {
     extensionReady = false;
@@ -29,7 +29,7 @@ export function resetPgTrgmCache() {
 }
 
 export async function isPgTrgmEnabled() {
-  const db = getDb();
+  const db = await getReadyDb();
 
   if (!db) {
     return false;

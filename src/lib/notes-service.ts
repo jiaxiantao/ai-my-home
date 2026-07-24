@@ -1,6 +1,6 @@
 import type { Note } from "@prisma/client";
 
-import { getDb } from "@/lib/db";
+import { getReadyDb } from "@/lib/db";
 
 export type NoteRecord = {
   id: string;
@@ -46,7 +46,7 @@ function slugify(value: string) {
 }
 
 async function buildUniqueSlug(title: string) {
-  const db = getDb();
+  const db = await getReadyDb();
 
   if (!db) {
     return slugify(title);
@@ -65,7 +65,7 @@ async function buildUniqueSlug(title: string) {
 }
 
 export async function listNotes() {
-  const db = getDb();
+  const db = await getReadyDb();
 
   if (!db) {
     return [] as NoteRecord[];
@@ -91,7 +91,7 @@ export async function listPublishedNotes() {
 }
 
 export async function getPublishedNoteBySlug(slug: string) {
-  const db = getDb();
+  const db = await getReadyDb();
 
   if (!db) {
     return null;
@@ -113,10 +113,10 @@ export async function getPublishedNoteBySlug(slug: string) {
 }
 
 export async function createNote(input: CreateNoteInput) {
-  const db = getDb();
+  const db = await getReadyDb();
 
   if (!db) {
-    throw new Error("DATABASE_URL is not configured");
+    throw new Error("DATABASE_URL is not configured or PostgreSQL is unreachable");
   }
 
   const slug = await buildUniqueSlug(input.title);
@@ -135,10 +135,10 @@ export async function createNote(input: CreateNoteInput) {
 }
 
 export async function deleteNote(id: string) {
-  const db = getDb();
+  const db = await getReadyDb();
 
   if (!db) {
-    throw new Error("DATABASE_URL is not configured");
+    throw new Error("DATABASE_URL is not configured or PostgreSQL is unreachable");
   }
 
   await db.note.delete({

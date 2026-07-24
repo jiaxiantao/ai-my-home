@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getDb } from "@/lib/db";
+import { getReadyDb, isDbMarkedUnavailable, probeDbConnection } from "@/lib/db";
 import { getLlmLabel, isLlmConfigured } from "@/lib/llm-config";
 import { isPgTrgmEnabled } from "@/lib/pg-trgm";
 import { probeReleaseStoreMode } from "@/lib/release-service";
@@ -11,19 +11,13 @@ export async function GET() {
   let dbMs = 0;
   let pgTrgm = false;
 
-  const db = getDb();
+  const dbStarted = performance.now();
+  dbOk = await probeDbConnection(true);
+  dbMs = Math.round(performance.now() - dbStarted);
+  const db = dbOk ? await getReadyDb() : null;
 
   if (db) {
-    const dbStarted = performance.now();
-
-    try {
-      await db.$queryRaw`SELECT 1`;
-      dbOk = true;
-      dbMs = Math.round(performance.now() - dbStarted);
-      pgTrgm = await isPgTrgmEnabled();
-    } catch {
-      dbOk = false;
-    }
+    pgTrgm = await isPgTrgmEnabled();
   }
 
   const llmConfigured = isLlmConfigured();
@@ -44,7 +38,11 @@ export async function GET() {
   return NextResponse.json({
     ok,
     ready,
-    db: { connected: Boolean(db), ok: dbOk, latencyMs: dbMs },
+    db: {
+      connected: Boolean(db) && !isDbMarkedUnavailable(),
+      ok: dbOk,
+      latencyMs: dbMs,
+    },
     llm: { configured: llmConfigured, label: llmLabel },
     search: { pgTrgm },
     release: { store: releaseStore },

@@ -72,7 +72,18 @@ curl -sI https://www.jiaxiantao.xyz/cos-design/ | head
 
 编辑 Worker 里 `PROJECT_PREFIXES`，增加例如 `"/new-repo"`，对应 GitHub Pages 路径 `/new-repo`，重新 Deploy。
 
+## 8. 根路径资源
+
+Worker 会把站点根下的常见资源转发到默认站 `ai-my-home`：
+
+- `/favicon.ico` → `/ai-my-home/favicon.ico`
+- `/robots.txt` → `/ai-my-home/robots.txt`
+- `/sitemap.xml` → `/ai-my-home/sitemap.xml`
+
+修改 Worker 后需在 Cloudflare 控制台重新粘贴部署。
+
 ## 说明
 
 - 这不是阿里云「备案 CDN」，而是 Cloudflare 边缘反代；国内访问通常比直连 `github.io` 好，但不保证所有网络都稳。
 - 各子项目仍需自己在 GitHub 开启 Pages；Worker 只负责按路径转发。
+- 本站 `metadataBase` 只用域名 origin；`basePath` 由 Next 自行拼接，避免 OG 图出现 `/ai-my-home/ai-my-home/...`。

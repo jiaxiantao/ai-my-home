@@ -3,6 +3,7 @@ import type { MetadataRoute } from "next";
 import { insightArticles } from "@/lib/editorial-content";
 import { listPublishedNotes } from "@/lib/notes-service";
 import { caseStudies, domainDetails } from "@/lib/site-content";
+import { getSiteUrl } from "@/lib/site-url";
 
 export const dynamic = "force-static";
 
@@ -21,7 +22,7 @@ const staticPaths = [
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const base = getSiteUrl().replace(/\/$/, "");
   const now = new Date();
 
   const staticEntries = staticPaths.map((path) => ({

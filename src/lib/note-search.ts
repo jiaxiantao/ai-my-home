@@ -1,4 +1,4 @@
-import { getDb } from "@/lib/db";
+import { getReadyDb } from "@/lib/db";
 import type { NoteRecord } from "@/lib/notes-service";
 import { listNotes } from "@/lib/notes-service";
 import { ensurePgTrgmExtension } from "@/lib/pg-trgm";
@@ -84,7 +84,7 @@ async function searchNotesWithPgTrgm(
   query: string,
   limit: number,
 ): Promise<NoteSearchResult[] | null> {
-  const db = getDb();
+  const db = await getReadyDb();
 
   if (!db) {
     return null;

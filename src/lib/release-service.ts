@@ -10,7 +10,7 @@ import type {
   ReleaseOrderStatus,
   ReleaseStageStatus,
 } from "@/lib/release-center-types";
-import { getDb } from "@/lib/db";
+import { getReadyDb, isDbConnectionError, isDbMarkedUnavailable, markDbUnavailable } from "@/lib/db";
 
 const orderLocks = new Set<string>();
 const runtimeLocks = new Map<
@@ -43,6 +43,12 @@ function isReleaseSchemaError(error: unknown) {
 }
 
 function markReleaseDbUnavailable(error: unknown) {
+  if (isDbConnectionError(error)) {
+    markDbUnavailable(error);
+    releaseDbUnavailable = true;
+    return;
+  }
+
   if (!isReleaseSchemaError(error) || releaseDbUnavailable) {
     return;
   }
@@ -57,7 +63,11 @@ function markReleaseDbUnavailable(error: unknown) {
 }
 
 function shouldUseReleaseMemoryStore() {
-  return !getDb() || releaseDbUnavailable;
+  return (
+    !process.env.DATABASE_URL ||
+    isDbMarkedUnavailable() ||
+    releaseDbUnavailable
+  );
 }
 
 function nowIso() {
@@ -217,7 +227,7 @@ async function persistDbOrder(order: ReleaseOrder) {
     return;
   }
 
-  const db = getDb();
+  const db = await getReadyDb();
   if (!db) {
     return;
   }
@@ -244,7 +254,7 @@ async function appendDbAuditLog(
     return;
   }
 
-  const db = getDb();
+  const db = await getReadyDb();
   if (!db) {
     return;
   }
@@ -281,7 +291,7 @@ async function loadDbOrder(orderId: string) {
     return null;
   }
 
-  const db = getDb();
+  const db = await getReadyDb();
   if (!db) {
     return null;
   }
@@ -320,7 +330,7 @@ export async function listReleaseApps(): Promise<ReleaseApp[]> {
     return listMemoryReleaseApps();
   }
 
-  const db = getDb();
+  const db = await getReadyDb();
   if (!db) {
     return listMemoryReleaseApps();
   }
@@ -362,7 +372,7 @@ export async function createReleaseApp(input: {
     return createMemoryReleaseApp(input);
   }
 
-  const db = getDb();
+  const db = await getReadyDb();
   if (!db) {
     return createMemoryReleaseApp(input);
   }
@@ -389,7 +399,7 @@ export async function listReleaseOrders(): Promise<ReleaseOrder[]> {
     return listMemoryReleaseOrders();
   }
 
-  const db = getDb();
+  const db = await getReadyDb();
   if (!db) {
     return listMemoryReleaseOrders();
   }
@@ -472,7 +482,7 @@ export async function createReleaseOrder(input: {
     return createMemoryReleaseOrder(app, input);
   }
 
-  const db = getDb();
+  const db = await getReadyDb();
   if (!db) {
     return createMemoryReleaseOrder(app, input);
   }
@@ -771,7 +781,7 @@ async function appendAudit(
 export type ReleaseStoreMode = "postgresql" | "memory" | "unavailable";
 
 export async function probeReleaseStoreMode(): Promise<ReleaseStoreMode> {
-  const db = getDb();
+  const db = await getReadyDb();
   if (!db) {
     return "memory";
   }
@@ -780,9 +790,15 @@ export async function probeReleaseStoreMode(): Promise<ReleaseStoreMode> {
     await db.releaseApp.count();
     return "postgresql";
   } catch (error) {
+    if (isDbConnectionError(error)) {
+      markDbUnavailable(error);
+      return "memory";
+    }
+
     if (isReleaseSchemaError(error)) {
       return "memory";
     }
+
     return "unavailable";
   }
 }

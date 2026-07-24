@@ -15,6 +15,7 @@ import { getHomepageContent } from "@/lib/content-service";
 import { getDashboardData } from "@/lib/dashboard-service";
 import { EXTERNAL_PROJECTS, HOME_AGENT_AGENTS_URL } from "@/lib/external-projects";
 import { getLlmLabel } from "@/lib/llm-config";
+import { getSiteUrl } from "@/lib/site-url";
 
 const FullstackDashboard = dynamic(
   () =>
@@ -76,7 +77,7 @@ export default async function Home() {
     Promise.resolve(getLlmLabel()),
   ]);
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const siteUrl = getSiteUrl();
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-16 px-6 py-10 lg:px-8 lg:py-14">

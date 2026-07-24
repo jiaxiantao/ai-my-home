@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { AdminAuthError, assertAdminTokenFromRequest } from "@/lib/admin-auth";
-import { getDb } from "@/lib/db";
+import { getReadyDb } from "@/lib/db";
 import {
   defaultIntelligencePreferences,
   defaultLearningProfile,
@@ -56,7 +56,7 @@ export async function GET(request: Request) {
     return unauthorized();
   }
 
-  const db = getDb();
+  const db = await getReadyDb();
   if (!db) {
     return NextResponse.json({
       profile: {
@@ -113,7 +113,7 @@ export async function PUT(request: Request) {
     return unauthorized();
   }
 
-  const db = getDb();
+  const db = await getReadyDb();
   if (!db) {
     return NextResponse.json(
       { error: "Database unavailable for intelligence profile" },

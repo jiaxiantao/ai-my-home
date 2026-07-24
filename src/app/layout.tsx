@@ -4,12 +4,11 @@ import { AuthProvider } from "@/components/auth-provider";
 import { JsonLd } from "@/components/json-ld";
 import { SiteShell } from "@/components/site-shell";
 import { siteProfile } from "@/lib/site-content";
+import { getMetadataBaseUrl, getSiteUrl } from "@/lib/site-url";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
-  ),
+  metadataBase: new URL(getMetadataBaseUrl()),
   title: {
     default: "XJ / Frontend Systems",
     template: "%s",
@@ -40,7 +39,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const siteUrl = getSiteUrl();
 
   return (
     <html lang="zh-CN" className="h-full antialiased" data-scroll-behavior="smooth">

@@ -1,5 +1,5 @@
 import { listNotes, listPublishedNotes } from "@/lib/notes-service";
-import { getDb } from "@/lib/db";
+import { getReadyDb } from "@/lib/db";
 
 export type NoteAnalytics = {
   source: "postgresql" | "memory";
@@ -68,7 +68,7 @@ function buildMemoryAnalytics(notes: Awaited<ReturnType<typeof listPublishedNote
 }
 
 export async function getNoteAnalytics(): Promise<NoteAnalytics> {
-  const db = getDb();
+  const db = await getReadyDb();
   const allNotes = await listNotes();
 
   if (!db) {

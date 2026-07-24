@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { AdminAuthError, assertAdminTokenFromRequest } from "@/lib/admin-auth";
-import { getDb } from "@/lib/db";
+import { getReadyDb } from "@/lib/db";
 
 const createProbeSchema = z.object({
   probeKey: z.string().min(1),
@@ -17,7 +17,7 @@ const createProbeSchema = z.object({
 });
 
 export async function GET(request: Request) {
-  const db = getDb();
+  const db = await getReadyDb();
   if (!db) {
     return NextResponse.json({ records: [], persisted: false });
   }
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const db = getDb();
+  const db = await getReadyDb();
   if (!db) {
     return NextResponse.json(
       { error: "Database unavailable for status persistence" },
@@ -122,7 +122,7 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const db = getDb();
+  const db = await getReadyDb();
   if (!db) {
     return NextResponse.json(
       { error: "Database unavailable for status persistence" },
