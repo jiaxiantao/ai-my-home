@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ChevronDown, Menu } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { GradientText } from "@/components/reactbits/gradient-text";
+import { ShinyText } from "@/components/reactbits/shiny-text";
 import { useAuth } from "@/components/auth-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -112,6 +115,7 @@ function NavLink({
 }
 
 export function SiteHeader() {
+  const pathname = usePathname();
   const desktopNavRef = useRef<HTMLElement | null>(null);
   const mobileMoodRef = useRef<HTMLDivElement | null>(null);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -193,16 +197,26 @@ export function SiteHeader() {
     }, 130);
   }
 
+  function isGroupCurrent(group: (typeof navGroups)[number]) {
+    return group.items.some((item) => !item.external && item.href === pathname);
+  }
+
   return (
     <header className="sticky top-0 z-20 border-b border-white/10 bg-slate-950/35 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 rounded-full border border-white/10 bg-white/3 px-4 py-2 shadow-[0_10px_30px_rgba(2,6,23,0.18)]">
           <Link
             href="/"
             className="text-sm font-semibold tracking-[0.24em] text-white"
             onClick={() => setOpen(false)}
           >
-            XJ / FRONTEND SYSTEMS
+            <GradientText
+              animationSpeed={12}
+              colors={["#e2e8f0", "#67e8f9", "#c4b5fd"]}
+              className="text-sm"
+            >
+              XJ / FRONTEND SYSTEMS
+            </GradientText>
           </Link>
           <p className="hidden text-[10px] text-slate-500 lg:block">
             <kbd className="rounded border border-white/10 px-1 font-mono">⌘K</kbd> 快捷导航
@@ -215,6 +229,7 @@ export function SiteHeader() {
         >
           {navGroups.map((group) => {
             const expanded = activeDropdown === group.id;
+            const current = isGroupCurrent(group);
             return (
               <div key={group.id} className="relative">
                 <button
@@ -225,11 +240,30 @@ export function SiteHeader() {
                   }}
                   onMouseLeave={scheduleDropdownClose}
                   onFocus={() => setActiveDropdown(group.id)}
-                  onClick={() => setActiveDropdown(group.id)}
-                  className="inline-flex items-center gap-1 text-sm text-slate-300 transition hover:text-white"
+                  onClick={() =>
+                    setActiveDropdown((currentOpen) =>
+                      currentOpen === group.id ? null : group.id,
+                    )
+                  }
+                  className={cn(
+                    "inline-flex items-center gap-1 rounded-full border px-3.5 py-2 text-sm transition",
+                    expanded || current
+                      ? "border-cyan-300/30 bg-cyan-300/10 text-white shadow-[0_0_0_3px_rgba(34,211,238,0.08)]"
+                      : "border-transparent text-slate-300 hover:border-white/10 hover:bg-white/4 hover:text-white",
+                  )}
                   aria-expanded={expanded}
                 >
-                  {group.label}
+                  {expanded || current ? (
+                    <ShinyText
+                      text={group.label}
+                      color="rgba(226, 232, 240, 0.92)"
+                      shineColor="#ffffff"
+                      speed={4}
+                      spread={132}
+                    />
+                  ) : (
+                    group.label
+                  )}
                   <ChevronDown
                     className={cn(
                       "h-3.5 w-3.5 transition-transform duration-200",
@@ -276,12 +310,26 @@ export function SiteHeader() {
               onClick={() =>
                 setActiveDropdown((current) => (current === "mood" ? null : "mood"))
               }
-              className="inline-flex items-center gap-1 text-sm text-slate-300 transition hover:text-white"
+              className={cn(
+                "inline-flex items-center gap-1 rounded-full border px-3.5 py-2 text-sm transition",
+                moodDropdownExpanded
+                  ? "border-violet-300/30 bg-violet-300/10 text-white shadow-[0_0_0_3px_rgba(167,139,250,0.08)]"
+                  : "border-transparent text-slate-300 hover:border-white/10 hover:bg-white/4 hover:text-white",
+              )}
               aria-expanded={moodDropdownExpanded}
               aria-haspopup="listbox"
               aria-label="切换心情天气"
             >
-              心情 · {mood.label}
+              <span className="inline-flex items-center gap-1">
+                心情 ·
+                <ShinyText
+                  text={mood.label}
+                  color="rgba(226, 232, 240, 0.92)"
+                  shineColor="#ffffff"
+                  speed={4.5}
+                  spread={138}
+                />
+              </span>
               <ChevronDown
                 className={cn(
                   "h-3.5 w-3.5 transition-transform duration-200",
