@@ -193,7 +193,7 @@ export const MOOD_OPTIONS: MoodOption[] = [
   },
 ];
 
-const DEFAULT_MOOD_ID = "stormy";
+const DEFAULT_MOOD_ID = "ripple-deep";
 
 type WeatherMoodContextValue = {
   moodId: string;
