@@ -21,9 +21,11 @@ import {
 } from "@/components/charts/lazy-dashboard-charts";
 import { DashboardPanelMount } from "@/components/dashboard-panel-mount";
 import { DashboardReleasePanel } from "@/components/dashboard-release-panel";
+import { BorderGlow } from "@/components/reactbits/border-glow";
 import { CountUp } from "@/components/reactbits/count-up";
 import { GlareHover } from "@/components/reactbits/glare-hover";
 import { Magnet } from "@/components/reactbits/magnet";
+import { StarBorder } from "@/components/reactbits/star-border";
 import type { DashboardData } from "@/lib/dashboard-service";
 import { formatReleaseStoreMode } from "@/lib/release-store-labels";
 
@@ -300,24 +302,30 @@ export function FullstackDashboard({
                 </p>
                 <div className="mt-4 grid gap-3">
                   {currentTracks.map((track) => (
-                    <div
+                    <BorderGlow
                       key={track.slug}
-                      className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-slate-950/35 px-4 py-3"
+                      className="rounded-xl"
+                      glowColor="rgba(103, 232, 249, 0.22)"
+                      backgroundColor="rgba(15, 23, 42, 0.35)"
                     >
-                      <span className="text-sm font-medium text-white">
-                        {track.title}
-                      </span>
-                      <span className="text-xs text-slate-500">{track.status}</span>
-                    </div>
+                      <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-slate-950/35 px-4 py-3">
+                        <span className="text-sm font-medium text-white">
+                          {track.title}
+                        </span>
+                        <span className="text-xs text-slate-500">{track.status}</span>
+                      </div>
+                    </BorderGlow>
                   ))}
                 </div>
-                <Link
-                  href="/now"
-                  className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-cyan-200"
-                >
-                  Now 页面
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
+                <StarBorder className="mt-4 self-start rounded-full" color="rgba(103, 232, 249, 0.82)">
+                  <Link
+                    href="/now"
+                    className="inline-flex items-center gap-2 rounded-full bg-slate-950/95 px-3.5 py-1.5 text-sm font-semibold text-cyan-200"
+                  >
+                    Now 页面
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </StarBorder>
               </article>
 
               <article className="rounded-2xl border border-white/10 bg-white/5 p-5">
@@ -326,18 +334,22 @@ export function FullstackDashboard({
                 </p>
                 <div className="mt-4 grid gap-3">
                   {recentLogs.map((log) => (
-                    <div
+                    <BorderGlow
                       key={`${log.date}-${log.title}`}
-                      className="rounded-xl border border-white/10 bg-slate-950/35 px-4 py-3"
+                      className="rounded-xl"
+                      glowColor="rgba(167, 139, 250, 0.2)"
+                      backgroundColor="rgba(15, 23, 42, 0.35)"
                     >
-                      <div className="flex justify-between gap-2 text-xs text-slate-500">
-                        <span>{log.date}</span>
+                      <div className="rounded-xl border border-white/10 bg-slate-950/35 px-4 py-3">
+                        <div className="flex justify-between gap-2 text-xs text-slate-500">
+                          <span>{log.date}</span>
+                        </div>
+                        <p className="mt-1 text-sm font-medium text-white">{log.title}</p>
+                        <p className="mt-1 text-sm leading-6 text-slate-400">
+                          {log.summary}
+                        </p>
                       </div>
-                      <p className="mt-1 text-sm font-medium text-white">{log.title}</p>
-                      <p className="mt-1 text-sm leading-6 text-slate-400">
-                        {log.summary}
-                      </p>
-                    </div>
+                    </BorderGlow>
                   ))}
                 </div>
               </article>
@@ -399,34 +411,42 @@ export function FullstackDashboard({
               </p>
               {knowledge.recentNotes.length ? (
                 knowledge.recentNotes.map((note) => (
-                  <Link
+                  <BorderGlow
                     key={note.id}
-                    href={`/notes/${note.slug}`}
-                    className="block rounded-2xl border border-white/10 bg-white/5 p-4 transition hover:border-white/20"
+                    className="rounded-2xl"
+                    glowColor="rgba(103, 232, 249, 0.22)"
+                    backgroundColor="rgba(2, 6, 23, 0.26)"
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <h3 className="text-sm font-semibold text-white">{note.title}</h3>
-                      <span className="shrink-0 text-xs text-slate-500">
-                        {formatDate(note.updatedAt)}
-                      </span>
-                    </div>
-                    {note.summary ? (
-                      <p className="mt-2 text-sm leading-6 text-slate-400 line-clamp-2">
-                        {note.summary}
-                      </p>
-                    ) : null}
-                  </Link>
+                    <Link
+                      href={`/notes/${note.slug}`}
+                      className="block rounded-2xl border border-white/10 bg-white/5 p-4 transition hover:border-white/20"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <h3 className="text-sm font-semibold text-white">{note.title}</h3>
+                        <span className="shrink-0 text-xs text-slate-500">
+                          {formatDate(note.updatedAt)}
+                        </span>
+                      </div>
+                      {note.summary ? (
+                        <p className="mt-2 text-sm leading-6 text-slate-400 line-clamp-2">
+                          {note.summary}
+                        </p>
+                      ) : null}
+                    </Link>
+                  </BorderGlow>
                 ))
               ) : (
                 <p className="text-sm text-slate-500">暂无笔记，可在 Notes 页创建。</p>
               )}
-              <Link
-                href="/notes"
-                className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-200"
-              >
-                笔记库
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+              <StarBorder className="self-start rounded-full" color="rgba(103, 232, 249, 0.82)">
+                <Link
+                  href="/notes"
+                  className="inline-flex items-center gap-2 rounded-full bg-slate-950/95 px-3.5 py-1.5 text-sm font-semibold text-cyan-200"
+                >
+                  笔记库
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </StarBorder>
             </div>
           </div>
         </DashboardPanelMount>
@@ -482,23 +502,33 @@ export function FullstackDashboard({
 
                 if (flowHref) {
                   return (
-                    <Link
+                    <BorderGlow
                       key={node.id}
-                      href={flowHref}
-                      className="relative block rounded-2xl border border-white/10 bg-white/5 p-5 transition hover:border-cyan-300/30 hover:bg-cyan-300/5"
+                      className="rounded-2xl"
+                      glowColor="rgba(103, 232, 249, 0.24)"
+                      backgroundColor="rgba(2, 6, 23, 0.24)"
                     >
-                      {card}
-                    </Link>
+                      <Link
+                        href={flowHref}
+                        className="relative block rounded-2xl border border-white/10 bg-white/5 p-5 transition hover:border-cyan-300/30 hover:bg-cyan-300/5"
+                      >
+                        {card}
+                      </Link>
+                    </BorderGlow>
                   );
                 }
 
                 return (
-                  <article
+                  <BorderGlow
                     key={node.id}
-                    className="relative rounded-2xl border border-white/10 bg-white/5 p-5"
+                    className="rounded-2xl"
+                    glowColor="rgba(103, 232, 249, 0.2)"
+                    backgroundColor="rgba(2, 6, 23, 0.24)"
                   >
-                    {card}
-                  </article>
+                    <article className="relative rounded-2xl border border-white/10 bg-white/5 p-5">
+                      {card}
+                    </article>
+                  </BorderGlow>
                 );
               })}
             </div>
