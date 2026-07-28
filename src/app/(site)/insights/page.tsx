@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { BorderGlow } from "@/components/reactbits/border-glow";
+import { CountUp } from "@/components/reactbits/count-up";
 import { InsightsExplorer } from "@/components/insights-explorer";
 import { JsonLd } from "@/components/json-ld";
 import { SectionHeading } from "@/components/section-heading";
@@ -25,6 +27,11 @@ export default function InsightsPage() {
           }}
         />
 
+        <BorderGlow
+          className="rounded-[2.25rem]"
+          glowColor="rgba(103, 232, 249, 0.26)"
+          backgroundColor="rgba(2, 6, 23, 0.24)"
+        >
         <section className="grid gap-8 rounded-[2.25rem] border border-white/10 bg-white/5 p-8 lg:grid-cols-[1.1fr_0.9fr] lg:p-10">
           <div>
             <p className="text-sm uppercase tracking-[0.3em] text-slate-400">
@@ -39,27 +46,32 @@ export default function InsightsPage() {
           </div>
 
           <div className="grid gap-4">
-            <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
-                Snapshot
-              </p>
-              <p className="mt-4 text-4xl font-semibold tracking-tight text-white">
-                {insightArticles.length}
-              </p>
-              <p className="mt-2 text-sm text-slate-400">篇结构化工程洞察</p>
-            </article>
+            <BorderGlow className="rounded-[1.75rem]" glowColor="rgba(103, 232, 249, 0.22)">
+              <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
+                  Snapshot
+                </p>
+                <p className="mt-4 text-4xl font-semibold tracking-tight text-white">
+                  <CountUp to={insightArticles.length} duration={1.6} separator="," />
+                </p>
+                <p className="mt-2 text-sm text-slate-400">篇结构化工程洞察</p>
+              </article>
+            </BorderGlow>
 
-            <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
-                Featured
-              </p>
-              <p className="mt-4 text-4xl font-semibold tracking-tight text-white">
-                {featured}
-              </p>
-              <p className="mt-2 text-sm text-slate-400">篇重点展示文章</p>
-            </article>
+            <BorderGlow className="rounded-[1.75rem]" glowColor="rgba(167, 139, 250, 0.22)">
+              <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
+                  Featured
+                </p>
+                <p className="mt-4 text-4xl font-semibold tracking-tight text-white">
+                  <CountUp to={featured} duration={1.6} separator="," />
+                </p>
+                <p className="mt-2 text-sm text-slate-400">篇重点展示文章</p>
+              </article>
+            </BorderGlow>
           </div>
         </section>
+        </BorderGlow>
 
         <section className="space-y-10">
           <SectionHeading

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { BorderGlow } from "@/components/reactbits/border-glow";
+import { CountUp } from "@/components/reactbits/count-up";
 import { ExperienceAccordion } from "@/components/experience-accordion";
 import { JsonLd } from "@/components/json-ld";
 import { SectionHeading } from "@/components/section-heading";
@@ -23,6 +25,11 @@ export default function ExperiencePage() {
           }}
         />
 
+        <BorderGlow
+          className="rounded-[2.25rem]"
+          glowColor="rgba(103, 232, 249, 0.26)"
+          backgroundColor="rgba(2, 6, 23, 0.24)"
+        >
         <section className="grid gap-8 rounded-[2.25rem] border border-white/10 bg-white/5 p-8 lg:grid-cols-[1.08fr_0.92fr] lg:p-10">
           <div>
             <p className="text-sm uppercase tracking-[0.3em] text-slate-400">
@@ -37,26 +44,31 @@ export default function ExperiencePage() {
           </div>
 
           <div className="grid gap-4">
-            <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
-                Chapters
-              </p>
-              <p className="mt-4 text-4xl font-semibold tracking-tight text-white">
-                {experienceChapters.length}
-              </p>
-              <p className="mt-2 text-sm text-slate-400">个阶段性的工作切面</p>
-            </article>
+            <BorderGlow className="rounded-[1.75rem]" glowColor="rgba(103, 232, 249, 0.22)">
+              <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
+                  Chapters
+                </p>
+                <p className="mt-4 text-4xl font-semibold tracking-tight text-white">
+                  <CountUp to={experienceChapters.length} duration={1.6} separator="," />
+                </p>
+                <p className="mt-2 text-sm text-slate-400">个阶段性的工作切面</p>
+              </article>
+            </BorderGlow>
 
-            <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
-                Focus
-              </p>
-              <p className="mt-4 text-sm leading-7 text-slate-300">
-                从页面交付、模块 owner，到工程系统、内容沉淀和 AI 工作流，我更想把这些变化写成一条连续的路径。
-              </p>
-            </article>
+            <BorderGlow className="rounded-[1.75rem]" glowColor="rgba(167, 139, 250, 0.2)">
+              <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
+                  Focus
+                </p>
+                <p className="mt-4 text-sm leading-7 text-slate-300">
+                  从页面交付、模块 owner，到工程系统、内容沉淀和 AI 工作流，我更想把这些变化写成一条连续的路径。
+                </p>
+              </article>
+            </BorderGlow>
           </div>
         </section>
+        </BorderGlow>
 
         <section className="space-y-10">
           <SectionHeading

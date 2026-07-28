@@ -3,7 +3,10 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 import { PlaybookAccordion } from "@/components/playbook-accordion";
+import { BorderGlow } from "@/components/reactbits/border-glow";
+import { Magnet } from "@/components/reactbits/magnet";
 import { SectionHeading } from "@/components/section-heading";
+import { StarBorder } from "@/components/reactbits/star-border";
 import { playbooks } from "@/lib/showcase-content";
 
 export const metadata: Metadata = {
@@ -15,6 +18,11 @@ export const metadata: Metadata = {
 export default function PlaybooksPage() {
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-16 px-6 py-10 lg:px-8 lg:py-16">
+        <BorderGlow
+          className="rounded-[2.25rem]"
+          glowColor="rgba(103, 232, 249, 0.26)"
+          backgroundColor="rgba(2, 6, 23, 0.24)"
+        >
         <section className="grid gap-8 rounded-[2.25rem] border border-white/10 bg-white/5 p-8 lg:grid-cols-[1.1fr_0.9fr] lg:p-10">
           <div>
             <p className="text-sm uppercase tracking-[0.3em] text-slate-400">
@@ -34,18 +42,22 @@ export default function PlaybooksPage() {
               "体现的不只是技术知识，还有优先级、风险和协作判断。",
               "很多内容本来就在项目里反复出现，所以我更愿意把它们沉淀成固定入口。",
             ].map((item, index) => (
-              <article
+              <BorderGlow
                 key={item}
-                className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6"
+                className="rounded-[1.75rem]"
+                glowColor={index === 1 ? "rgba(167, 139, 250, 0.22)" : "rgba(103, 232, 249, 0.22)"}
               >
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
-                  Signal 0{index + 1}
-                </p>
-                <p className="mt-4 text-sm leading-7 text-slate-300">{item}</p>
-              </article>
+                <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
+                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
+                    Signal 0{index + 1}
+                  </p>
+                  <p className="mt-4 text-sm leading-7 text-slate-300">{item}</p>
+                </article>
+              </BorderGlow>
             ))}
           </div>
         </section>
+        </BorderGlow>
 
         <section className="space-y-10">
           <SectionHeading
@@ -57,6 +69,11 @@ export default function PlaybooksPage() {
           <PlaybookAccordion items={playbooks} />
         </section>
 
+        <BorderGlow
+          className="rounded-[2rem]"
+          glowColor="rgba(103, 232, 249, 0.26)"
+          backgroundColor="rgba(2, 6, 23, 0.28)"
+        >
         <section className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-8">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
             Next Step
@@ -67,14 +84,19 @@ export default function PlaybooksPage() {
           <p className="mt-4 max-w-3xl text-base leading-8 text-slate-300">
             对我来说，方法论更像“我通常怎么处理”，而领域详情页更像“我为什么会这样判断”。两边放在一起，内容会完整很多。
           </p>
-          <Link
-            href="/#topology"
-            className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-cyan-200 transition hover:text-white"
-          >
-            回到首页继续浏览
-            <ArrowRight className="h-4 w-4" />
-          </Link>
+          <Magnet>
+            <StarBorder className="mt-8 rounded-full" color="rgba(103, 232, 249, 0.82)">
+              <Link
+                href="/#topology"
+                className="inline-flex items-center gap-2 rounded-full bg-slate-950/95 px-3.5 py-1.5 text-sm font-semibold text-cyan-200 transition hover:text-white"
+              >
+                回到首页继续浏览
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </StarBorder>
+          </Magnet>
         </section>
+        </BorderGlow>
       </main>
 
   );

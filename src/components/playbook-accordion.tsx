@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 
+import { BorderGlow } from "@/components/reactbits/border-glow";
 import { cn } from "@/lib/utils";
 import type { Playbook } from "@/lib/showcase-content";
 
@@ -19,8 +20,15 @@ export function PlaybookAccordion({ items }: PlaybookAccordionProps) {
         const isOpen = item.slug === openSlug;
 
         return (
-          <article
+          <BorderGlow
             key={item.slug}
+            className={cn(
+              "rounded-[2rem]",
+            )}
+            glowColor={isOpen ? "rgba(103, 232, 249, 0.28)" : "rgba(255, 255, 255, 0.16)"}
+            backgroundColor="rgba(2, 6, 23, 0.24)"
+          >
+          <article
             className={cn(
               "rounded-[2rem] border p-6 transition",
               isOpen
@@ -51,60 +59,69 @@ export function PlaybookAccordion({ items }: PlaybookAccordionProps) {
 
             {isOpen ? (
               <div className="mt-8 grid gap-5">
-                <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
-                    Scenario
-                  </p>
-                  <p className="mt-3 text-sm leading-7 text-slate-300">{item.scenario}</p>
-                </div>
+                <BorderGlow className="rounded-[1.5rem]" glowColor="rgba(255, 255, 255, 0.16)">
+                  <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
+                      Scenario
+                    </p>
+                    <p className="mt-3 text-sm leading-7 text-slate-300">{item.scenario}</p>
+                  </div>
+                </BorderGlow>
 
                 <div className="grid gap-4 lg:grid-cols-3">
-                  <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
-                    <p className="text-sm font-semibold text-white">识别信号</p>
-                    <ul className="mt-4 space-y-3">
-                      {item.signals.map((signal) => (
-                        <li key={signal} className="flex gap-3 text-sm text-slate-300">
-                          <span className="mt-2 h-1.5 w-1.5 rounded-full bg-cyan-300" />
-                          <span>{signal}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  <BorderGlow className="rounded-[1.5rem]" glowColor="rgba(255, 255, 255, 0.16)">
+                    <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
+                      <p className="text-sm font-semibold text-white">识别信号</p>
+                      <ul className="mt-4 space-y-3">
+                        {item.signals.map((signal) => (
+                          <li key={signal} className="flex gap-3 text-sm text-slate-300">
+                            <span className="mt-2 h-1.5 w-1.5 rounded-full bg-cyan-300" />
+                            <span>{signal}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </BorderGlow>
 
-                  <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5 lg:col-span-2">
-                    <p className="text-sm font-semibold text-white">推进阶段</p>
-                    <div className="mt-4 grid gap-4 md:grid-cols-3">
-                      {item.phases.map((phase) => (
-                        <div
-                          key={phase.title}
-                          className="rounded-[1.25rem] border border-white/10 bg-slate-950/35 p-4"
+                  <BorderGlow className="rounded-[1.5rem] lg:col-span-2" glowColor="rgba(103, 232, 249, 0.2)">
+                    <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5 lg:col-span-2">
+                      <p className="text-sm font-semibold text-white">推进阶段</p>
+                      <div className="mt-4 grid gap-4 md:grid-cols-3">
+                        {item.phases.map((phase) => (
+                          <div
+                            key={phase.title}
+                            className="rounded-[1.25rem] border border-white/10 bg-slate-950/35 p-4"
+                          >
+                            <p className="text-sm font-semibold text-white">{phase.title}</p>
+                            <p className="mt-3 text-sm leading-7 text-slate-300">
+                              {phase.description}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </BorderGlow>
+                </div>
+
+                <BorderGlow className="rounded-[1.5rem]" glowColor="rgba(103, 232, 249, 0.24)">
+                  <div className="rounded-[1.5rem] border border-cyan-300/20 bg-cyan-300/10 p-5">
+                    <p className="text-sm font-semibold text-white">典型产物</p>
+                    <div className="mt-4 flex flex-wrap gap-3">
+                      {item.deliverables.map((entry) => (
+                        <span
+                          key={entry}
+                          className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-100"
                         >
-                          <p className="text-sm font-semibold text-white">{phase.title}</p>
-                          <p className="mt-3 text-sm leading-7 text-slate-300">
-                            {phase.description}
-                          </p>
-                        </div>
+                          {entry}
+                        </span>
                       ))}
                     </div>
                   </div>
-                </div>
-
-                <div className="rounded-[1.5rem] border border-cyan-300/20 bg-cyan-300/10 p-5">
-                  <p className="text-sm font-semibold text-white">典型产物</p>
-                  <div className="mt-4 flex flex-wrap gap-3">
-                    {item.deliverables.map((entry) => (
-                      <span
-                        key={entry}
-                        className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-100"
-                      >
-                        {entry}
-                      </span>
-                    ))}
-                  </div>
-                </div>
+                </BorderGlow>
               </div>
             ) : null}
           </article>
+          </BorderGlow>
         );
       })}
     </div>

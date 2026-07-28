@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 
+import { BorderGlow } from "@/components/reactbits/border-glow";
 import { cn } from "@/lib/utils";
 import type { ExperienceChapter } from "@/lib/ongoing-content";
 
@@ -19,8 +20,15 @@ export function ExperienceAccordion({ items }: ExperienceAccordionProps) {
         const isOpen = item.slug === openSlug;
 
         return (
-          <article
+          <BorderGlow
             key={item.slug}
+            className={cn(
+              "rounded-[2rem]",
+            )}
+            glowColor={isOpen ? "rgba(103, 232, 249, 0.28)" : "rgba(255, 255, 255, 0.16)"}
+            backgroundColor="rgba(2, 6, 23, 0.24)"
+          >
+          <article
             className={cn(
               "rounded-[2rem] border p-6 transition",
               isOpen
@@ -60,6 +68,7 @@ export function ExperienceAccordion({ items }: ExperienceAccordionProps) {
               </div>
             ) : null}
           </article>
+          </BorderGlow>
         );
       })}
     </div>
@@ -76,22 +85,28 @@ function ExperienceColumn({
   accent?: boolean;
 }) {
   return (
-    <div
-      className={`rounded-[1.5rem] border p-5 ${
-        accent
-          ? "border-cyan-300/20 bg-cyan-300/10"
-          : "border-white/10 bg-white/5"
-      }`}
+    <BorderGlow
+      className="rounded-[1.5rem]"
+      glowColor={accent ? "rgba(103, 232, 249, 0.24)" : "rgba(255, 255, 255, 0.16)"}
+      backgroundColor="rgba(2, 6, 23, 0.18)"
     >
-      <p className="text-sm font-semibold text-white">{title}</p>
-      <ul className="mt-4 space-y-3">
-        {items.map((item) => (
-          <li key={item} className="flex gap-3 text-sm text-slate-300">
-            <span className="mt-2 h-1.5 w-1.5 rounded-full bg-cyan-300" />
-            <span>{item}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
+      <div
+        className={`rounded-[1.5rem] border p-5 ${
+          accent
+            ? "border-cyan-300/20 bg-cyan-300/10"
+            : "border-white/10 bg-white/5"
+        }`}
+      >
+        <p className="text-sm font-semibold text-white">{title}</p>
+        <ul className="mt-4 space-y-3">
+          {items.map((item) => (
+            <li key={item} className="flex gap-3 text-sm text-slate-300">
+              <span className="mt-2 h-1.5 w-1.5 rounded-full bg-cyan-300" />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </BorderGlow>
   );
 }
