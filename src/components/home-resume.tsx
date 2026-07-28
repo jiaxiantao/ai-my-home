@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 
 import { CopyButton } from "@/components/copy-button";
+import { ShinyText } from "@/components/reactbits/shiny-text";
+import { SpotlightCard } from "@/components/reactbits/spotlight-card";
 import { TechStackBoard } from "@/components/tech-stack-board";
 import {
   resumeBusinessProjects,
@@ -52,7 +54,16 @@ export function HomeResume({ siteUrl }: { siteUrl: string }) {
                 {resumeHeadline.name}
               </h1>
               <p className="mt-2 text-lg text-slate-300">{resumeHeadline.title}</p>
-              <p className="mt-1 text-sm text-cyan-200/80">{resumeHeadline.tagline}</p>
+              <div className="mt-1 text-sm text-cyan-200/80">
+                <ShinyText
+                  text={resumeHeadline.tagline}
+                  className="font-medium"
+                  color="rgba(186, 230, 253, 0.72)"
+                  shineColor="#ffffff"
+                  speed={3.6}
+                  spread={145}
+                />
+              </div>
             </div>
           </div>
           <p className="max-w-2xl text-sm leading-7 text-slate-400">
@@ -79,7 +90,10 @@ export function HomeResume({ siteUrl }: { siteUrl: string }) {
           </div>
         </div>
 
-        <aside className="space-y-4 rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-6 backdrop-blur-md">
+        <SpotlightCard
+          className="space-y-4 rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-6 backdrop-blur-md"
+          spotlightColor="rgba(139, 92, 246, 0.18)"
+        >
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
             联系方式
           </p>
@@ -135,7 +149,7 @@ export function HomeResume({ siteUrl }: { siteUrl: string }) {
             </p>
             <p className="mt-1 font-mono text-xs text-slate-500">{resumeEducation.period}</p>
           </div>
-        </aside>
+        </SpotlightCard>
       </section>
 
       <section className="space-y-6">
@@ -279,9 +293,10 @@ function ProjectGrid({
   return (
     <div className="grid gap-5 lg:grid-cols-2">
       {projects.map((project) => (
-        <article
+        <SpotlightCard
           key={project.name}
           className="rounded-[1.75rem] border border-white/10 bg-white/5 p-6"
+          spotlightColor="rgba(103, 232, 249, 0.18)"
         >
           <div className="flex flex-wrap items-start justify-between gap-2">
             <h2 className="text-lg font-semibold text-white">{project.name}</h2>
@@ -330,7 +345,7 @@ function ProjectGrid({
               </li>
             ))}
           </ul>
-        </article>
+        </SpotlightCard>
       ))}
     </div>
   );

@@ -1,10 +1,14 @@
 import { ArrowRight } from "lucide-react";
 
+import { SpotlightCard } from "@/components/reactbits/spotlight-card";
 import type { CaseStudy } from "@/lib/site-content";
 
 export function CaseProofCard({ caseStudy }: { caseStudy: CaseStudy }) {
   return (
-    <article className="flex h-full flex-col rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
+    <SpotlightCard
+      className="flex h-full flex-col rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6"
+      spotlightColor="rgba(103, 232, 249, 0.16)"
+    >
       <div className="flex flex-wrap gap-2">
         {caseStudy.stack.map((item) => (
           <span
@@ -34,6 +38,6 @@ export function CaseProofCard({ caseStudy }: { caseStudy: CaseStudy }) {
         案例拆解
         <ArrowRight className="h-4 w-4" />
       </a>
-    </article>
+    </SpotlightCard>
   );
 }
