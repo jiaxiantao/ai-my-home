@@ -21,6 +21,9 @@ import {
 } from "@/components/charts/lazy-dashboard-charts";
 import { DashboardPanelMount } from "@/components/dashboard-panel-mount";
 import { DashboardReleasePanel } from "@/components/dashboard-release-panel";
+import { CountUp } from "@/components/reactbits/count-up";
+import { GlareHover } from "@/components/reactbits/glare-hover";
+import { Magnet } from "@/components/reactbits/magnet";
 import type { DashboardData } from "@/lib/dashboard-service";
 import { formatReleaseStoreMode } from "@/lib/release-store-labels";
 
@@ -188,22 +191,27 @@ export function FullstackDashboard({
           const isActive = panel.id === activePanel;
 
           return (
-            <button
+            <GlareHover
               key={panel.id}
-              type="button"
-              onClick={() => setActivePanel(panel.id)}
-              className={`rounded-[1.5rem] border p-4 text-left transition ${
-                isActive
-                  ? "border-cyan-300/35 bg-cyan-300/10"
-                  : "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10"
-              }`}
+              className="rounded-[1.5rem]"
+              glareColor={isActive ? "#67e8f9" : "#ffffff"}
             >
-              <Icon
-                className={`h-4 w-4 ${isActive ? "text-cyan-200" : "text-slate-400"}`}
-              />
-              <p className="mt-3 text-sm font-semibold text-white">{panel.label}</p>
-              <p className="mt-1 text-xs leading-5 text-slate-400">{panel.summary}</p>
-            </button>
+              <button
+                type="button"
+                onClick={() => setActivePanel(panel.id)}
+                className={`rounded-[1.5rem] border p-4 text-left transition ${
+                  isActive
+                    ? "border-cyan-300/35 bg-cyan-300/10"
+                    : "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10"
+                }`}
+              >
+                <Icon
+                  className={`h-4 w-4 ${isActive ? "text-cyan-200" : "text-slate-400"}`}
+                />
+                <p className="mt-3 text-sm font-semibold text-white">{panel.label}</p>
+                <p className="mt-1 text-xs leading-5 text-slate-400">{panel.summary}</p>
+              </button>
+            </GlareHover>
           );
         })}
       </div>
@@ -221,7 +229,7 @@ export function FullstackDashboard({
                     {metric.label}
                   </p>
                   <p className="mt-2 text-3xl font-semibold text-white">
-                    {metric.value}
+                    <CountUp to={metric.value} duration={1.8} separator="," />
                   </p>
                   <p className="mt-1 text-sm text-slate-400">{metric.detail}</p>
                 </article>
@@ -252,25 +260,29 @@ export function FullstackDashboard({
                   <div className="rounded-xl border border-white/10 bg-slate-950/35 px-4 py-3 text-slate-300">
                     Note
                     <p className="mt-1 text-2xl font-semibold text-white tabular-nums">
-                      {analytics.stats.totalNotes}
+                      <CountUp to={analytics.stats.totalNotes} duration={1.6} separator="," />
                     </p>
                   </div>
                   <div className="rounded-xl border border-white/10 bg-slate-950/35 px-4 py-3 text-slate-300">
                     Domain
                     <p className="mt-1 text-2xl font-semibold text-white tabular-nums">
-                      {analytics.stats.domainCount}
+                      <CountUp to={analytics.stats.domainCount} duration={1.6} separator="," />
                     </p>
                   </div>
                   <div className="rounded-xl border border-white/10 bg-slate-950/35 px-4 py-3 text-slate-300">
                     Topic
                     <p className="mt-1 text-2xl font-semibold text-white tabular-nums">
-                      {analytics.stats.topicCount}
+                      <CountUp to={analytics.stats.topicCount} duration={1.6} separator="," />
                     </p>
                   </div>
                   <div className="rounded-xl border border-white/10 bg-slate-950/35 px-4 py-3 text-slate-300">
                     CaseStudy
                     <p className="mt-1 text-2xl font-semibold text-white tabular-nums">
-                      {analytics.stats.caseStudyCount}
+                      <CountUp
+                        to={analytics.stats.caseStudyCount}
+                        duration={1.6}
+                        separator=","
+                      />
                     </p>
                   </div>
                 </div>
@@ -333,27 +345,33 @@ export function FullstackDashboard({
 
             <div className="flex flex-wrap gap-3">
               {featured.caseSlug ? (
-                <Link
-                  href={`/cases/${featured.caseSlug}`}
-                  className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 transition hover:border-cyan-300/30"
-                >
-                  精选案例 →
-                </Link>
+                <Magnet>
+                  <Link
+                    href={`/cases/${featured.caseSlug}`}
+                    className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 transition hover:border-cyan-300/30"
+                  >
+                    精选案例 →
+                  </Link>
+                </Magnet>
               ) : null}
               {featured.insightSlug ? (
-                <Link
-                  href={`/insights/${featured.insightSlug}`}
+                <Magnet>
+                  <Link
+                    href={`/insights/${featured.insightSlug}`}
+                    className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 transition hover:border-cyan-300/30"
+                  >
+                    精选文章 →
+                  </Link>
+                </Magnet>
+              ) : null}
+              <Magnet>
+                <a
+                  href="/api/profile"
                   className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 transition hover:border-cyan-300/30"
                 >
-                  精选文章 →
-                </Link>
-              ) : null}
-              <a
-                href="/api/profile"
-                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 transition hover:border-cyan-300/30"
-              >
-                Profile BFF JSON →
-              </a>
+                  Profile BFF JSON →
+                </a>
+              </Magnet>
             </div>
           </div>
         </DashboardPanelMount>

@@ -6,6 +6,7 @@ import { CaseProofCard } from "@/components/case-proof-card";
 import { CopyButton } from "@/components/copy-button";
 import { HomeResume } from "@/components/home-resume";
 import { HomeScrollRestoration } from "@/components/home-scroll-restoration";
+import { Magnet } from "@/components/reactbits/magnet";
 import { SectionHeading } from "@/components/section-heading";
 import { SectionSkeleton } from "@/components/section-skeleton";
 import { FrontIntelligenceSpotlight } from "@/components/front-intelligence-spotlight";
@@ -173,23 +174,25 @@ export default async function Home() {
         <div className="flex flex-wrap gap-2">
           {exploreLinks.map((item) =>
             "external" in item && item.external ? (
-              <a
-                key={item.href}
-                href={item.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-full border border-white/10 px-3 py-1.5 text-sm text-slate-300 transition hover:border-cyan-300/30 hover:text-white"
-              >
-                {item.label}
-              </a>
+              <Magnet key={item.href}>
+                <a
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-full border border-white/10 px-3 py-1.5 text-sm text-slate-300 transition hover:border-cyan-300/30 hover:text-white"
+                >
+                  {item.label}
+                </a>
+              </Magnet>
             ) : (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="rounded-full border border-white/10 px-3 py-1.5 text-sm text-slate-300 transition hover:border-cyan-300/30 hover:text-white"
-              >
-                {item.label}
-              </Link>
+              <Magnet key={item.href}>
+                <Link
+                  href={item.href}
+                  className="rounded-full border border-white/10 px-3 py-1.5 text-sm text-slate-300 transition hover:border-cyan-300/30 hover:text-white"
+                >
+                  {item.label}
+                </Link>
+              </Magnet>
             ),
           )}
         </div>

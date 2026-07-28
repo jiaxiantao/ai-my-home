@@ -5,6 +5,7 @@ import { useState } from "react";
 import { BrainCircuit, Cpu, Scan, Sparkles } from "lucide-react";
 
 import { ExternalProjectLink } from "@/components/external-project-link";
+import { GlareHover } from "@/components/reactbits/glare-hover";
 import { FrontIntelligenceComposerDemo } from "@/components/demos/front-intelligence-composer-demo";
 import { EXTERNAL_PROJECTS, HOME_AGENT_AGENTS_URL } from "@/lib/external-projects";
 
@@ -79,24 +80,29 @@ export function EdgeAiShowcase() {
           const isActive = tab.id === active;
 
           return (
-            <button
+            <GlareHover
               key={tab.id}
-              type="button"
-              onClick={() => setActive(tab.id)}
-              className={`rounded-2xl border px-4 py-3 text-left transition ${
-                isActive
-                  ? "border-violet-300/35 bg-violet-300/10"
-                  : "border-white/10 bg-white/5 hover:border-white/20"
-              }`}
+              className="rounded-2xl"
+              glareColor={isActive ? "#a78bfa" : "#ffffff"}
             >
-              <div className="flex items-center gap-2">
-                <Icon className="h-4 w-4 text-violet-200/80" />
-                <span className="text-sm font-semibold text-white">{tab.title}</span>
-              </div>
-              <span className="mt-1 block font-mono text-[10px] text-slate-500">
-                {tab.tech}
-              </span>
-            </button>
+              <button
+                type="button"
+                onClick={() => setActive(tab.id)}
+                className={`rounded-2xl border px-4 py-3 text-left transition ${
+                  isActive
+                    ? "border-violet-300/35 bg-violet-300/10"
+                    : "border-white/10 bg-white/5 hover:border-white/20"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Icon className="h-4 w-4 text-violet-200/80" />
+                  <span className="text-sm font-semibold text-white">{tab.title}</span>
+                </div>
+                <span className="mt-1 block font-mono text-[10px] text-slate-500">
+                  {tab.tech}
+                </span>
+              </button>
+            </GlareHover>
           );
         })}
       </div>

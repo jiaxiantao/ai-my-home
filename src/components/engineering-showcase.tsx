@@ -12,6 +12,7 @@ import {
   Workflow,
 } from "lucide-react";
 
+import { GlareHover } from "@/components/reactbits/glare-hover";
 import { ApiLatencyDemo } from "@/components/demos/api-latency-demo";
 import { AuthRateLimitLabDemo } from "@/components/demos/auth-rate-limit-lab-demo";
 import { CheckoutFlowDemo } from "@/components/demos/checkout-flow-demo";
@@ -106,24 +107,29 @@ export function EngineeringShowcase() {
           const isActive = demo.id === active;
 
           return (
-            <button
+            <GlareHover
               key={demo.id}
-              type="button"
-              onClick={() => setActive(demo.id)}
-              className={`rounded-2xl border px-4 py-3 text-left transition ${
-                isActive
-                  ? "border-cyan-300/35 bg-cyan-300/10"
-                  : "border-white/10 bg-white/5 hover:border-white/20"
-              }`}
+              className="rounded-2xl"
+              glareColor={isActive ? "#67e8f9" : "#ffffff"}
             >
-              <div className="flex items-center gap-2">
-                <Icon className="h-4 w-4 text-cyan-200/80" />
-                <span className="text-sm font-semibold text-white">{demo.title}</span>
-              </div>
-              <span className="mt-1 block font-mono text-[10px] text-slate-500">
-                {demo.tech}
-              </span>
-            </button>
+              <button
+                type="button"
+                onClick={() => setActive(demo.id)}
+                className={`rounded-2xl border px-4 py-3 text-left transition ${
+                  isActive
+                    ? "border-cyan-300/35 bg-cyan-300/10"
+                    : "border-white/10 bg-white/5 hover:border-white/20"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Icon className="h-4 w-4 text-cyan-200/80" />
+                  <span className="text-sm font-semibold text-white">{demo.title}</span>
+                </div>
+                <span className="mt-1 block font-mono text-[10px] text-slate-500">
+                  {demo.tech}
+                </span>
+              </button>
+            </GlareHover>
           );
         })}
       </div>
