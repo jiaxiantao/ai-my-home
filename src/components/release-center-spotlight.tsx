@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { ArrowRight, GitBranch, ShieldCheck } from "lucide-react";
 
+import { BorderGlow } from "@/components/reactbits/border-glow";
+import { CountUp } from "@/components/reactbits/count-up";
+import { Magnet } from "@/components/reactbits/magnet";
+import { StarBorder } from "@/components/reactbits/star-border";
 import { formatReleaseOrderStatus } from "@/lib/release-labels";
 import type { ReleaseSummary } from "@/lib/release-service";
 import { formatReleaseStoreMode } from "@/lib/release-store-labels";
@@ -27,24 +31,30 @@ export function ReleaseCenterSpotlight({ release }: { release: ReleaseSummary })
         </p>
 
         <div className="grid grid-cols-3 gap-2">
-          <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2">
-            <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">应用</p>
-            <p className="mt-1 text-xl font-semibold tabular-nums text-white">
-              {release.appCount}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2">
-            <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">发布单</p>
-            <p className="mt-1 text-xl font-semibold tabular-nums text-white">
-              {release.orderCount}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2">
-            <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">进行中</p>
-            <p className="mt-1 text-xl font-semibold tabular-nums text-white">
-              {inProgress}
-            </p>
-          </div>
+          <BorderGlow className="rounded-2xl" glowColor="rgba(103, 232, 249, 0.24)">
+            <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">应用</p>
+              <p className="mt-1 text-xl font-semibold tabular-nums text-white">
+                <CountUp to={release.appCount} duration={1.5} separator="," />
+              </p>
+            </div>
+          </BorderGlow>
+          <BorderGlow className="rounded-2xl" glowColor="rgba(103, 232, 249, 0.24)">
+            <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">发布单</p>
+              <p className="mt-1 text-xl font-semibold tabular-nums text-white">
+                <CountUp to={release.orderCount} duration={1.5} separator="," />
+              </p>
+            </div>
+          </BorderGlow>
+          <BorderGlow className="rounded-2xl" glowColor="rgba(103, 232, 249, 0.24)">
+            <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">进行中</p>
+              <p className="mt-1 text-xl font-semibold tabular-nums text-white">
+                <CountUp to={inProgress} duration={1.5} separator="," />
+              </p>
+            </div>
+          </BorderGlow>
         </div>
 
         {release.recentOrders.length > 0 ? (
@@ -81,29 +91,36 @@ export function ReleaseCenterSpotlight({ release }: { release: ReleaseSummary })
             变更单 + 审批元信息
           </span>
         </div>
-        <Link
-          href="/release-center"
-          className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-100"
-        >
-          打开发布中心
-          <ArrowRight className="h-4 w-4" />
-        </Link>
+        <Magnet>
+          <StarBorder className="rounded-full" color="rgba(255, 255, 255, 0.9)">
+            <Link
+              href="/release-center"
+              className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-100"
+            >
+              打开发布中心
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </StarBorder>
+        </Magnet>
       </div>
 
       <div className="grid gap-3">
         {pipelineStages.map((stage, index) => (
-          <div
+          <BorderGlow
             key={stage.label}
-            className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
+            className="rounded-2xl"
+            glowColor="rgba(103, 232, 249, 0.22)"
           >
-            <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-cyan-300/25 bg-cyan-300/10 text-xs font-semibold text-cyan-100">
-              {index + 1}
-            </span>
-            <div>
-              <p className="text-sm font-semibold text-white">{stage.label}</p>
-              <p className="text-xs text-slate-400">{stage.detail}</p>
+            <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+              <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-cyan-300/25 bg-cyan-300/10 text-xs font-semibold text-cyan-100">
+                {index + 1}
+              </span>
+              <div>
+                <p className="text-sm font-semibold text-white">{stage.label}</p>
+                <p className="text-xs text-slate-400">{stage.detail}</p>
+              </div>
             </div>
-          </div>
+          </BorderGlow>
         ))}
       </div>
     </div>

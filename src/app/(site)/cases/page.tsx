@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { CaseStudyCard } from "@/components/case-study-card";
 import { JsonLd } from "@/components/json-ld";
+import { BorderGlow } from "@/components/reactbits/border-glow";
 import { SectionHeading } from "@/components/section-heading";
 import { getHomepageContent } from "@/lib/content-service";
 
@@ -25,6 +26,11 @@ export default async function CasesPage() {
           }}
         />
 
+        <BorderGlow
+          className="rounded-[2.25rem]"
+          glowColor="rgba(103, 232, 249, 0.26)"
+          backgroundColor="rgba(2, 6, 23, 0.24)"
+        >
         <section className="rounded-[2.25rem] border border-white/10 bg-white/5 p-8 lg:p-10">
           <p className="text-sm uppercase tracking-[0.3em] text-slate-400">
             Case Narratives
@@ -36,6 +42,7 @@ export default async function CasesPage() {
             我不太想把案例写成项目经历流水账，所以这里更像是我对问题、约束、推进方式和结果的重新整理。重点不只是做了什么，而是当时为什么这么判断。
           </p>
         </section>
+        </BorderGlow>
 
         <section className="space-y-10">
           <SectionHeading
