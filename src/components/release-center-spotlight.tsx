@@ -3,7 +3,6 @@ import { ArrowRight, GitBranch, ShieldCheck } from "lucide-react";
 
 import { BorderGlow } from "@/components/reactbits/border-glow";
 import { CountUp } from "@/components/reactbits/count-up";
-import { Magnet } from "@/components/reactbits/magnet";
 import { StarBorder } from "@/components/reactbits/star-border";
 import { formatReleaseOrderStatus } from "@/lib/release-labels";
 import type { ReleaseSummary } from "@/lib/release-service";
@@ -91,8 +90,7 @@ export function ReleaseCenterSpotlight({ release }: { release: ReleaseSummary })
             变更单 + 审批元信息
           </span>
         </div>
-        <Magnet>
-          <StarBorder className="rounded-full" color="rgba(255, 255, 255, 0.9)">
+        <StarBorder className="rounded-full" color="rgba(255, 255, 255, 0.9)">
             <Link
               href="/release-center"
               className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-100"
@@ -101,7 +99,6 @@ export function ReleaseCenterSpotlight({ release }: { release: ReleaseSummary })
               <ArrowRight className="h-4 w-4" />
             </Link>
           </StarBorder>
-        </Magnet>
       </div>
 
       <div className="grid gap-3">

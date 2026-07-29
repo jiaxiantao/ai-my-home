@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { BorderGlow } from "@/components/reactbits/border-glow";
 import { SectionHeading } from "@/components/section-heading";
 import { StatusProbe } from "@/components/status-probe";
 
@@ -22,7 +23,12 @@ const quickLinks = [
 export default function StatusPage() {
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-16 px-6 py-10 lg:px-8 lg:py-16">
-      <section className="rounded-[2rem] border border-white/10 bg-white/5 p-8">
+      <BorderGlow
+        className="rounded-4xl"
+        glowColor="rgba(103, 232, 249, 0.26)"
+        backgroundColor="rgba(2, 6, 23, 0.24)"
+      >
+      <section className="rounded-4xl border border-white/10 bg-white/5 p-8">
         <p className="text-sm uppercase tracking-[0.3em] text-slate-400">
           System Status
         </p>
@@ -45,6 +51,7 @@ export default function StatusPage() {
           ))}
         </div>
       </section>
+      </BorderGlow>
 
       <section className="space-y-6">
         <SectionHeading eyebrow="Diagnostics" title="依赖状态与 API 响应" />

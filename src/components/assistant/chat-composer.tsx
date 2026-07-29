@@ -3,6 +3,10 @@
 import { ImagePlus, Mic, MicOff, Square, Send } from "lucide-react";
 import { useRef, useState } from "react";
 
+import { AnimatedContent } from "@/components/reactbits/animated-content";
+import { BorderGlow } from "@/components/reactbits/border-glow";
+import { DecryptedText } from "@/components/reactbits/decrypted-text";
+import { GlareHover } from "@/components/reactbits/glare-hover";
 import type { ChatImageAttachment } from "@/lib/chat-types";
 
 type ChatComposerProps = {
@@ -107,7 +111,7 @@ export function ChatComposer({
   return (
     <div className="mt-6 grid gap-3">
       {images.length ? (
-        <div className="flex flex-wrap gap-2">
+        <AnimatedContent className="flex flex-wrap gap-2" distance={10}>
           {images.map((image) => (
             <figure
               key={image.name}
@@ -131,22 +135,24 @@ export function ChatComposer({
           >
             清除图片
           </button>
-        </div>
+        </AnimatedContent>
       ) : null}
 
-      <textarea
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        rows={4}
-        placeholder="输入问题，支持 Markdown、图片附件说明、语音输入…"
-        className="rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-3 text-sm leading-7 text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/40"
-        onKeyDown={(event) => {
-          if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-            event.preventDefault();
-            onSubmit();
-          }
-        }}
-      />
+      <BorderGlow className="rounded-3xl" glowColor="rgba(103, 232, 249, 0.18)">
+        <textarea
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          rows={4}
+          placeholder="输入问题，支持 Markdown、图片附件说明、语音输入…"
+          className="w-full rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-sm leading-7 text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/40"
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+              event.preventDefault();
+              onSubmit();
+            }
+          }}
+        />
+      </BorderGlow>
 
       {voiceError ? (
         <p className="text-xs text-amber-200">{voiceError}</p>
@@ -161,54 +167,67 @@ export function ChatComposer({
           className="hidden"
           onChange={(event) => void handleImagePick(event)}
         />
-        <button
-          type="button"
-          onClick={() => fileRef.current?.click()}
-          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-slate-200 hover:bg-white/10"
-        >
-          <ImagePlus className="h-3.5 w-3.5" />
-          图片
-        </button>
-        <button
-          type="button"
-          onClick={toggleVoice}
-          className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs transition ${
+        <GlareHover className="rounded-full border border-white/10 bg-white/5" glareColor="#67e8f9">
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs text-slate-200"
+          >
+            <ImagePlus className="h-3.5 w-3.5" />
+            图片
+          </button>
+        </GlareHover>
+        <GlareHover
+          className={`rounded-full border ${
             isListening
-              ? "border-rose-300/35 bg-rose-300/10 text-rose-100"
-              : "border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+              ? "border-rose-300/35 bg-rose-300/10"
+              : "border-white/10 bg-white/5"
           }`}
+          glareColor={isListening ? "#fda4af" : "#67e8f9"}
         >
-          {isListening ? (
-            <MicOff className="h-3.5 w-3.5" />
-          ) : (
-            <Mic className="h-3.5 w-3.5" />
-          )}
-          {isListening ? "停止听写" : "语音输入"}
-        </button>
+          <button
+            type="button"
+            onClick={toggleVoice}
+            className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs transition ${
+              isListening ? "text-rose-100" : "text-slate-200"
+            }`}
+          >
+            {isListening ? (
+              <MicOff className="h-3.5 w-3.5" />
+            ) : (
+              <Mic className="h-3.5 w-3.5" />
+            )}
+            {isListening ? "停止听写" : "语音输入"}
+          </button>
+        </GlareHover>
 
         {isSubmitting ? (
           <button
-            type="button"
-            onClick={onStop}
-            className="inline-flex items-center gap-2 rounded-full border border-rose-300/35 bg-rose-300/10 px-5 py-2.5 text-sm font-semibold text-rose-100"
-          >
-            <Square className="h-3.5 w-3.5 fill-current" />
-            停止生成
-          </button>
+              type="button"
+              onClick={onStop}
+              className="inline-flex items-center gap-2 rounded-full border border-rose-300/35 bg-rose-300/10 px-5 py-2.5 text-sm font-semibold text-rose-100"
+            >
+              <Square className="h-3.5 w-3.5 fill-current" />
+              停止生成
+            </button>
         ) : (
           <button
-            type="button"
-            onClick={onSubmit}
-            disabled={!value.trim()}
-            className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <Send className="h-3.5 w-3.5" />
-            发送
-          </button>
+              type="button"
+              onClick={onSubmit}
+              disabled={!value.trim()}
+              className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Send className="h-3.5 w-3.5" />
+              发送
+            </button>
         )}
       </div>
       <p className="font-mono text-[10px] text-slate-500">
-        ⌘/Ctrl + Enter 发送 · 图片会作为多模态上下文说明（演示）
+        <DecryptedText
+          text="⌘/Ctrl + Enter 发送 · 图片会作为多模态上下文说明（演示）"
+          revealOnHover
+          speed={12}
+        />
       </p>
     </div>
   );

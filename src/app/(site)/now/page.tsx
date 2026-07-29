@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { BorderGlow } from "@/components/reactbits/border-glow";
+import { CountUp } from "@/components/reactbits/count-up";
 import { CurrentTracks } from "@/components/current-tracks";
 import { JsonLd } from "@/components/json-ld";
 import { SectionHeading } from "@/components/section-heading";
@@ -24,6 +26,11 @@ export default function NowPage() {
           }}
         />
 
+        <BorderGlow
+          className="rounded-[2.25rem]"
+          glowColor="rgba(103, 232, 249, 0.26)"
+          backgroundColor="rgba(2, 6, 23, 0.24)"
+        >
         <section className="grid gap-8 rounded-[2.25rem] border border-white/10 bg-white/5 p-8 lg:grid-cols-[1.05fr_0.95fr] lg:p-10">
           <div>
             <p className="text-sm uppercase tracking-[0.3em] text-slate-400">Now</p>
@@ -36,27 +43,32 @@ export default function NowPage() {
           </div>
 
           <div className="grid gap-4">
-            <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
-                Active Tracks
-              </p>
-              <p className="mt-4 text-4xl font-semibold tracking-tight text-white">
-                {currentTracks.length}
-              </p>
-              <p className="mt-2 text-sm text-slate-400">个持续推进的方向</p>
-            </article>
+            <BorderGlow className="rounded-[1.75rem]" glowColor="rgba(103, 232, 249, 0.22)">
+              <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
+                  Active Tracks
+                </p>
+                <p className="mt-4 text-4xl font-semibold tracking-tight text-white">
+                  <CountUp to={currentTracks.length} duration={1.6} separator="," />
+                </p>
+                <p className="mt-2 text-sm text-slate-400">个持续推进的方向</p>
+              </article>
+            </BorderGlow>
 
-            <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
-                Recent Logs
-              </p>
-              <p className="mt-4 text-4xl font-semibold tracking-tight text-white">
-                {workLogs.length}
-              </p>
-              <p className="mt-2 text-sm text-slate-400">条最近整理下来的工作记录</p>
-            </article>
+            <BorderGlow className="rounded-[1.75rem]" glowColor="rgba(167, 139, 250, 0.22)">
+              <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
+                  Recent Logs
+                </p>
+                <p className="mt-4 text-4xl font-semibold tracking-tight text-white">
+                  <CountUp to={workLogs.length} duration={1.6} separator="," />
+                </p>
+                <p className="mt-2 text-sm text-slate-400">条最近整理下来的工作记录</p>
+              </article>
+            </BorderGlow>
           </div>
         </section>
+        </BorderGlow>
 
         <section className="space-y-10">
           <SectionHeading

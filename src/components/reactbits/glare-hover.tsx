@@ -89,7 +89,7 @@ export function GlareHover({
           backgroundPosition: "-100% -100%, 0 0",
         }}
       />
-      <div className="relative z-0">{children}</div>
+      <div className="relative z-0 h-full w-full">{children}</div>
     </div>
   );
 }

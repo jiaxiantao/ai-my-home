@@ -4,6 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { useAuth } from "@/components/auth-provider";
+import { AnimatedList } from "@/components/reactbits/animated-list";
+import { BlurText } from "@/components/reactbits/blur-text";
+import { BorderGlow } from "@/components/reactbits/border-glow";
+import { CountUp } from "@/components/reactbits/count-up";
+import { DecryptedText } from "@/components/reactbits/decrypted-text";
+import { StarBorder } from "@/components/reactbits/star-border";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type {
@@ -370,15 +376,13 @@ export function ReleaseCenterPanel() {
 
   return (
     <div className="grid gap-6">
-      <section className="grid gap-4 rounded-[2rem] border border-white/10 bg-white/5 p-6">
+      <BorderGlow className="rounded-4xl" glowColor="rgba(103, 232, 249, 0.2)">
+      <section className="grid gap-4 rounded-4xl border border-white/10 bg-white/5 p-6">
         <div className="grid gap-4 md:grid-cols-4">
-          <Metric label="应用数" value={String(apps.length)} />
-          <Metric label="发布单" value={String(orders.length)} />
-          <Metric
-            label="进行中"
-            value={String(orders.length - statusCounts.released)}
-          />
-          <Metric label="已上线" value={String(statusCounts.released)} />
+          <Metric label="应用数" value={apps.length} />
+          <Metric label="发布单" value={orders.length} />
+          <Metric label="进行中" value={orders.length - statusCounts.released} />
+          <Metric label="已上线" value={statusCounts.released} />
         </div>
         <div className="flex flex-wrap gap-2">
           {(
@@ -393,6 +397,7 @@ export function ReleaseCenterPanel() {
           ))}
         </div>
       </section>
+      </BorderGlow>
 
       {!authenticated ? (
         <p className="rounded-2xl border border-amber-300/20 bg-amber-300/10 px-4 py-3 text-sm text-amber-100">
@@ -418,9 +423,12 @@ export function ReleaseCenterPanel() {
         </p>
       ) : null}
 
-      <section className="grid gap-4 rounded-[2rem] border border-white/10 bg-slate-950/35 p-6 lg:grid-cols-2">
-        <div className="grid gap-3">
-          <p className="text-sm font-semibold text-white">1) 添加应用</p>
+      <section className="grid gap-4 lg:grid-cols-2">
+        <BorderGlow className="rounded-4xl" glowColor="rgba(103, 232, 249, 0.18)">
+        <div className="grid gap-3 rounded-4xl border border-white/10 bg-slate-950/35 p-6">
+          <p className="text-sm font-semibold text-white">
+            <BlurText text="1) 添加应用" animateBy="words" />
+          </p>
           <Input
             placeholder="应用名，如 ai-my-home-web"
             value={appForm.name}
@@ -456,12 +464,16 @@ export function ReleaseCenterPanel() {
             }
           />
           <Button disabled={!authenticated} onClick={() => void createApp()}>
-            新增应用
-          </Button>
+              新增应用
+            </Button>
         </div>
+        </BorderGlow>
 
-        <div className="grid gap-3">
-          <p className="text-sm font-semibold text-white">2) 创建发布单</p>
+        <BorderGlow className="rounded-4xl" glowColor="rgba(167, 139, 250, 0.18)">
+        <div className="grid gap-3 rounded-4xl border border-white/10 bg-slate-950/35 p-6">
+          <p className="text-sm font-semibold text-white">
+            <BlurText text="2) 创建发布单" animateBy="words" />
+          </p>
           <select
             value={orderForm.appId}
             onChange={(event) =>
@@ -501,18 +513,19 @@ export function ReleaseCenterPanel() {
             }
           />
           <Button
-            disabled={!authenticated || !orderForm.appId || !orderForm.changeTicket.trim()}
-            onClick={() => void createOrder()}
-          >
-            创建发布单
-          </Button>
+              disabled={!authenticated || !orderForm.appId || !orderForm.changeTicket.trim()}
+              onClick={() => void createOrder()}
+            >
+              创建发布单
+            </Button>
         </div>
+        </BorderGlow>
       </section>
 
       <section className="grid gap-4">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-400">
-            3) 发布流水线执行
+            <DecryptedText text="3) 发布流水线执行" revealOnHover speed={16} />
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-xs text-slate-500">
@@ -603,9 +616,12 @@ export function ReleaseCenterPanel() {
         />
 
         {loading ? (
-          <p className="text-sm text-slate-400">加载中...</p>
+          <p className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-400">
+            <DecryptedText text="加载中..." speed={20} />
+          </p>
         ) : (
           <>
+            <BorderGlow className="rounded-xl" glowColor="rgba(103, 232, 249, 0.16)">
             <div className="flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-white/5 p-3">
               <p className="text-xs text-slate-500">
                 已选 {selectedOrderIds.size} / {filteredOrders.length}
@@ -662,11 +678,15 @@ export function ReleaseCenterPanel() {
                 折叠全部
               </Button>
             </div>
+            </BorderGlow>
 
             {filteredOrders.length ? (
-          filteredOrders.map((order) => (
+              <AnimatedList
+                items={filteredOrders}
+                className="grid gap-4"
+                getKey={(order) => order.id}
+                renderItem={(order) => (
             <details
-              key={order.id}
               open={openOrderIds.has(order.id)}
               onToggle={(event) => {
                 const details = event.currentTarget;
@@ -680,7 +700,7 @@ export function ReleaseCenterPanel() {
                   return next;
                 });
               }}
-              className="group rounded-[1.5rem] border border-white/10 bg-slate-950/40 open:border-cyan-300/20"
+              className="group rounded-3xl border border-white/10 bg-slate-950/40 open:border-cyan-300/20"
             >
               <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3 p-5 marker:content-none [&::-webkit-details-marker]:hidden">
                 <div className="flex min-w-0 flex-1 items-start gap-3">
@@ -889,14 +909,18 @@ export function ReleaseCenterPanel() {
               </div>
               </div>
             </details>
-          ))
+                )}
+              />
         ) : orders.length ? (
           <p className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-400">
-            没有符合筛选条件的发布单，试试调整状态或搜索关键词。
+            <DecryptedText
+              text="没有符合筛选条件的发布单，试试调整状态或搜索关键词。"
+              speed={12}
+            />
           </p>
         ) : (
           <p className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-400">
-            暂无发布单，先创建一个应用和发布单。
+            <DecryptedText text="暂无发布单，先创建一个应用和发布单。" speed={12} />
           </p>
         )}
           </>
@@ -906,11 +930,13 @@ export function ReleaseCenterPanel() {
   );
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function Metric({ label, value }: { label: string; value: number }) {
   return (
     <article className="rounded-2xl border border-white/10 bg-slate-950/35 p-4">
       <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{label}</p>
-      <p className="mt-2 text-2xl font-semibold text-white">{value}</p>
+      <p className="mt-2 text-2xl font-semibold text-white">
+        <CountUp to={value} duration={1.4} separator="," />
+      </p>
     </article>
   );
 }
@@ -934,9 +960,11 @@ function StagePill({
           : "border-white/10 bg-white/5 text-slate-300";
 
   return (
-    <div className={`rounded-xl border px-3 py-2 text-xs ${colorClass}`}>
+    <StarBorder className="rounded-xl" color="rgba(103, 232, 249, 0.22)" speed="10s">
+      <div className={`rounded-xl border px-3 py-2 text-xs ${colorClass}`}>
       <p className="font-semibold uppercase tracking-[0.2em]">{title}</p>
       <p className="mt-1 truncate">{detail}</p>
-    </div>
+      </div>
+    </StarBorder>
   );
 }

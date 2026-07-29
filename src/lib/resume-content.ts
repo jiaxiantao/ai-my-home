@@ -159,6 +159,18 @@ export const resumeBusinessProjects: ResumeProject[] = [
 /** GitHub 开源项目 */
 export const resumeOpenSourceProjects: ResumeProject[] = [
   {
+    name: "cos-design",
+    period: "开源",
+    stack: ["TypeScript", "组件库", "前端工程化"],
+    summary: "搜车场景下的前端设计 / 组件探索与实践沉淀。",
+    bullets: [
+      "可复用 UI 与交互模式整理",
+      "TypeScript 工程化与组件规范实践",
+    ],
+    repoUrl: EXTERNAL_PROJECTS.cosDesign.repoUrl,
+    previewUrl: EXTERNAL_PROJECTS.cosDesign.previewUrl,
+  },
+  {
     name: "3d-car-viewing",
     period: "开源 · 持续维护",
     stack: ["Next.js", "React Three Fiber", "Three.js", "GLB 部件识别"],
@@ -170,6 +182,18 @@ export const resumeOpenSourceProjects: ResumeProject[] = [
     ],
     repoUrl: EXTERNAL_PROJECTS.carShowroom.repoUrl,
     previewUrl: EXTERNAL_PROJECTS.carShowroom.previewUrl,
+  },
+  {
+    name: "3d-express-warehouse",
+    period: "开源",
+    stack: ["Three.js", "WebGL", "3D 可视化"],
+    summary: "3D 快递仓库场景演示，空间布局与交互可视化。",
+    bullets: [
+      "仓库三维场景搭建与浏览交互",
+      "WebGL 性能与展示效果平衡",
+    ],
+    repoUrl: EXTERNAL_PROJECTS.expressWarehouse.repoUrl,
+    previewUrl: EXTERNAL_PROJECTS.expressWarehouse.previewUrl,
   },
   {
     name: "home-agent",
@@ -209,30 +233,6 @@ export const resumeOpenSourceProjects: ResumeProject[] = [
     ],
     repoUrl: EXTERNAL_PROJECTS.teamDocs.repoUrl,
     previewUrl: EXTERNAL_PROJECTS.teamDocs.previewUrl,
-  },
-  {
-    name: "cos-design",
-    period: "开源",
-    stack: ["TypeScript", "组件库", "前端工程化"],
-    summary: "搜车场景下的前端设计 / 组件探索与实践沉淀。",
-    bullets: [
-      "可复用 UI 与交互模式整理",
-      "TypeScript 工程化与组件规范实践",
-    ],
-    repoUrl: EXTERNAL_PROJECTS.cosDesign.repoUrl,
-    previewUrl: EXTERNAL_PROJECTS.cosDesign.previewUrl,
-  },
-  {
-    name: "3d-express-warehouse",
-    period: "开源",
-    stack: ["Three.js", "WebGL", "3D 可视化"],
-    summary: "3D 快递仓库场景演示，空间布局与交互可视化。",
-    bullets: [
-      "仓库三维场景搭建与浏览交互",
-      "WebGL 性能与展示效果平衡",
-    ],
-    repoUrl: EXTERNAL_PROJECTS.expressWarehouse.repoUrl,
-    previewUrl: EXTERNAL_PROJECTS.expressWarehouse.previewUrl,
   },
   {
     name: "blogs",

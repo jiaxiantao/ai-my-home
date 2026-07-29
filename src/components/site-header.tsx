@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { ChevronDown, Menu } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { DecryptedText } from "@/components/reactbits/decrypted-text";
 import { GradientText } from "@/components/reactbits/gradient-text";
 import { ShinyText } from "@/components/reactbits/shiny-text";
 import { useAuth } from "@/components/auth-provider";
@@ -23,6 +24,10 @@ import {
   useWeatherMood,
 } from "@/components/weather-mood-provider";
 import { HOME_AGENT_AGENTS_URL, PLATFORM_EXPERIENCE_NAV } from "@/lib/external-projects";
+import {
+  applySamePageHashNavigation,
+  parseHashHref,
+} from "@/lib/smooth-hash";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
@@ -78,12 +83,14 @@ function NavLink({
   onClick,
   tabIndex,
   "data-testid": dataTestId,
+  pathname,
 }: {
   item: NavItem;
   className: string;
   onClick?: () => void;
   tabIndex?: number;
   "data-testid"?: string;
+  pathname: string;
 }) {
   if (item.external) {
     return (
@@ -101,11 +108,19 @@ function NavLink({
     );
   }
 
+  const { hash } = parseHashHref(item.href);
+
   return (
     <Link
       href={item.href}
+      scroll={!hash}
       className={className}
-      onClick={onClick}
+      onClick={(event) => {
+        if (applySamePageHashNavigation(item.href, pathname)) {
+          event.preventDefault();
+        }
+        onClick?.();
+      }}
       tabIndex={tabIndex}
       data-testid={dataTestId}
     >
@@ -203,8 +218,8 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-20 border-b border-white/10 bg-slate-950/35 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
-        <div className="flex flex-col gap-1 rounded-full border border-white/10 bg-white/3 px-4 py-2 shadow-[0_10px_30px_rgba(2,6,23,0.18)]">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3 lg:px-8">
+        <div className="flex items-center gap-3 rounded-full border border-white/10 bg-white/3 px-4 py-2 shadow-[0_10px_30px_rgba(2,6,23,0.18)]">
           <Link
             href="/"
             className="text-sm font-semibold tracking-[0.24em] text-white"
@@ -218,8 +233,9 @@ export function SiteHeader() {
               XJ / FRONTEND SYSTEMS
             </GradientText>
           </Link>
-          <p className="hidden text-[10px] text-slate-500 lg:block">
-            <kbd className="rounded border border-white/10 px-1 font-mono">⌘K</kbd> 快捷导航
+          <p className="hidden items-center gap-1 text-[10px] text-slate-500 lg:inline-flex">
+            <kbd className="rounded border border-white/10 px-1 font-mono">⌘K</kbd>
+            快捷导航
           </p>
         </div>
 
@@ -246,7 +262,7 @@ export function SiteHeader() {
                     )
                   }
                   className={cn(
-                    "inline-flex items-center gap-1 rounded-full border px-3.5 py-2 text-sm transition",
+                    "inline-flex items-center gap-1 rounded-full border px-3.5 py-1.5 text-sm transition",
                     expanded || current
                       ? "border-cyan-300/30 bg-cyan-300/10 text-white shadow-[0_0_0_3px_rgba(34,211,238,0.08)]"
                       : "border-transparent text-slate-300 hover:border-white/10 hover:bg-white/4 hover:text-white",
@@ -287,6 +303,7 @@ export function SiteHeader() {
                       <NavLink
                         key={item.href}
                         item={item}
+                        pathname={pathname}
                         data-testid={`nav-${group.id}-${item.label.replace(/\s+/g, "-").toLowerCase()}`}
                         onClick={() => setActiveDropdown(null)}
                         tabIndex={expanded ? 0 : -1}
@@ -311,7 +328,7 @@ export function SiteHeader() {
                 setActiveDropdown((current) => (current === "mood" ? null : "mood"))
               }
               className={cn(
-                "inline-flex items-center gap-1 rounded-full border px-3.5 py-2 text-sm transition",
+                "inline-flex items-center gap-1 rounded-full border px-3.5 py-1.5 text-sm transition",
                 moodDropdownExpanded
                   ? "border-violet-300/30 bg-violet-300/10 text-white shadow-[0_0_0_3px_rgba(167,139,250,0.08)]"
                   : "border-transparent text-slate-300 hover:border-white/10 hover:bg-white/4 hover:text-white",
@@ -385,10 +402,10 @@ export function SiteHeader() {
             type="button"
             onClick={() => setAuthOpen(true)}
             className={cn(
-              "relative inline-flex h-11 w-11 items-center justify-center rounded-full border text-[11px] font-semibold uppercase transition",
+              "relative inline-flex h-9 w-9 items-center justify-center rounded-full border text-[10px] font-semibold uppercase transition",
               authenticated
-                ? "border-emerald-200/40 bg-emerald-300/15 text-emerald-100 shadow-[0_0_0_4px_rgba(16,185,129,0.12)]"
-                : "border-cyan-200/40 bg-cyan-300/10 text-cyan-100 shadow-[0_0_0_4px_rgba(34,211,238,0.1)]",
+                ? "border-emerald-200/40 bg-emerald-300/15 text-emerald-100 shadow-[0_0_0_3px_rgba(16,185,129,0.12)]"
+                : "border-cyan-200/40 bg-cyan-300/10 text-cyan-100 shadow-[0_0_0_3px_rgba(34,211,238,0.1)]",
             )}
             aria-label="打开登录弹窗"
           >
@@ -403,7 +420,7 @@ export function SiteHeader() {
               onClick={() =>
                 setActiveDropdown((current) => (current === "mood" ? null : "mood"))
               }
-              className="inline-flex h-10 items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 text-[11px] text-slate-200"
+              className="inline-flex h-9 items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 text-[11px] text-slate-200"
               aria-expanded={moodDropdownExpanded}
               aria-haspopup="listbox"
               aria-label="切换心情天气"
@@ -457,7 +474,7 @@ export function SiteHeader() {
             type="button"
             onClick={() => setAuthOpen(true)}
             className={cn(
-              "inline-flex h-10 w-10 items-center justify-center rounded-full border text-[10px] font-semibold uppercase",
+              "inline-flex h-9 w-9 items-center justify-center rounded-full border text-[10px] font-semibold uppercase",
               authenticated
                 ? "border-emerald-200/40 bg-emerald-300/15 text-emerald-100"
                 : "border-cyan-200/40 bg-cyan-300/10 text-cyan-100",
@@ -470,7 +487,7 @@ export function SiteHeader() {
             type="button"
             variant="outline"
             size="icon"
-            className="rounded-xl text-slate-200"
+            className="h-9 w-9 rounded-xl text-slate-200"
             aria-expanded={open}
             aria-label={open ? "关闭菜单" : "打开菜单"}
             onClick={() => setOpen((value) => !value)}
@@ -486,13 +503,14 @@ export function SiteHeader() {
             {navGroups.map((group) => (
               <li key={group.id} className="rounded-xl border border-white/10 bg-white/5 p-3">
                 <p className="mb-2 text-xs uppercase tracking-[0.2em] text-slate-500">
-                  {group.label}
+                  <DecryptedText text={group.label} revealOnHover speed={18} />
                 </p>
                 <div className="grid gap-2">
                   {group.items.map((item) => (
                     <NavLink
                       key={item.href}
                       item={item}
+                      pathname={pathname}
                       onClick={() => setOpen(false)}
                       className="block rounded-lg border border-white/10 px-3 py-2 text-sm text-slate-200"
                     />

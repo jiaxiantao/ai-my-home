@@ -21,10 +21,10 @@ import {
 } from "@/components/charts/lazy-dashboard-charts";
 import { DashboardPanelMount } from "@/components/dashboard-panel-mount";
 import { DashboardReleasePanel } from "@/components/dashboard-release-panel";
+import { rememberHomeScrollForReturn } from "@/components/home-scroll-restoration";
 import { BorderGlow } from "@/components/reactbits/border-glow";
 import { CountUp } from "@/components/reactbits/count-up";
 import { GlareHover } from "@/components/reactbits/glare-hover";
-import { Magnet } from "@/components/reactbits/magnet";
 import { StarBorder } from "@/components/reactbits/star-border";
 import type { DashboardData } from "@/lib/dashboard-service";
 import { formatReleaseStoreMode } from "@/lib/release-store-labels";
@@ -187,7 +187,7 @@ export function FullstackDashboard({
         </a>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-5">
+      <div className="grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {panels.map((panel) => {
           const Icon = panel.icon;
           const isActive = panel.id === activePanel;
@@ -195,13 +195,13 @@ export function FullstackDashboard({
           return (
             <GlareHover
               key={panel.id}
-              className="rounded-[1.5rem]"
+              className="h-full min-h-0 w-full rounded-[1.5rem]"
               glareColor={isActive ? "#67e8f9" : "#ffffff"}
             >
               <button
                 type="button"
                 onClick={() => setActivePanel(panel.id)}
-                className={`rounded-[1.5rem] border p-4 text-left transition ${
+                className={`flex h-full w-full flex-col rounded-[1.5rem] border p-4 text-left transition ${
                   isActive
                     ? "border-cyan-300/35 bg-cyan-300/10"
                     : "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10"
@@ -357,33 +357,29 @@ export function FullstackDashboard({
 
             <div className="flex flex-wrap gap-3">
               {featured.caseSlug ? (
-                <Magnet>
-                  <Link
-                    href={`/cases/${featured.caseSlug}`}
-                    className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 transition hover:border-cyan-300/30"
-                  >
-                    精选案例 →
-                  </Link>
-                </Magnet>
+                <Link
+                  href={`/cases/${featured.caseSlug}`}
+                  scroll={false}
+                  onClick={rememberHomeScrollForReturn}
+                  className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 transition hover:border-cyan-300/30"
+                >
+                  精选案例 →
+                </Link>
               ) : null}
               {featured.insightSlug ? (
-                <Magnet>
-                  <Link
+                <Link
                     href={`/insights/${featured.insightSlug}`}
                     className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 transition hover:border-cyan-300/30"
                   >
                     精选文章 →
                   </Link>
-                </Magnet>
               ) : null}
-              <Magnet>
-                <a
+              <a
                   href="/api/profile"
                   className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 transition hover:border-cyan-300/30"
                 >
                   Profile BFF JSON →
                 </a>
-              </Magnet>
             </div>
           </div>
         </DashboardPanelMount>

@@ -6,7 +6,6 @@ import { CaseProofCard } from "@/components/case-proof-card";
 import { CopyButton } from "@/components/copy-button";
 import { HomeResume } from "@/components/home-resume";
 import { HomeScrollRestoration } from "@/components/home-scroll-restoration";
-import { Magnet } from "@/components/reactbits/magnet";
 import { SectionHeading } from "@/components/section-heading";
 import { SectionSkeleton } from "@/components/section-skeleton";
 import { FrontIntelligenceSpotlight } from "@/components/front-intelligence-spotlight";
@@ -93,12 +92,12 @@ export default async function Home() {
         />
       </section>
 
-      <section id="capability-radar" className="space-y-6">
+      <section id="capability-radar" className="scroll-mt-24 space-y-6">
         <SectionHeading eyebrow="Capability" title="六维能力雷达 · 一眼看覆盖面" />
         <CapabilityProfileSection dashboard={dashboard} />
       </section>
 
-      <section id="front-intelligence" className="space-y-6">
+      <section id="front-intelligence" className="scroll-mt-24 space-y-6">
         <SectionHeading
           eyebrow="Front Intelligence"
           title="前端智能化：意图识别 · Prompt 编排 · 偏好学习"
@@ -106,7 +105,7 @@ export default async function Home() {
         <FrontIntelligenceSpotlight dashboard={dashboard} llmLabel={llmLabel} />
       </section>
 
-      <section id="viz" className="space-y-6">
+      <section id="viz" className="scroll-mt-24 space-y-6">
         <SectionHeading
           eyebrow="Visualization"
           title="Three.js + ECharts + PostgreSQL"
@@ -114,12 +113,12 @@ export default async function Home() {
         <SystemsVisualization analytics={dashboard.analytics} domains={domains} />
       </section>
 
-      <section id="dashboard" className="space-y-6">
+      <section id="dashboard" className="scroll-mt-24 space-y-6">
         <SectionHeading eyebrow="Dashboard" title="实时数据与链路" />
         <FullstackDashboard data={dashboard} llmLabel={llmLabel} />
       </section>
 
-      <section id="release-center" className="space-y-6">
+      <section id="release-center" className="scroll-mt-24 space-y-6">
         <SectionHeading
           eyebrow="Release Engineering"
           title="发布单 · 构建 · 分环境门禁"
@@ -127,7 +126,7 @@ export default async function Home() {
         <ReleaseCenterSpotlight release={dashboard.release} />
       </section>
 
-      <section id="cross-platform" className="space-y-6">
+      <section id="cross-platform" className="scroll-mt-24 space-y-6">
         <SectionHeading
           eyebrow="Cross-Platform"
           title="大前端：移动端 H5 · 小程序 · 桌面端"
@@ -135,7 +134,7 @@ export default async function Home() {
         <CrossPlatformShowcase />
       </section>
 
-      <section id="edge-ai" className="space-y-6">
+      <section id="edge-ai" className="scroll-mt-24 space-y-6">
         <SectionHeading
           eyebrow="Edge AI"
           title="浏览器端智能：Transformers.js · WASM · MediaPipe"
@@ -143,7 +142,7 @@ export default async function Home() {
         <EdgeAiShowcase />
       </section>
 
-      <section id="tech-demos" className="space-y-6">
+      <section id="tech-demos" className="scroll-mt-24 space-y-6">
         <SectionHeading
           eyebrow="Engineering Demos"
           title="可交互样例：性能 · 网络 · 渲染 · 状态 · 流 · Worker · 检索 · 安全"
@@ -151,21 +150,21 @@ export default async function Home() {
         <EngineeringShowcase />
       </section>
 
-      <section id="demo-lab" className="space-y-6">
+      <section id="demo-lab" className="scroll-mt-24 space-y-6">
         <SectionHeading eyebrow="Demo Lab" title="切换输入，看输出判断" />
         <InteractiveDemoLab />
       </section>
 
-      <section className="space-y-6">
+      <section id="cases" className="scroll-mt-24 space-y-6">
         <SectionHeading eyebrow="Cases" title="结果可核对的交付样例" />
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid items-stretch gap-4 md:grid-cols-2 xl:grid-cols-4">
           {caseStudies.map((caseStudy) => (
             <CaseProofCard key={caseStudy.slug} caseStudy={caseStudy} />
           ))}
         </div>
       </section>
 
-      <section id="topology" className="space-y-6">
+      <section id="topology" className="scroll-mt-24 space-y-6">
         <SectionHeading eyebrow="Topology" title="能力连接图" />
         <CapabilityTopology profile={profile} domains={domains} />
       </section>
@@ -174,25 +173,23 @@ export default async function Home() {
         <div className="flex flex-wrap gap-2">
           {exploreLinks.map((item) =>
             "external" in item && item.external ? (
-              <Magnet key={item.href}>
-                <a
-                  href={item.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-full border border-white/10 px-3 py-1.5 text-sm text-slate-300 transition hover:border-cyan-300/30 hover:text-white"
-                >
-                  {item.label}
-                </a>
-              </Magnet>
+              <a
+                key={item.href}
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-full border border-white/10 px-3 py-1.5 text-sm text-slate-300 transition hover:border-cyan-300/30 hover:text-white"
+              >
+                {item.label}
+              </a>
             ) : (
-              <Magnet key={item.href}>
-                <Link
-                  href={item.href}
-                  className="rounded-full border border-white/10 px-3 py-1.5 text-sm text-slate-300 transition hover:border-cyan-300/30 hover:text-white"
-                >
-                  {item.label}
-                </Link>
-              </Magnet>
+              <Link
+                key={item.href}
+                href={item.href}
+                className="rounded-full border border-white/10 px-3 py-1.5 text-sm text-slate-300 transition hover:border-cyan-300/30 hover:text-white"
+              >
+                {item.label}
+              </Link>
             ),
           )}
         </div>

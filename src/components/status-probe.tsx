@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { BorderGlow } from "@/components/reactbits/border-glow";
+import { GlareHover } from "@/components/reactbits/glare-hover";
 type HealthData = {
   ok?: boolean;
   ready?: boolean;
@@ -186,13 +188,13 @@ export function StatusProbe() {
               </span>
             ) : null}
             <button
-              type="button"
-              disabled={running}
-              onClick={() => void runProbes()}
-              className="rounded-full bg-white px-4 py-2 text-xs font-semibold text-slate-950 transition hover:bg-cyan-100 disabled:opacity-50"
-            >
-              {running ? "探测中…" : "并行探测"}
-            </button>
+                type="button"
+                disabled={running}
+                onClick={() => void runProbes()}
+                className="rounded-full bg-white px-4 py-2 text-xs font-semibold text-slate-950 transition hover:bg-cyan-100 disabled:opacity-50"
+              >
+                {running ? "探测中…" : "并行探测"}
+              </button>
           </div>
         </div>
 
@@ -200,37 +202,41 @@ export function StatusProbe() {
           {PROBES.map((probe) => {
             const row = probes.find((p) => p.key === probe.key);
             return (
-              <div
+              <GlareHover
                 key={probe.key}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
+                className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
+                glareColor="#67e8f9"
+                glareOpacity={0.15}
               >
-                <Link
-                  href={probe.href}
-                  className="font-mono text-xs text-cyan-100/90 transition hover:text-white"
-                >
-                  {probe.label}
-                </Link>
-                {row ? (
-                  <div className="flex items-center gap-2 font-mono text-xs">
-                    <span
-                      className={row.ok ? "text-emerald-300" : "text-rose-300"}
-                    >
-                      {row.ok ? "✓" : "✗"} HTTP {row.status || "ERR"}
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <Link
+                    href={probe.href}
+                    className="font-mono text-xs text-cyan-100/90 transition hover:text-white"
+                  >
+                    {probe.label}
+                  </Link>
+                  {row ? (
+                    <div className="flex items-center gap-2 font-mono text-xs">
+                      <span
+                        className={row.ok ? "text-emerald-300" : "text-rose-300"}
+                      >
+                        {row.ok ? "✓" : "✗"} HTTP {row.status || "ERR"}
+                      </span>
+                      <span className="text-slate-400">{row.ms} ms</span>
+                      {row.ttftMs != null ? (
+                        <span className="text-slate-500">TTFT {row.ttftMs} ms</span>
+                      ) : null}
+                      {row.detail ? (
+                        <span className="text-slate-500">· {row.detail}</span>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <span className="font-mono text-[10px] text-slate-600">
+                      点击「并行探测」
                     </span>
-                    <span className="text-slate-400">{row.ms} ms</span>
-                    {row.ttftMs != null ? (
-                      <span className="text-slate-500">TTFT {row.ttftMs} ms</span>
-                    ) : null}
-                    {row.detail ? (
-                      <span className="text-slate-500">· {row.detail}</span>
-                    ) : null}
-                  </div>
-                ) : (
-                  <span className="font-mono text-[10px] text-slate-600">
-                    点击「并行探测」
-                  </span>
-                )}
-              </div>
+                  )}
+                </div>
+              </GlareHover>
             );
           })}
         </div>
@@ -379,22 +385,27 @@ function StatusCard({
   detail: string;
 }) {
   return (
-    <article
-      className={`rounded-2xl border p-5 ${
-        ok
-          ? "border-emerald-400/20 bg-emerald-400/5"
-          : "border-amber-400/20 bg-amber-400/5"
-      }`}
+    <BorderGlow
+      className="rounded-2xl"
+      glowColor={ok ? "rgba(52, 211, 153, 0.2)" : "rgba(251, 191, 36, 0.2)"}
     >
-      <div className="flex items-center gap-2">
-        <span
-          className={`h-2 w-2 rounded-full ${ok ? "bg-emerald-400" : "bg-amber-400"}`}
-        />
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-          {label}
-        </p>
-      </div>
-      <p className="mt-3 text-sm text-slate-200">{detail}</p>
-    </article>
+      <article
+        className={`rounded-2xl border p-5 ${
+          ok
+            ? "border-emerald-400/20 bg-emerald-400/5"
+            : "border-amber-400/20 bg-amber-400/5"
+        }`}
+      >
+        <div className="flex items-center gap-2">
+          <span
+            className={`h-2 w-2 rounded-full ${ok ? "bg-emerald-400" : "bg-amber-400"}`}
+          />
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+            {label}
+          </p>
+        </div>
+        <p className="mt-3 text-sm text-slate-200">{detail}</p>
+      </article>
+    </BorderGlow>
   );
 }

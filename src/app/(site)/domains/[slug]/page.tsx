@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { notFound } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 
+import { HashLink } from "@/components/hash-link";
 import { SectionHeading } from "@/components/section-heading";
 import { getDomainBySlug } from "@/lib/content-service";
 import { iconMap } from "@/lib/icon-map";
@@ -53,13 +53,13 @@ export default async function DomainPage({ params }: DomainPageProps) {
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-16 px-6 py-10 lg:px-8 lg:py-16">
         <section className="grid gap-8 rounded-[2.25rem] border border-white/10 bg-white/5 p-8 lg:grid-cols-[1.15fr_0.85fr] lg:p-10">
           <div>
-            <Link
+            <HashLink
               href="/#topology"
               className="inline-flex items-center gap-2 text-sm text-slate-300 transition hover:text-white"
             >
               <ArrowLeft className="h-4 w-4" />
               返回首页总览
-            </Link>
+            </HashLink>
 
             <div className="mt-8 inline-flex items-center gap-3 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-sm text-cyan-100">
               <Icon className="h-4 w-4" />

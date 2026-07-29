@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 import {
   ArrowRight,
   Briefcase,
@@ -13,7 +12,7 @@ import {
 } from "lucide-react";
 
 import { CopyButton } from "@/components/copy-button";
-import { Magnet } from "@/components/reactbits/magnet";
+import { HashLink } from "@/components/hash-link";
 import { ShinyText } from "@/components/reactbits/shiny-text";
 import { SpotlightCard } from "@/components/reactbits/spotlight-card";
 import { TechStackBoard } from "@/components/tech-stack-board";
@@ -72,17 +71,14 @@ export function HomeResume({ siteUrl }: { siteUrl: string }) {
           </p>
 
           <div className="flex flex-wrap gap-3">
-            <Magnet>
-              <Link
+            <HashLink
                 href="#portfolio"
                 className="inline-flex items-center gap-2 rounded-full border border-cyan-300/35 bg-cyan-400/10 px-5 py-2.5 text-sm font-semibold text-cyan-50 transition hover:border-cyan-300/55 hover:bg-cyan-400/18"
               >
                 查看在线作品
                 <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Magnet>
-            <Magnet>
-              <a
+              </HashLink>
+            <a
                 href={resumeContact.github}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -90,7 +86,6 @@ export function HomeResume({ siteUrl }: { siteUrl: string }) {
               >
                 GitHub
               </a>
-            </Magnet>
             <CopyButton value={siteUrl} label="复制站点" />
           </div>
         </div>

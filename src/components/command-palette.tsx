@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Command, MessageCircle, Search } from "lucide-react";
 
+import { HashLink } from "@/components/hash-link";
 import { HOME_AGENT_AGENTS_URL, PLATFORM_EXPERIENCE_NAV } from "@/lib/external-projects";
 
 type CommandItem = {
@@ -165,7 +165,7 @@ export function CommandPalette() {
                     </span>
                   </a>
                 ) : (
-                  <Link
+                  <HashLink
                     href={item.href}
                     onClick={() => setOpen(false)}
                     className="flex items-center justify-between rounded-xl px-3 py-2.5 text-sm text-slate-200 transition hover:bg-white/10"
@@ -177,7 +177,7 @@ export function CommandPalette() {
                     <span className="text-[10px] uppercase tracking-wider text-slate-500">
                       {item.group}
                     </span>
-                  </Link>
+                  </HashLink>
                 )}
               </li>
             ))

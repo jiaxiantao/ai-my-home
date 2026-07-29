@@ -11,6 +11,11 @@ import { IntelligenceComposerPreview } from "@/components/intelligence-composer-
 import { AssistantContextLinks } from "@/components/assistant-context-links";
 import { IntelligenceLearningPanel } from "@/components/intelligence-learning-panel";
 import { useAuth } from "@/components/auth-provider";
+import { AnimatedContent } from "@/components/reactbits/animated-content";
+import { BlurText } from "@/components/reactbits/blur-text";
+import { BorderGlow } from "@/components/reactbits/border-glow";
+import { DecryptedText } from "@/components/reactbits/decrypted-text";
+import { StarBorder } from "@/components/reactbits/star-border";
 import {
   ChatMessageBubble,
   ReferenceCard,
@@ -532,11 +537,12 @@ export function AssistantChat({
       />
 
       <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-        <div className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-7">
+        <BorderGlow className="rounded-4xl" glowColor="rgba(103, 232, 249, 0.22)">
+        <div className="rounded-4xl border border-white/10 bg-slate-950/40 p-7">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-2xl font-semibold tracking-tight text-white">
-                对话窗口
+                <BlurText text="对话窗口" animateBy="words" />
               </h2>
               {activeSession ? (
                 <p className="mt-1 text-sm text-slate-500">{activeSession.title}</p>
@@ -580,14 +586,20 @@ export function AssistantChat({
 
           <div className="mt-5 flex flex-wrap gap-2">
             {starterPrompts.map((prompt) => (
-              <button
+              <StarBorder
                 key={prompt}
-                type="button"
-                onClick={() => setComposer(prompt)}
-                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 transition hover:border-white/20 hover:bg-white/10"
+                className="rounded-full"
+                color="rgba(103, 232, 249, 0.28)"
+                speed="10s"
               >
-                {prompt}
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setComposer(prompt)}
+                  className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 transition hover:border-white/20 hover:bg-white/10"
+                >
+                  {prompt}
+                </button>
+              </StarBorder>
             ))}
           </div>
 
@@ -671,7 +683,7 @@ export function AssistantChat({
             </div>
             <div className="mt-3 rounded-xl border border-white/10 bg-black/20 p-3">
               <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">
-                当前模板预览
+                <DecryptedText text="当前模板预览" revealOnHover speed={14} />
               </p>
               <ul className="mt-2 space-y-1 text-xs text-slate-300">
                 {preferenceTemplate.map((line) => (
@@ -745,7 +757,7 @@ export function AssistantChat({
             </div>
           </div>
 
-          <div className="mt-6 grid max-h-[32rem] gap-4 overflow-y-auto pr-1">
+          <div className="mt-6 grid max-h-128 gap-4 overflow-y-auto pr-1">
             {messages.length ? (
               messages.map((message, index) => (
                 <ChatMessageBubble
@@ -776,9 +788,14 @@ export function AssistantChat({
                 />
               ))
             ) : (
-              <div className="rounded-[1.5rem] border border-dashed border-white/15 bg-white/5 p-6 text-sm text-slate-400">
-                流式 UI · 图片/语音输入 · 会话分支 · 置信度与重新生成
-              </div>
+              <AnimatedContent>
+                <div className="rounded-3xl border border-dashed border-white/15 bg-white/5 p-6 text-sm text-slate-400">
+                  <DecryptedText
+                    text="流式 UI · 图片/语音输入 · 会话分支 · 置信度与重新生成"
+                    speed={12}
+                  />
+                </div>
+              </AnimatedContent>
             )}
           </div>
 
@@ -804,9 +821,11 @@ export function AssistantChat({
             onStop={handleStop}
           />
         </div>
+        </BorderGlow>
 
         <aside className="grid gap-4">
-          <article className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-6">
+          <BorderGlow className="rounded-4xl" glowColor="rgba(103, 232, 249, 0.18)">
+          <article className="rounded-4xl border border-white/10 bg-slate-950/40 p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
               Observability
             </p>
@@ -816,8 +835,10 @@ export function AssistantChat({
               <MetricRow label="Total" value={metrics.totalMs} />
             </div>
           </article>
+          </BorderGlow>
 
-          <article className="rounded-[2rem] border border-white/10 bg-slate-950/40 p-6">
+          <BorderGlow className="rounded-4xl" glowColor="rgba(167, 139, 250, 0.18)">
+          <article className="rounded-4xl border border-white/10 bg-slate-950/40 p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200/75">
               References
             </p>
@@ -825,6 +846,7 @@ export function AssistantChat({
               召回分数影响置信度展示；可点备选视角重新提问。
             </p>
           </article>
+          </BorderGlow>
 
           {references.length ? (
             references.map((reference) => (
@@ -832,7 +854,7 @@ export function AssistantChat({
             ))
           ) : (
             <div className="rounded-[1.75rem] border border-dashed border-white/15 bg-slate-950/35 p-6 text-sm text-slate-400">
-              发送问题后展示召回笔记。
+              <DecryptedText text="发送问题后展示召回笔记。" speed={12} />
             </div>
           )}
         </aside>

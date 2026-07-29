@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
+import { HashLink } from "@/components/hash-link";
 import { PlaybookAccordion } from "@/components/playbook-accordion";
 import { BorderGlow } from "@/components/reactbits/border-glow";
-import { Magnet } from "@/components/reactbits/magnet";
 import { SectionHeading } from "@/components/section-heading";
 import { StarBorder } from "@/components/reactbits/star-border";
 import { playbooks } from "@/lib/showcase-content";
@@ -84,17 +83,15 @@ export default function PlaybooksPage() {
           <p className="mt-4 max-w-3xl text-base leading-8 text-slate-300">
             对我来说，方法论更像“我通常怎么处理”，而领域详情页更像“我为什么会这样判断”。两边放在一起，内容会完整很多。
           </p>
-          <Magnet>
-            <StarBorder className="mt-8 rounded-full" color="rgba(103, 232, 249, 0.82)">
-              <Link
+          <StarBorder className="mt-8 rounded-full" color="rgba(103, 232, 249, 0.82)">
+              <HashLink
                 href="/#topology"
                 className="inline-flex items-center gap-2 rounded-full bg-slate-950/95 px-3.5 py-1.5 text-sm font-semibold text-cyan-200 transition hover:text-white"
               >
                 回到首页继续浏览
                 <ArrowRight className="h-4 w-4" />
-              </Link>
+              </HashLink>
             </StarBorder>
-          </Magnet>
         </section>
         </BorderGlow>
       </main>

@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-
-import { Magnet } from "@/components/reactbits/magnet";
 import { StarBorder } from "@/components/reactbits/star-border";
 import { NoteLibrary } from "@/components/note-library";
 import { NoteManager } from "@/components/note-manager";
@@ -41,8 +39,7 @@ export default async function NotesPage() {
         <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-400">
           pg_trgm 检索 · CRUD API · 作为 Assistant 的召回源。
         </p>
-        <Magnet>
-          <StarBorder className="mt-6 rounded-full" color="rgba(255, 255, 255, 0.9)">
+        <StarBorder className="mt-6 rounded-full" color="rgba(255, 255, 255, 0.9)">
             <Link
               href="/assistant?q=%E6%88%91%E5%9C%A8%E5%89%8D%E7%AB%AF%E6%9E%B6%E6%9E%84%E8%AF%84%E5%AE%A1%E6%97%B6%E6%9C%80%E5%85%88%E7%A1%AE%E8%AE%A4%E4%BB%80%E4%B9%88%EF%BC%9F"
               className="inline-flex rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-100"
@@ -50,7 +47,6 @@ export default async function NotesPage() {
               用 Assistant 追问
             </Link>
           </StarBorder>
-        </Magnet>
       </section>
 
       <NotesIntelligenceBridge prompts={assistantPrompts} />

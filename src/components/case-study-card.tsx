@@ -1,7 +1,11 @@
+"use client";
+
 import { ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 import { BorderGlow } from "@/components/reactbits/border-glow";
 import { StarBorder } from "@/components/reactbits/star-border";
+import { rememberHomeScrollForReturn } from "@/components/home-scroll-restoration";
 import type { CaseStudy } from "@/lib/site-content";
 
 type CaseStudyCardProps = {
@@ -54,13 +58,15 @@ export function CaseStudyCard({ caseStudy }: CaseStudyCardProps) {
         </div>
 
         <StarBorder className="mt-7 self-start rounded-full" color="rgba(103, 232, 249, 0.82)">
-          <a
+          <Link
             href={`/cases/${caseStudy.slug}`}
+            scroll={false}
+            onClick={rememberHomeScrollForReturn}
             className="inline-flex items-center gap-2 rounded-full bg-slate-950/95 px-3.5 py-1.5 text-sm font-semibold text-cyan-200 transition hover:text-white"
           >
             查看完整案例拆解
             <ArrowRight className="h-4 w-4" />
-          </a>
+          </Link>
         </StarBorder>
       </article>
     </BorderGlow>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
 type HealthPayload = {
   db?: { connected?: boolean; ok?: boolean; latencyMs?: number };
   llm?: { configured?: boolean; label?: string };

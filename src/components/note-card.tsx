@@ -1,6 +1,5 @@
 import type { NoteRecord } from "@/lib/notes-service";
 import { BorderGlow } from "@/components/reactbits/border-glow";
-import { Magnet } from "@/components/reactbits/magnet";
 import { StarBorder } from "@/components/reactbits/star-border";
 
 type NoteCardProps = {
@@ -45,8 +44,7 @@ export function NoteCard({ note, onDelete, deletingId }: NoteCardProps) {
             </div>
           </div>
 
-          <Magnet>
-            <button
+          <button
               type="button"
               onClick={() => void onDelete(note.id)}
               disabled={deletingId === note.id}
@@ -54,7 +52,6 @@ export function NoteCard({ note, onDelete, deletingId }: NoteCardProps) {
             >
               {deletingId === note.id ? "删除中..." : "删除笔记"}
             </button>
-          </Magnet>
         </div>
 
         <div className="mt-5 flex flex-wrap gap-2">
