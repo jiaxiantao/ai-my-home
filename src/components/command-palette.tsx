@@ -1,11 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Command, MessageCircle, Search } from "lucide-react";
 
 import { HashLink } from "@/components/hash-link";
-import { HOME_AGENT_AGENTS_URL, PLATFORM_EXPERIENCE_NAV } from "@/lib/external-projects";
+import { buildKnowledgeStudioUrl, HOME_AGENT_AGENTS_URL, PLATFORM_EXPERIENCE_NAV } from "@/lib/external-projects";
 
 type CommandItem = {
   label: string;
@@ -48,7 +47,6 @@ const commands: CommandItem[] = [
 ];
 
 export function CommandPalette() {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
 
@@ -88,7 +86,7 @@ export function CommandPalette() {
       return;
     }
     setOpen(false);
-    router.push(`/assistant?q=${encodeURIComponent(askQuery)}`);
+    window.location.assign(buildKnowledgeStudioUrl("assistant", askQuery));
   }
 
   if (!open) {

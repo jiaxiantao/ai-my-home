@@ -20,5 +20,5 @@ test("command palette can ask assistant", async ({ page }) => {
   await dialog.locator("input").fill("前端性能治理");
   await dialog.getByRole("button", { name: "向 Assistant 提问" }).click();
 
-  await expect(page).toHaveURL(/\/assistant\?q=/);
+  await expect(page).toHaveURL(/knowledge-studio\/assistant\?q=/);
 });

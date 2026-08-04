@@ -9,7 +9,10 @@ test.describe("Site navigation", () => {
     await clickHeaderNavLink(page, { group: "智能与内容", label: "Notes" });
 
     await expect(page).toHaveURL(/\/notes$/);
-    await expect(page.getByText(/Knowledge Studio|正在跳转/)).toBeVisible();
+    await expect(page.getByRole("link", { name: /若未自动跳转/ })).toHaveAttribute(
+      "href",
+      /knowledge-studio\/notes/,
+    );
   });
 
   test("header links to Assistant redirect", async ({ page }) => {
@@ -18,7 +21,10 @@ test.describe("Site navigation", () => {
     await clickHeaderNavLink(page, { group: "智能与内容", label: "Assistant" });
 
     await expect(page).toHaveURL(/\/assistant$/);
-    await expect(page.getByText(/Knowledge Studio|正在跳转/)).toBeVisible();
+    await expect(page.getByRole("link", { name: /若未自动跳转/ })).toHaveAttribute(
+      "href",
+      /knowledge-studio\/assistant/,
+    );
   });
 
   test("engineering demo tabs switch", async ({ page }) => {

@@ -8,7 +8,7 @@ test.describe("Status page", () => {
     const runButton = page.getByRole("button", { name: "并行探测" });
     await expect(runButton).toBeVisible();
     await expect(
-      page.getByRole("link", { name: /SSE \/api\/chat/i }).first(),
+      page.getByRole("link", { name: /GET \/api\/dashboard/i }).first(),
     ).toBeVisible();
     await runButton.click();
     await expect(page.getByText("API 延迟探测")).toBeVisible({ timeout: 20_000 });

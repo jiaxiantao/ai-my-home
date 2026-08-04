@@ -23,7 +23,7 @@ import {
   MOOD_OPTIONS,
   useWeatherMood,
 } from "@/components/weather-mood-provider";
-import { HOME_AGENT_AGENTS_URL, KNOWLEDGE_STUDIO_URL, PLATFORM_EXPERIENCE_NAV } from "@/lib/external-projects";
+import { HOME_AGENT_AGENTS_URL, PLATFORM_EXPERIENCE_NAV } from "@/lib/external-projects";
 import {
   applySamePageHashNavigation,
   parseHashHref,
@@ -63,9 +63,8 @@ const navGroups: Array<{ id: string; label: string; items: NavItem[] }> = [
         external: true,
       },
       {
-        href: KNOWLEDGE_STUDIO_URL,
+        href: "/notes",
         label: "Notes",
-        external: true,
       },
       { href: "/cases", label: "Cases" },
     ],

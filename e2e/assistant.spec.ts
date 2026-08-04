@@ -4,6 +4,9 @@ test.describe("Assistant redirect", () => {
   test("redirects to Knowledge Studio", async ({ page }) => {
     await page.goto("/assistant");
 
-    await expect(page.getByText(/Knowledge Studio|正在跳转/)).toBeVisible();
+    await expect(page.getByRole("link", { name: /若未自动跳转/ })).toHaveAttribute(
+      "href",
+      /knowledge-studio\/assistant/,
+    );
   });
 });
