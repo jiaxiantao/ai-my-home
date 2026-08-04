@@ -13,7 +13,7 @@ import { ReleaseCenterSpotlight } from "@/components/release-center-spotlight";
 import { SystemsVisualization } from "@/components/systems-visualization";
 import { getHomepageContent } from "@/lib/content-service";
 import { getDashboardData } from "@/lib/dashboard-service";
-import { EXTERNAL_PROJECTS, HOME_AGENT_AGENTS_URL } from "@/lib/external-projects";
+import { EXTERNAL_PROJECTS, HOME_AGENT_AGENTS_URL, KNOWLEDGE_STUDIO_URL } from "@/lib/external-projects";
 import { getLlmLabel } from "@/lib/llm-config";
 import { getSiteUrl } from "@/lib/site-url";
 
@@ -60,7 +60,7 @@ const EdgeAiShowcase = dynamic(
 const exploreLinks = [
   { href: "/cases", label: "Cases" },
   { href: "/insights", label: "Insights" },
-  { href: "/notes", label: "Notes" },
+  { href: KNOWLEDGE_STUDIO_URL, label: "Notes", external: true },
   { href: "/assistant", label: "Assistant" },
   { href: HOME_AGENT_AGENTS_URL, label: "Agents", external: true },
   { href: "/release-center", label: "Release Center" },
@@ -110,7 +110,10 @@ export default async function Home() {
           eyebrow="Visualization"
           title="Three.js + ECharts + PostgreSQL"
         />
-        <SystemsVisualization analytics={dashboard.analytics} domains={domains} />
+        <SystemsVisualization
+          contentStats={dashboard.contentStats}
+          domains={domains}
+        />
       </section>
 
       <section id="dashboard" className="scroll-mt-24 space-y-6">

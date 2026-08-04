@@ -4,18 +4,6 @@ const adminUsername = process.env.ADMIN_USERNAME ?? "admin";
 const adminPassword = process.env.ADMIN_PASSWORD ?? "123456";
 
 test.describe("Auth guard", () => {
-  test("guest cannot write notes", async ({ request }) => {
-    const response = await request.post("/api/notes", {
-      data: {
-        title: "unauthorized-note",
-        contentMarkdown: "unauthorized",
-        tags: [],
-      },
-    });
-
-    expect(response.status()).toBe(401);
-  });
-
   test("admin can write status probes after login", async ({ request }) => {
     const loginResponse = await request.post("/api/auth/login", {
       data: {

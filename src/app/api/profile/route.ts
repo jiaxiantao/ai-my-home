@@ -9,7 +9,6 @@ import {
   performanceSignals,
   workflowCapabilities,
 } from "@/lib/demo-lab-content";
-import { listNotes } from "@/lib/notes-service";
 import {
   currentTracks,
   experienceChapters,
@@ -22,10 +21,10 @@ import {
   resumeDimensions,
   techStackGroups,
 } from "@/lib/showcase-content";
+import { KNOWLEDGE_STUDIO_URL } from "@/lib/external-projects";
 
 export async function GET() {
   const homepage = await getHomepageContent();
-  const notes = await listNotes();
 
   return NextResponse.json({
     generatedAt: new Date().toISOString(),
@@ -40,14 +39,10 @@ export async function GET() {
       highlights: domain.highlights,
     })),
     caseStudies: homepage.caseStudies,
-    notes: notes.map((note: (typeof notes)[number]) => ({
-      id: note.id,
-      title: note.title,
-      slug: note.slug,
-      summary: note.summary,
-      tags: note.tags,
-      updatedAt: note.updatedAt,
-    })),
+    knowledgeStudio: {
+      url: KNOWLEDGE_STUDIO_URL,
+      summary: "笔记知识库已抽离至独立项目 Knowledge Studio",
+    },
     timeline: careerTimeline,
     currentTracks,
     workLogs,

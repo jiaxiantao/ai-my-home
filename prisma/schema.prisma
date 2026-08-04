@@ -48,21 +48,6 @@ model CaseStudy {
   updatedAt DateTime @updatedAt
 }
 
-model Note {
-  id              String   @id @default(cuid())
-  title           String
-  slug            String   @unique
-  summary         String?
-  contentMarkdown String   @db.Text
-  tags            String[]
-  isPublished     Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  @@index([isPublished])
-  @@index([updatedAt])
-}
-
 model StatusProbeHistory {
   id           String   @id @default(cuid())
   probeKey     String

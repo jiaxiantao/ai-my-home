@@ -7,12 +7,11 @@ const apiDir = path.join(root, "src/app/api");
 const stashDir = path.join(root, "scripts/.gh-pages-stash/api");
 const stashRoot = path.join(root, "scripts/.gh-pages-stash");
 
-const dynamicRouteDirs = ["src/app/(site)/notes/[slug]"];
+const dynamicRouteDirs: string[] = [];
 
 const dynamicOgImages = [
   "src/app/(site)/cases/[slug]/opengraph-image.tsx",
   "src/app/(site)/insights/[slug]/opengraph-image.tsx",
-  "src/app/(site)/notes/[slug]/opengraph-image.tsx",
 ];
 
 const siteUrl =

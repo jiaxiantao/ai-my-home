@@ -28,6 +28,7 @@ const PROJECT_PREFIXES = [
   "/team-docs",
   "/3d-car-viewing",
   "/home-agent",
+  "/knowledge-studio",
   "/3d-express-warehouse",
   "/blogs",
 ];

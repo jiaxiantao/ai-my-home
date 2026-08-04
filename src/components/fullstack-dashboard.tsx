@@ -15,10 +15,9 @@ import {
 
 import {
   LazyDeliveryFlowSankey,
-  LazyNotesTimelineChart,
   LazySystemRadarChart,
-  LazyTagDistributionChart,
 } from "@/components/charts/lazy-dashboard-charts";
+import { ExternalProjectLink } from "@/components/external-project-link";
 import { DashboardPanelMount } from "@/components/dashboard-panel-mount";
 import { DashboardReleasePanel } from "@/components/dashboard-release-panel";
 import { rememberHomeScrollForReturn } from "@/components/home-scroll-restoration";
@@ -27,6 +26,7 @@ import { CountUp } from "@/components/reactbits/count-up";
 import { GlareHover } from "@/components/reactbits/glare-hover";
 import { StarBorder } from "@/components/reactbits/star-border";
 import type { DashboardData } from "@/lib/dashboard-service";
+import { buildKnowledgeStudioUrl } from "@/lib/external-projects";
 import { formatReleaseStoreMode } from "@/lib/release-store-labels";
 
 function PanelLoading() {
@@ -37,14 +37,6 @@ function PanelLoading() {
     </div>
   );
 }
-
-const DashboardAssistantPreview = dynamic(
-  () =>
-    import("@/components/dashboard-assistant-preview").then(
-      (mod) => mod.DashboardAssistantPreview,
-    ),
-  { ssr: false, loading: PanelLoading },
-);
 
 const DashboardDecisionWidget = dynamic(
   () =>
@@ -134,22 +126,11 @@ export function FullstackDashboard({
     featured,
     currentTracks,
     recentLogs,
-    analytics,
+    contentStats,
     release,
   } = data;
 
-  const timelineData =
-    analytics.notesByMonth.length > 0
-      ? analytics.notesByMonth
-      : [{ month: new Date().toISOString().slice(0, 7), count: 0 }];
-
-  const tagChartData =
-    knowledge.tagCounts.length > 0
-      ? knowledge.tagCounts
-      : [{ tag: "—", count: 0 }];
-
   const metricCards = [
-    { label: "Notes", value: overview.notesCount, detail: "PostgreSQL" },
     { label: "Domains", value: overview.domainsCount, detail: "能力域" },
     { label: "Cases", value: overview.caseStudiesCount, detail: "结构化案例" },
     { label: "Tracks", value: overview.tracksCount, detail: "当前主线" },
@@ -245,7 +226,7 @@ export function FullstackDashboard({
                 </p>
                 <LazySystemRadarChart
                   values={{
-                    notes: overview.notesCount,
+                    notes: 0,
                     domains: overview.domainsCount,
                     cases: overview.caseStudiesCount,
                     tracks: overview.tracksCount,
@@ -260,38 +241,34 @@ export function FullstackDashboard({
                 </p>
                 <div className="mt-4 grid grid-cols-2 gap-3 font-mono text-sm">
                   <div className="rounded-xl border border-white/10 bg-slate-950/35 px-4 py-3 text-slate-300">
-                    Note
-                    <p className="mt-1 text-2xl font-semibold text-white tabular-nums">
-                      <CountUp to={analytics.stats.totalNotes} duration={1.6} separator="," />
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-white/10 bg-slate-950/35 px-4 py-3 text-slate-300">
                     Domain
                     <p className="mt-1 text-2xl font-semibold text-white tabular-nums">
-                      <CountUp to={analytics.stats.domainCount} duration={1.6} separator="," />
+                      <CountUp to={contentStats.domainCount} duration={1.6} separator="," />
                     </p>
                   </div>
                   <div className="rounded-xl border border-white/10 bg-slate-950/35 px-4 py-3 text-slate-300">
                     Topic
                     <p className="mt-1 text-2xl font-semibold text-white tabular-nums">
-                      <CountUp to={analytics.stats.topicCount} duration={1.6} separator="," />
+                      <CountUp to={contentStats.topicCount} duration={1.6} separator="," />
                     </p>
                   </div>
                   <div className="rounded-xl border border-white/10 bg-slate-950/35 px-4 py-3 text-slate-300">
                     CaseStudy
                     <p className="mt-1 text-2xl font-semibold text-white tabular-nums">
                       <CountUp
-                        to={analytics.stats.caseStudyCount}
+                        to={contentStats.caseStudyCount}
                         duration={1.6}
                         separator=","
                       />
                     </p>
                   </div>
+                  <div className="rounded-xl border border-white/10 bg-slate-950/35 px-4 py-3 text-slate-300">
+                    Notes
+                    <p className="mt-1 text-sm font-semibold text-cyan-200">
+                      Knowledge Studio →
+                    </p>
+                  </div>
                 </div>
-                <p className="mt-3 font-mono text-[10px] text-slate-500">
-                  source: {analytics.source} · avg content{" "}
-                  {analytics.stats.avgContentLength} chars
-                </p>
               </article>
             </div>
 
@@ -386,64 +363,27 @@ export function FullstackDashboard({
 
         <DashboardPanelMount id="knowledge" active={activePanel}>
           <div className="grid gap-6">
-            <div className="grid gap-4 lg:grid-cols-2">
-              <article className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200/75">
-                  ECharts · 标签分布
-                </p>
-                <LazyTagDistributionChart data={tagChartData} />
-              </article>
-              <article className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200/75">
-                  ECharts · 按月更新
-                </p>
-                <LazyNotesTimelineChart data={timelineData} />
-              </article>
-            </div>
-
-            <div className="grid gap-3">
+            <article className="rounded-2xl border border-white/10 bg-white/5 p-6">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200/75">
-                Recent Notes
+                {knowledge.label}
               </p>
-              {knowledge.recentNotes.length ? (
-                knowledge.recentNotes.map((note) => (
-                  <BorderGlow
-                    key={note.id}
-                    className="rounded-2xl"
-                    glowColor="rgba(103, 232, 249, 0.22)"
-                    backgroundColor="rgba(2, 6, 23, 0.26)"
-                  >
-                    <Link
-                      href={`/notes/${note.slug}`}
-                      className="block rounded-2xl border border-white/10 bg-white/5 p-4 transition hover:border-white/20"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <h3 className="text-sm font-semibold text-white">{note.title}</h3>
-                        <span className="shrink-0 text-xs text-slate-500">
-                          {formatDate(note.updatedAt)}
-                        </span>
-                      </div>
-                      {note.summary ? (
-                        <p className="mt-2 text-sm leading-6 text-slate-400 line-clamp-2">
-                          {note.summary}
-                        </p>
-                      ) : null}
-                    </Link>
-                  </BorderGlow>
-                ))
-              ) : (
-                <p className="text-sm text-slate-500">暂无笔记，可在 Notes 页创建。</p>
-              )}
-              <StarBorder className="self-start rounded-full" color="rgba(103, 232, 249, 0.82)">
-                <Link
-                  href="/notes"
-                  className="inline-flex items-center gap-2 rounded-full bg-slate-950/95 px-3.5 py-1.5 text-sm font-semibold text-cyan-200"
+              <p className="mt-3 text-sm leading-7 text-slate-400">{knowledge.summary}</p>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <ExternalProjectLink
+                  href={knowledge.externalUrl}
+                  label="打开 Knowledge Studio"
+                  className="rounded-full border border-cyan-300/30 bg-cyan-300/10 px-4 py-2 text-sm font-semibold text-cyan-100"
+                />
+                <a
+                  href={buildKnowledgeStudioUrl("assistant")}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 transition hover:border-white/25"
                 >
-                  笔记库
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </StarBorder>
-            </div>
+                  Grounded Assistant →
+                </a>
+              </div>
+            </article>
           </div>
         </DashboardPanelMount>
 
@@ -454,7 +394,7 @@ export function FullstackDashboard({
                 ECharts · Sankey 交付链路
               </p>
               <LazyDeliveryFlowSankey
-                notesCount={overview.notesCount}
+                notesCount={0}
                 domainsCount={overview.domainsCount}
                 caseStudiesCount={overview.caseStudiesCount}
               />
@@ -493,10 +433,14 @@ export function FullstackDashboard({
                     : node.id === "composer"
                       ? "/#front-intelligence"
                       : node.id === "chat"
-                        ? "/assistant"
-                        : null;
+                        ? buildKnowledgeStudioUrl("assistant")
+                        : node.id === "notes"
+                          ? buildKnowledgeStudioUrl("notes")
+                          : null;
 
                 if (flowHref) {
+                  const isExternal =
+                    node.id === "chat" || node.id === "notes";
                   return (
                     <BorderGlow
                       key={node.id}
@@ -504,12 +448,23 @@ export function FullstackDashboard({
                       glowColor="rgba(103, 232, 249, 0.24)"
                       backgroundColor="rgba(2, 6, 23, 0.24)"
                     >
-                      <Link
-                        href={flowHref}
-                        className="relative block rounded-2xl border border-white/10 bg-white/5 p-5 transition hover:border-cyan-300/30 hover:bg-cyan-300/5"
-                      >
-                        {card}
-                      </Link>
+                      {isExternal ? (
+                        <a
+                          href={flowHref}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="relative block rounded-2xl border border-white/10 bg-white/5 p-5 transition hover:border-cyan-300/30 hover:bg-cyan-300/5"
+                        >
+                          {card}
+                        </a>
+                      ) : (
+                        <Link
+                          href={flowHref}
+                          className="relative block rounded-2xl border border-white/10 bg-white/5 p-5 transition hover:border-cyan-300/30 hover:bg-cyan-300/5"
+                        >
+                          {card}
+                        </Link>
+                      )}
                     </BorderGlow>
                   );
                 }
@@ -531,7 +486,7 @@ export function FullstackDashboard({
             <div className="flex flex-wrap gap-2 text-sm text-slate-500">
               <span>profile</span>
               <span>→</span>
-              <span>notes</span>
+              <span>knowledge studio</span>
               <span>→</span>
               <span>chat</span>
               <span>→</span>
@@ -547,7 +502,22 @@ export function FullstackDashboard({
         </DashboardPanelMount>
 
         <DashboardPanelMount id="assistant" active={activePanel}>
-          <DashboardAssistantPreview llmLabel={llmLabel} />
+          <article className="rounded-2xl border border-white/10 bg-white/5 p-6">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200/75">
+              Grounded Assistant
+            </p>
+            <p className="mt-3 text-sm leading-7 text-slate-400">
+              笔记召回、SSE 流式对话与多会话能力已迁移至 Knowledge Studio。
+              {llmLabel ? ` 当前 LLM：${llmLabel}` : ""}
+            </p>
+            <div className="mt-5">
+              <ExternalProjectLink
+                href={buildKnowledgeStudioUrl("assistant")}
+                label="打开 Assistant"
+                className="rounded-full border border-cyan-300/30 bg-cyan-300/10 px-4 py-2 text-sm font-semibold text-cyan-100"
+              />
+            </div>
+          </article>
         </DashboardPanelMount>
 
         <DashboardPanelMount id="decision" active={activePanel}>

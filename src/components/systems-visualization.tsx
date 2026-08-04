@@ -2,12 +2,9 @@
 
 import dynamic from "next/dynamic";
 
-import {
-  LazyNotesTimelineChart,
-  LazyTagDistributionChart,
-} from "@/components/charts/lazy-viz-charts";
-import type { NoteAnalytics } from "@/lib/note-analytics";
+import { KNOWLEDGE_STUDIO_URL } from "@/lib/external-projects";
 import type { DomainDetail } from "@/lib/site-content";
+import type { DashboardContentStats } from "@/lib/dashboard-service";
 
 const SystemsScene = dynamic(
   () =>
@@ -32,10 +29,10 @@ const sceneColors = [
 ];
 
 export function SystemsVisualization({
-  analytics,
+  contentStats,
   domains,
 }: {
-  analytics: NoteAnalytics;
+  contentStats: DashboardContentStats;
   domains: DomainDetail[];
 }) {
   const sceneNodes = domains.slice(0, 6).map((domain, index) => ({
@@ -44,58 +41,39 @@ export function SystemsVisualization({
     color: sceneColors[index % sceneColors.length],
   }));
 
-  const timelineData =
-    analytics.notesByMonth.length > 0
-      ? analytics.notesByMonth
-      : [{ month: new Date().toISOString().slice(0, 7), count: 0 }];
-
-  const tagData =
-    analytics.tagDistribution.length > 0
-      ? analytics.tagDistribution
-      : [{ tag: "empty", count: 0 }];
-
   return (
     <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
       <SystemsScene nodes={sceneNodes.length ? sceneNodes : undefined} />
 
       <div className="grid gap-4">
-        <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-4">
-          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200/75">
-              PostgreSQL · unnest(tags)
-            </p>
-            <span className="rounded-full border border-white/10 px-2 py-0.5 font-mono text-[10px] text-slate-400">
-              {analytics.source}
-            </span>
-          </div>
-          <LazyTagDistributionChart data={tagData} />
-        </article>
-
-        <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-4">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200/75">
-            PostgreSQL · date_trunc(month)
+        <article className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200/75">
+            Knowledge Studio
           </p>
-          <LazyNotesTimelineChart data={timelineData} />
+          <p className="mt-3 text-sm leading-7 text-slate-400">
+            笔记 CRUD、pg_trgm 检索与 Grounded Assistant 已抽离至独立项目。本站保留跳转入口。
+          </p>
+          <a
+            href={KNOWLEDGE_STUDIO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex rounded-full border border-cyan-300/30 bg-cyan-300/10 px-4 py-2 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-300/20"
+          >
+            打开 Knowledge Studio →
+          </a>
         </article>
 
         <div className="grid grid-cols-3 gap-2 font-mono text-[11px] text-slate-400">
           <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-            notes {analytics.stats.totalNotes}
+            domains {contentStats.domainCount}
           </div>
           <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-            avg len {analytics.stats.avgContentLength}
+            topics {contentStats.topicCount}
           </div>
           <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-            domains {analytics.stats.domainCount}
+            cases {contentStats.caseStudyCount}
           </div>
         </div>
-
-        <a
-          href="/api/analytics/notes"
-          className="font-mono text-xs text-cyan-200/80 transition hover:text-cyan-100"
-        >
-          GET /api/analytics/notes →
-        </a>
       </div>
     </div>
   );

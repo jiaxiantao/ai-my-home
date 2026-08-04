@@ -31,6 +31,11 @@ export const EXTERNAL_PROJECTS = {
     previewUrl: `${SITE}/blogs/`,
     repoUrl: "https://github.com/jiaxiantao/blogs",
   },
+  knowledgeStudio: {
+    label: "Knowledge Studio",
+    previewUrl: `${SITE}/knowledge-studio/`,
+    repoUrl: "https://github.com/jiaxiantao/knowledge-studio",
+  },
   aiMyHome: {
     label: "ai-my-home",
     previewUrl: `${SITE}/ai-my-home/`,
@@ -50,6 +55,25 @@ export const PLATFORM_EXPERIENCE_NAV = [
 
 /** 导航「Agents」入口 */
 export const HOME_AGENT_AGENTS_URL = EXTERNAL_PROJECTS.homeAgent.previewUrl;
+
+/** 导航「Notes / Assistant」入口（独立知识库项目） */
+export const KNOWLEDGE_STUDIO_URL = EXTERNAL_PROJECTS.knowledgeStudio.previewUrl;
+
+export function buildKnowledgeStudioUrl(path = "", query?: string) {
+  const trimmedPath = path.replace(/^\//, "");
+  const base = EXTERNAL_PROJECTS.knowledgeStudio.previewUrl;
+  const url = new URL(
+    trimmedPath,
+    base.endsWith("/") ? base : `${base}/`,
+  );
+
+  const trimmedQuery = query?.trim();
+  if (trimmedQuery) {
+    url.searchParams.set("q", trimmedQuery);
+  }
+
+  return url.toString();
+}
 
 export function buildExternalAgentUrl(query?: string) {
   const trimmed = query?.trim();

@@ -2,12 +2,13 @@ import {
   buildCapabilityScores,
   type CapabilityProfileScores,
 } from "@/lib/capability-scores";
-import { HOME_AGENT_AGENTS_URL } from "@/lib/external-projects";
+import {
+  HOME_AGENT_AGENTS_URL,
+  KNOWLEDGE_STUDIO_URL,
+} from "@/lib/external-projects";
 import { getHomepageContent } from "@/lib/content-service";
 import { insightArticles } from "@/lib/editorial-content";
 import { currentTracks, workLogs } from "@/lib/ongoing-content";
-import { getNoteAnalytics, type NoteAnalytics } from "@/lib/note-analytics";
-import { listPublishedNotes } from "@/lib/notes-service";
 import { buildIntelligenceSamplePrompts } from "@/lib/intelligence-samples";
 import { getLlmLabel, isLlmConfigured } from "@/lib/llm-config";
 import { getReleaseSummary, type ReleaseSummary } from "@/lib/release-service";
@@ -26,27 +27,25 @@ export type DashboardFlowNode = {
   status: "live" | "curated" | "interactive";
 };
 
+export type DashboardContentStats = {
+  domainCount: number;
+  topicCount: number;
+  caseStudyCount: number;
+};
+
 export type DashboardData = {
   generatedAt: string;
   overview: {
-    notesCount: number;
     domainsCount: number;
     caseStudiesCount: number;
     tracksCount: number;
-    publishedNotesCount: number;
     demoCapabilitiesCount: number;
   };
   knowledge: {
-    recentNotes: Array<{
-      id: string;
-      title: string;
-      slug: string;
-      summary: string | null;
-      tags: string[];
-      updatedAt: string;
-    }>;
-    tagCounts: Array<{ tag: string; count: number }>;
-    latestUpdate: string | null;
+    externalUrl: string;
+    repoUrl: string;
+    label: string;
+    summary: string;
   };
   flow: DashboardFlowNode[];
   featured: {
@@ -63,7 +62,7 @@ export type DashboardData = {
     title: string;
     summary: string;
   }>;
-  analytics: NoteAnalytics;
+  contentStats: DashboardContentStats;
   capabilityProfile: CapabilityProfileScores;
   release: ReleaseSummary;
   intelligence: DashboardIntelligence;
@@ -79,32 +78,19 @@ function safeDashboardLlmLabel() {
   }
 }
 
+function countTopics(domains: HomepageContent["domains"]) {
+  return domains.reduce((sum, domain) => sum + domain.topics.length, 0);
+}
+
 export async function getDashboardData(
   preloaded?: HomepageContent,
 ): Promise<DashboardData> {
-  const [{ domains, caseStudies }, notes, analytics, release] = await Promise.all([
+  const [{ domains, caseStudies }, release] = await Promise.all([
     preloaded ? Promise.resolve(preloaded) : getHomepageContent(),
-    listPublishedNotes(),
-    getNoteAnalytics(),
     getReleaseSummary(),
   ]);
   const featuredInsight = insightArticles.find((a) => a.featured);
   const featuredCase = caseStudies[0];
-
-  const tagMap = new Map<string, number>();
-  for (const note of notes) {
-    for (const tag of note.tags) {
-      tagMap.set(tag, (tagMap.get(tag) ?? 0) + 1);
-    }
-  }
-
-  const tagCounts = [...tagMap.entries()]
-    .map(([tag, count]) => ({ tag, count }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 8);
-
-  const latestNote = notes[0];
-  const latestUpdate = latestNote?.updatedAt ?? null;
 
   const flow: DashboardFlowNode[] = [
     {
@@ -115,14 +101,14 @@ export async function getDashboardData(
     },
     {
       id: "notes",
-      label: "PostgreSQL Notes",
-      description: `${notes.length} 条笔记，支持 CRUD 与检索`,
+      label: "Knowledge Studio",
+      description: "独立项目：PostgreSQL 笔记库 · pg_trgm 检索 · Grounded Assistant",
       status: "live",
     },
     {
       id: "chat",
       label: "Grounded Chat",
-      description: "笔记检索 + Prompt 编排 + OpenAI 兼容对话",
+      description: "笔记召回 + SSE 流式对话（Knowledge Studio）",
       status: "interactive",
     },
     {
@@ -152,28 +138,20 @@ export async function getDashboardData(
   ];
 
   const overview = {
-    notesCount: notes.length,
     domainsCount: domains.length,
     caseStudiesCount: caseStudies.length,
     tracksCount: currentTracks.length,
-    publishedNotesCount: notes.filter((n) => n.isPublished).length,
-    demoCapabilitiesCount: 13,
+    demoCapabilitiesCount: 12,
   };
 
   return {
     generatedAt: new Date().toISOString(),
     overview,
     knowledge: {
-      recentNotes: notes.slice(0, 5).map((n) => ({
-        id: n.id,
-        title: n.title,
-        slug: n.slug,
-        summary: n.summary,
-        tags: n.tags,
-        updatedAt: n.updatedAt,
-      })),
-      tagCounts,
-      latestUpdate,
+      externalUrl: KNOWLEDGE_STUDIO_URL,
+      repoUrl: "https://github.com/jiaxiantao/knowledge-studio",
+      label: "Knowledge Studio",
+      summary: "笔记 CRUD · pg_trgm 检索 · 双引擎对比 · Grounded Assistant",
     },
     flow,
     featured: {
@@ -186,8 +164,14 @@ export async function getDashboardData(
       status: t.status,
     })),
     recentLogs: workLogs.slice(0, 3),
-    analytics,
+    contentStats: {
+      domainCount: domains.length,
+      topicCount: countTopics(domains),
+      caseStudyCount: caseStudies.length,
+    },
     capabilityProfile: buildCapabilityScores({
+      notesCount: 0,
+      publishedNotesCount: 0,
       ...overview,
       releaseOrderCount: release.orderCount,
       llmConfigured: isLlmConfigured(),
@@ -200,10 +184,14 @@ export async function getDashboardData(
       features: [
         { id: "composer", label: "Prompt 编排台", href: "/#front-intelligence" },
         { id: "edge-ai", label: "端侧推理", href: "/#edge-ai" },
-        { id: "assistant", label: "笔记增强对话", href: "/assistant" },
+        {
+          id: "assistant",
+          label: "笔记增强对话",
+          href: `${KNOWLEDGE_STUDIO_URL}assistant/`,
+        },
         { id: "agents", label: "Agent 工具循环", href: HOME_AGENT_AGENTS_URL },
       ],
-      samplePrompts: buildIntelligenceSamplePrompts(notes, caseStudies),
+      samplePrompts: buildIntelligenceSamplePrompts([], caseStudies),
     },
   };
 }

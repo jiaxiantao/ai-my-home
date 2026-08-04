@@ -1,4 +1,4 @@
-import { EXTERNAL_PROJECTS, HOME_AGENT_AGENTS_URL } from "@/lib/external-projects";
+import { EXTERNAL_PROJECTS, HOME_AGENT_AGENTS_URL, KNOWLEDGE_STUDIO_URL } from "@/lib/external-projects";
 
 export type SystemArtifact = {
   label: string;
@@ -14,25 +14,25 @@ export const architectureSystemMap: Record<string, SystemArtifact[]> = {
       label: "Dashboard BFF",
       href: "/api/dashboard",
       kind: "api",
-      summary: "首页看板聚合 overview / knowledge / analytics",
+      summary: "首页看板聚合 overview / release / intelligence",
     },
     {
-      label: "Notes 检索",
-      href: "/api/notes/search?q=架构",
+      label: "Knowledge Studio 检索",
+      href: `${KNOWLEDGE_STUDIO_URL}api/notes/search?q=架构`,
       kind: "api",
-      summary: "pg_trgm 或 memory 引擎可切换",
+      summary: "独立项目：pg_trgm 或 memory 引擎可切换",
     },
     {
       label: "Sitemap",
       file: "src/app/sitemap.ts",
       kind: "file",
-      summary: "静态页 + 领域 + 案例 + 笔记动态条目",
+      summary: "静态页 + 领域 + 案例条目",
     },
     {
       label: "Notes 详情",
-      href: "/notes",
+      href: `${KNOWLEDGE_STUDIO_URL}notes/`,
       kind: "route",
-      summary: "Markdown 渲染 + Assistant 深链",
+      summary: "Markdown 渲染 + Assistant 深链（独立项目）",
     },
   ],
   "admin-workbench": [
@@ -57,16 +57,16 @@ export const architectureSystemMap: Record<string, SystemArtifact[]> = {
   ],
   "ai-ops-system": [
     {
-      label: "Chat SSE",
-      href: "/api/chat",
+      label: "Knowledge Studio Chat",
+      href: `${KNOWLEDGE_STUDIO_URL}api/chat`,
       kind: "api",
-      summary: "references → meta → chunk → done",
+      summary: "references → meta → chunk → done（独立项目）",
     },
     {
       label: "Assistant",
       href: "/assistant",
       kind: "route",
-      summary: "RAG 多轮对话工作台",
+      summary: "跳转 Knowledge Studio 对话工作台",
     },
     {
       label: "Home Agent（独立项目）",
@@ -84,7 +84,7 @@ export const architectureSystemMap: Record<string, SystemArtifact[]> = {
       label: "Health",
       href: "/api/health",
       kind: "api",
-      summary: "DB / LLM / pg_trgm 就绪探测",
+      summary: "DB / LLM / Release 就绪探测",
     },
   ],
   "multi-end-product": [

@@ -1,5 +1,5 @@
 import type { CapabilityProfileScores } from "@/lib/capability-scores";
-import { EXTERNAL_PROJECTS } from "@/lib/external-projects";
+import { EXTERNAL_PROJECTS, KNOWLEDGE_STUDIO_URL } from "@/lib/external-projects";
 
 export type CapabilityDimensionKey = keyof CapabilityProfileScores;
 
@@ -14,8 +14,8 @@ export const CAPABILITY_DIMENSIONS: CapabilityDimensionMeta[] = [
   {
     key: "fullstackApi",
     label: "全栈 API",
-    href: "/notes",
-    hint: "PostgreSQL 笔记 + CRUD + 检索",
+    href: KNOWLEDGE_STUDIO_URL,
+    hint: "独立项目：PostgreSQL 笔记 + CRUD + 检索",
   },
   {
     key: "engineeringDemos",

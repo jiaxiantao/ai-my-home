@@ -1,14 +1,19 @@
 import { LiveHealthPill } from "@/components/live-health-pill";
 import type { DashboardData } from "@/lib/dashboard-service";
+import { EXTERNAL_PROJECTS } from "@/lib/external-projects";
 
 const apiProofs = [
   { href: "/api/health", label: "GET /api/health" },
   { href: "/api/dashboard", label: "GET /api/dashboard" },
-  { href: "/api/analytics/notes", label: "GET /api/analytics/notes" },
   { href: "/api/profile", label: "GET /api/profile" },
-  { href: "/api/notes", label: "GET /api/notes" },
-  { href: "/api/notes/search?q=架构", label: "GET /api/notes/search" },
-  { href: "/api/chat", label: "POST /api/chat" },
+  {
+    href: `${EXTERNAL_PROJECTS.knowledgeStudio.previewUrl}api/notes/search?q=架构`,
+    label: "GET /api/notes/search (KS)",
+  },
+  {
+    href: `${EXTERNAL_PROJECTS.knowledgeStudio.previewUrl}api/chat`,
+    label: "POST /api/chat (KS)",
+  },
   { href: "/api/release/apps", label: "GET /api/release/apps" },
   { href: "/api/release/orders", label: "GET /api/release/orders" },
 ];
@@ -17,9 +22,9 @@ export function HomeProofBar({ dashboard }: { dashboard: DashboardData }) {
   const { overview, release } = dashboard;
 
   const stats = [
-    { label: "Notes", value: String(overview.notesCount) },
     { label: "Cases", value: String(overview.caseStudiesCount) },
     { label: "Domains", value: String(overview.domainsCount) },
+    { label: "Tracks", value: String(overview.tracksCount) },
     { label: "Release", value: String(release.orderCount) },
     { label: "Demo 台", value: String(overview.demoCapabilitiesCount) },
   ];

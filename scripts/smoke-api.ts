@@ -52,27 +52,6 @@ const checks: Array<Check & CheckRequest> = [
     },
   },
   {
-    name: "chat",
-    path: "/api/chat",
-    method: "POST",
-    body: { question: "smoke: hello", stream: false },
-    assert: (status, body) => {
-      if (status !== 200) {
-        throw new Error(`expected 200, got ${status}`);
-      }
-
-      const data = body as { answer?: string; references?: unknown[] };
-
-      if (!data.answer || typeof data.answer !== "string") {
-        throw new Error("missing answer");
-      }
-
-      if (!Array.isArray(data.references)) {
-        throw new Error("missing references array");
-      }
-    },
-  },
-  {
     name: "profile",
     path: "/api/profile",
     assert: (status, body) => {
@@ -96,8 +75,9 @@ const checks: Array<Check & CheckRequest> = [
       }
 
       const data = body as {
-        overview?: { notesCount?: number };
+        overview?: { domainsCount?: number };
         capabilityProfile?: { fullstackApi?: number };
+        knowledge?: { externalUrl?: string };
         release?: {
           orderCount?: number;
           byStatus?: Record<string, number>;
@@ -109,12 +89,16 @@ const checks: Array<Check & CheckRequest> = [
         };
       };
 
-      if (typeof data.overview?.notesCount !== "number") {
-        throw new Error("missing overview.notesCount");
+      if (typeof data.overview?.domainsCount !== "number") {
+        throw new Error("missing overview.domainsCount");
       }
 
       if (typeof data.capabilityProfile?.fullstackApi !== "number") {
         throw new Error("missing capabilityProfile.fullstackApi");
+      }
+
+      if (!data.knowledge?.externalUrl) {
+        throw new Error("missing knowledge.externalUrl");
       }
 
       if (typeof data.release?.orderCount !== "number") {
@@ -157,41 +141,7 @@ const checks: Array<Check & CheckRequest> = [
     },
   },
   {
-    name: "notes-search",
-    path: `/api/notes/search?q=${encodeURIComponent("架构")}&limit=3`,
-    assert: (status, body) => {
-      if (status !== 200) {
-        throw new Error(`expected 200, got ${status}`);
-      }
-
-      const data = body as { results?: unknown[]; engine?: string };
-
-      if (!Array.isArray(data.results)) {
-        throw new Error("missing results array");
-      }
-
-      if (!data.engine) {
-        throw new Error("missing engine");
-      }
-    },
-  },
-  {
-    name: "analytics",
-    path: "/api/analytics/notes",
-    assert: (status, body) => {
-      if (status !== 200) {
-        throw new Error(`expected 200, got ${status}`);
-      }
-
-      const data = body as { stats?: { totalNotes?: number } };
-
-      if (typeof data.stats?.totalNotes !== "number") {
-        throw new Error("missing stats.totalNotes");
-      }
-    },
-  },
-  {
-    name: "release-apps",
+    name: "intelligence-analyze",
     path: "/api/release/apps",
     assert: (status, body) => {
       if (status !== 200) {

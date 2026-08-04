@@ -31,18 +31,6 @@ const PROBES: Array<{ key: string; label: string; href: string }> = [
   { key: "health", label: "GET /api/health", href: "/api/health" },
   { key: "profile", label: "GET /api/profile", href: "/api/profile" },
   { key: "dashboard", label: "GET /api/dashboard", href: "/api/dashboard" },
-  { key: "chat", label: "POST /api/chat", href: "/api/chat" },
-  { key: "chat-sse", label: "SSE /api/chat (references→chunk→done)", href: "/api/chat" },
-  {
-    key: "search",
-    label: "GET /api/notes/search?q=架构",
-    href: "/api/notes/search?q=架构&limit=3",
-  },
-  {
-    key: "analytics",
-    label: "GET /api/analytics/notes",
-    href: "/api/analytics/notes",
-  },
 ];
 
 export function StatusProbe() {

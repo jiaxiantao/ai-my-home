@@ -7,21 +7,21 @@ import {
   Gauge,
   Layers,
   Radio,
-  Search,
   ShieldAlert,
   Workflow,
 } from "lucide-react";
 
+import { ExternalProjectLink } from "@/components/external-project-link";
 import { GlareHover } from "@/components/reactbits/glare-hover";
 import { ApiLatencyDemo } from "@/components/demos/api-latency-demo";
 import { AuthRateLimitLabDemo } from "@/components/demos/auth-rate-limit-lab-demo";
 import { CheckoutFlowDemo } from "@/components/demos/checkout-flow-demo";
 import { DebounceThrottleDemo } from "@/components/demos/debounce-throttle-demo";
 import { SseInspectorDemo } from "@/components/demos/sse-inspector-demo";
-import { SearchCompareDemo } from "@/components/demos/search-compare-demo";
 import { VirtualScrollDemo } from "@/components/demos/virtual-scroll-demo";
 import { WebVitalsDemo } from "@/components/demos/web-vitals-demo";
 import { WorkerComputeDemo } from "@/components/demos/worker-compute-demo";
+import { EXTERNAL_PROJECTS } from "@/lib/external-projects";
 
 type DemoId =
   | "vitals"
@@ -30,7 +30,6 @@ type DemoId =
   | "state"
   | "sse"
   | "worker"
-  | "search"
   | "debounce"
   | "security";
 
@@ -77,12 +76,6 @@ const demos: Array<{
     icon: Cpu,
   },
   {
-    id: "search",
-    title: "检索对比",
-    tech: "pg_trgm vs memory",
-    icon: Search,
-  },
-  {
     id: "debounce",
     title: "debounce / throttle",
     tech: "输入节奏控制",
@@ -101,6 +94,19 @@ export function EngineeringShowcase() {
 
   return (
     <div className="grid gap-5">
+      <div className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-5">
+        <p className="text-sm font-semibold text-white">检索对比 Demo</p>
+        <p className="mt-2 text-sm leading-7 text-slate-400">
+          pg_trgm vs memory 双引擎对比已迁移至 Knowledge Studio。
+        </p>
+        <div className="mt-4">
+          <ExternalProjectLink
+            href={EXTERNAL_PROJECTS.knowledgeStudio.previewUrl}
+            label={EXTERNAL_PROJECTS.knowledgeStudio.label}
+          />
+        </div>
+      </div>
+
       <div className="flex flex-wrap gap-2">
         {demos.map((demo) => {
           const Icon = demo.icon;
@@ -141,7 +147,6 @@ export function EngineeringShowcase() {
         {active === "state" ? <CheckoutFlowDemo /> : null}
         {active === "sse" ? <SseInspectorDemo /> : null}
         {active === "worker" ? <WorkerComputeDemo /> : null}
-        {active === "search" ? <SearchCompareDemo /> : null}
         {active === "debounce" ? <DebounceThrottleDemo /> : null}
         {active === "security" ? <AuthRateLimitLabDemo /> : null}
       </div>

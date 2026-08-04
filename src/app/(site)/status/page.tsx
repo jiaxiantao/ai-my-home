@@ -5,19 +5,20 @@ import { BorderGlow } from "@/components/reactbits/border-glow";
 import { SectionHeading } from "@/components/section-heading";
 import { StatusProbe } from "@/components/status-probe";
 
+import { KNOWLEDGE_STUDIO_URL } from "@/lib/external-projects";
+
 export const metadata: Metadata = {
   title: "System Status | XJ / Frontend Systems",
   description:
-    "Live diagnostics: database, LLM runtime, pg_trgm search, and API endpoint latency.",
+    "Live diagnostics: database, LLM runtime, release store, and API endpoint latency.",
 };
 
 const quickLinks = [
   { href: "/api/health", label: "GET /api/health" },
   { href: "/api/profile", label: "GET /api/profile" },
   { href: "/api/dashboard", label: "GET /api/dashboard" },
-  { href: "/api/notes/search?q=架构", label: "GET /api/notes/search" },
-  { href: "/api/analytics/notes", label: "GET /api/analytics/notes" },
-  { href: "/api/chat", label: "POST /api/chat (SSE)" },
+  { href: `${KNOWLEDGE_STUDIO_URL}api/notes/search?q=架构`, label: "GET /api/notes/search (KS)" },
+  { href: `${KNOWLEDGE_STUDIO_URL}api/chat`, label: "POST /api/chat (KS)" },
 ];
 
 export default function StatusPage() {
@@ -36,8 +37,8 @@ export default function StatusPage() {
           运行时诊断
         </h1>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-400">
-          实时探测 DB 连接、LLM 配置、pg_trgm 扩展，以及各 API 端点的延迟。
-          可作为部署后的快速验收入口。
+          实时探测 DB 连接、LLM 配置、Release 存储，以及各 API 端点的延迟。
+          笔记检索与对话 API 已迁移至 Knowledge Studio。
         </p>
         <div className="mt-6 flex flex-wrap gap-2">
           {quickLinks.map((item) => (

@@ -1,4 +1,4 @@
-import { HOME_AGENT_AGENTS_URL } from "@/lib/external-projects";
+import { HOME_AGENT_AGENTS_URL, KNOWLEDGE_STUDIO_URL } from "@/lib/external-projects";
 import type { IntentLabel } from "@/lib/front-intelligence";
 
 export type AssistantContextLink = {
@@ -34,7 +34,7 @@ export function buildAssistantContextLinks(
     });
   }
 
-  links.push({ href: "/notes", label: "笔记库检索" });
+  links.push({ href: KNOWLEDGE_STUDIO_URL, label: "笔记库检索" });
 
   const seen = new Set<string>();
   return links.filter((link) => {

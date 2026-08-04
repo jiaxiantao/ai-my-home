@@ -15,11 +15,7 @@ const endpoints: EndpointSpec[] = [
   { id: "health", label: "GET /api/health", url: "/api/health" },
   { id: "dashboard", label: "GET /api/dashboard", url: "/api/dashboard" },
   { id: "profile", label: "GET /api/profile", url: "/api/profile" },
-  {
-    id: "search",
-    label: "GET /api/notes/search",
-    url: "/api/notes/search?q=架构&limit=5",
-  },
+  { id: "release", label: "GET /api/release/apps", url: "/api/release/apps" },
 ];
 
 type BenchRow = {
@@ -32,7 +28,7 @@ export function ApiLatencyDemo() {
   const [selected, setSelected] = useState<string[]>([
     "health",
     "dashboard",
-    "search",
+    "profile",
   ]);
   const [rows, setRows] = useState<BenchRow[]>([]);
   const [running, setRunning] = useState(false);
