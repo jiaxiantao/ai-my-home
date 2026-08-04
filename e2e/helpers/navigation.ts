@@ -7,6 +7,11 @@ const hrefByLabel: Record<string, string> = {
   Cases: "/cases",
 };
 
+const urlPatternByLabel: Record<string, RegExp> = {
+  Notes: /(\/notes$|knowledge-studio\/notes)/,
+  Assistant: /(\/assistant$|knowledge-studio\/assistant)/,
+};
+
 const testIdByLabel: Record<string, string> = {
   Notes: "nav-ai-notes",
   Assistant: "nav-ai-assistant",
@@ -45,7 +50,11 @@ export async function clickHeaderNavLink(
     await link.click();
   }
 
-  await page.waitForURL(new RegExp(`${href.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`), {
+  const urlPattern =
+    urlPatternByLabel[options.label] ??
+    new RegExp(`${href.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`);
+
+  await page.waitForURL(urlPattern, {
     timeout: 30_000,
   });
 }
